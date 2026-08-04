@@ -12,52 +12,40 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="../favicon-de23e50b.svg">
-        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
-        <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-e96d0476.css">
-        <link rel="stylesheet" href="../css/chrome-d279d366.css">
-        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
-        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
-        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
 
-        <!-- Provide site root and default themes to javascript -->
+        <!-- Provide site root to javascript -->
         <script>
-            const path_to_root = "../";
-            const default_light_theme = "light";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7851d977.js";
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-d263d424.js"></script>
+        <script src="../toc.js"></script>
     </head>
     <body>
-    <div id="mdbook-help-container">
-        <div id="mdbook-help-popup">
-            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
-            <div>
-                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
-                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
-                <p>Press <kbd>?</kbd> to show this help</p>
-                <p>Press <kbd>Esc</kbd> to hide this help</p>
-            </div>
-        </div>
-    </div>
-    <div id="mdbook-body-container">
+    <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
-                let theme = localStorage.getItem('mdbook-theme');
-                let sidebar = localStorage.getItem('mdbook-sidebar');
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
 
                 if (theme.startsWith('"') && theme.endsWith('"')) {
                     localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
@@ -71,8 +59,7 @@
 
         <!-- Set the theme before any content is loaded, prevents flash -->
         <script>
-            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
-            let theme;
+            var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             const html = document.documentElement;
@@ -81,59 +68,55 @@
             html.classList.add("js");
         </script>
 
-        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            let sidebar = null;
-            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
             } else {
                 sidebar = 'hidden';
-                sidebar_toggle.checked = false;
             }
-            if (sidebar === 'visible') {
-                sidebar_toggle.checked = true;
-            } else {
-                html.classList.remove('sidebar-visible');
-            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
         </script>
 
-        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
                 <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
-            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
             </div>
         </nav>
 
-        <div id="mdbook-page-wrapper" class="page-wrapper">
+        <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                <div id="mdbook-menu-bar-hover-placeholder"></div>
-                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
                         </label>
-                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
                         </button>
-                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
                         </button>
                     </div>
 
@@ -141,47 +124,43 @@
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
-                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                            <i id="print-button" class="fa fa-print"></i>
                         </a>
                         <a href="https://github.com/wuyijing-dev/DeepRoot" title="Git repository" aria-label="Git repository">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                            <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/wuyijing-dev/DeepRoot/edit/main/book/src/path/05-abi.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
-                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        <a href="https://github.com/wuyijing-dev/DeepRoot/edit/main/book/src/path/05-abi.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
                     </div>
                 </div>
 
-                <div id="mdbook-search-wrapper" class="hidden">
-                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
-                        <div class="search-wrapper">
-                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
-                            <div class="spinner-wrapper">
-                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
-                            </div>
-                        </div>
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
                     </form>
-                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
-                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
-                        <ul id="mdbook-searchresults">
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
                         </ul>
                     </div>
                 </div>
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script>
-                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
-                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
-                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
                         link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
                     });
                 </script>
 
-                <div id="mdbook-content" class="content">
+                <div id="content" class="content">
                     <main>
                         <h1 id="10-冻结-abi详细表"><a class="header" href="#10-冻结-abi详细表">1.0 冻结 ABI（详细表）</a></h1>
-<p>ABI = Application Binary Interface：用户程序与内核之间的「接线标准」。<br>1.0 把底座钉住；1.1–1.4 只<strong>追加</strong>新号码。</p>
+<p>ABI = Application Binary Interface：用户程序与内核之间的「接线标准」。<br />
+1.0 把底座钉住；1.1–1.4 只<strong>追加</strong>新号码。</p>
 <h2 id="本章拆读顺序"><a class="header" href="#本章拆读顺序">本章拆读顺序</a></h2>
 <ol>
 <li><a href="abi/01-registers.html">1.0.1 寄存器调用约定</a></li>
@@ -190,17 +169,11 @@
 <li><a href="abi/04-guided-syscalls.html">1.0.4 四个 syscall 实战跟读</a></li>
 </ol>
 <h2 id="1-调用约定risc-v-用户态"><a class="header" href="#1-调用约定risc-v-用户态">1. 调用约定（RISC-V 用户态）</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>寄存器</th><th>用途</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>寄存器</th><th>用途</th></tr></thead><tbody>
 <tr><td><code>a7</code></td><td>syscall 号 <code>SYS_*</code></td></tr>
 <tr><td><code>a0</code>–<code>a3</code></td><td>参数（不够再扩展，当前够用）</td></tr>
 <tr><td><code>a0</code></td><td>返回值（负号常表示 <code>ERR_*</code>）</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>封装见 <code>libs/deeproot-user/src/lib.rs</code> 的 <code>ecall</code>。</p>
 <h2 id="11-用户态怎么发-ecall跟源码对齐"><a class="header" href="#11-用户态怎么发-ecall跟源码对齐">1.1 用户态怎么“发 ecall”（跟源码对齐）</a></h2>
@@ -232,19 +205,14 @@ a0..a3 放参数
 a0 收返回值
 负值表示错误
 </code></pre>
-<p>所以 ABI 最怕的不是“代码写得丑”，而是<strong>内核和用户态对同一组寄存器有不同理解</strong>。<br>一旦一边觉得 <code>a0</code> 是路径指针、另一边把它当 sched id，系统往往不会优雅报错，而是直接跑向 <code>ERR_GENERIC</code>、page fault，甚至乱码输出。</p>
+<p>所以 ABI 最怕的不是“代码写得丑”，而是<strong>内核和用户态对同一组寄存器有不同理解</strong>。<br />
+一旦一边觉得 <code>a0</code> 是路径指针、另一边把它当 sched id，系统往往不会优雅报错，而是直接跑向 <code>ERR_GENERIC</code>、page fault，甚至乱码输出。</p>
 <h2 id="2-错误码"><a class="header" href="#2-错误码">2. 错误码</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>常量</th><th>值</th><th>含义</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>常量</th><th>值</th><th>含义</th></tr></thead><tbody>
 <tr><td><code>ERR_GENERIC</code></td><td>-1</td><td>泛型失败</td></tr>
 <tr><td><code>ERR_AGAIN</code></td><td>-11</td><td>暂时没有（如串口无新字节、wait 子任务还在跑）</td></tr>
 <tr><td><code>ERR_NOSYS</code></td><td>-38</td><td>未知 syscall</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>在学习时你可以用一个经验法则判断“这是策略问题还是数据问题”：</p>
 <ul>
@@ -253,7 +221,8 @@ a0 收返回值
 <li><code>ERR_GENERIC</code>：多半是参数/路径/ELF 映射失败（比如 <code>SYS_EXEC</code> 找不到 ramfs 文件，或 ELF magic 不对）</li>
 </ul>
 <h3 id="21-为什么-deeproot-喜欢返回负数"><a class="header" href="#21-为什么-deeproot-喜欢返回负数">2.1 为什么 DeepRoot 喜欢返回负数？</a></h3>
-<p>因为用户态封装统一把 <code>ecall</code> 返回值视为 <code>isize</code>。<br>这让调用者只需要做一个非常朴素的判断：</p>
+<p>因为用户态封装统一把 <code>ecall</code> 返回值视为 <code>isize</code>。<br />
+这让调用者只需要做一个非常朴素的判断：</p>
 <pre><code class="language-text">ret &gt;= 0   → 成功，正数/0 可能自带业务含义
 ret &lt; 0    → 出错或暂不可用
 </code></pre>
@@ -270,12 +239,7 @@ ret &lt; 0    → 出错或暂不可用
 <p>下表以 <code>libs/deeproot-abi/src/syscall.rs</code> 为准；学的时候请打开文件核对。</p>
 </blockquote>
 <h3 id="31-10-基线09"><a class="header" href="#31-10-基线09">3.1 1.0 基线（0–9）</a></h3>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>号</th><th>名字</th><th>参数直觉</th><th>典型用途</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>号</th><th>名字</th><th>参数直觉</th><th>典型用途</th></tr></thead><tbody>
 <tr><td>0</td><td><code>SYS_DEBUG_WRITE</code></td><td>ptr, len</td><td>调试打印</td></tr>
 <tr><td>1</td><td><code>SYS_LEDGER_DUMP</code></td><td>—</td><td>打印账本</td></tr>
 <tr><td>2</td><td><code>SYS_CAP_DERIVE</code></td><td>…</td><td>派生能力</td></tr>
@@ -286,16 +250,10 @@ ret &lt; 0    → 出错或暂不可用
 <tr><td>7</td><td><code>SYS_IPC_REPLY</code></td><td>badge, label, word0</td><td>回复</td></tr>
 <tr><td>8</td><td><code>SYS_YIELD</code></td><td>—</td><td>让出 CPU</td></tr>
 <tr><td>9</td><td><code>SYS_EXIT</code></td><td>code</td><td>退出并变僵尸</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h3 id="32-1114-追加"><a class="header" href="#32-1114-追加">3.2 1.1–1.4 追加</a></h3>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>号</th><th>名字</th><th>参数直觉</th><th>系列</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>号</th><th>名字</th><th>参数直觉</th><th>系列</th></tr></thead><tbody>
 <tr><td>10</td><td><code>SYS_SPAWN</code></td><td>blob_id（0=hello）</td><td>1.1</td></tr>
 <tr><td>11</td><td><code>SYS_DEBUG_READ</code></td><td>— → 字节或 <code>-11</code></td><td>1.2</td></tr>
 <tr><td>12</td><td><code>SYS_FS_LIST</code></td><td>—</td><td>1.3</td></tr>
@@ -303,24 +261,18 @@ ret &lt; 0    → 出错或暂不可用
 <tr><td>14</td><td><code>SYS_EXEC</code></td><td>path_ptr, len → sched id</td><td>1.3</td></tr>
 <tr><td>15</td><td><code>SYS_TIME</code></td><td>— → 毫秒</td><td>彩蛋/节奏</td></tr>
 <tr><td>16</td><td><code>SYS_WAIT</code></td><td>sched_id → 0 / <code>-11</code></td><td>shell 等待子任务</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h3 id="33-先记住-5-个最常用-syscall"><a class="header" href="#33-先记住-5-个最常用-syscall">3.3 先记住 5 个最常用 syscall</a></h3>
-<p>如果你是第一次读 DeepRoot，不要一上来背完整 syscall 表。<br>先把下面 5 个吃透，基本就能走完整条用户态交互链：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>名字</th><th>你在哪最容易遇到它</th><th>成功返回</th><th>常见失败/特殊值</th></tr>
-</thead>
-<tbody>
+<p>如果你是第一次读 DeepRoot，不要一上来背完整 syscall 表。<br />
+先把下面 5 个吃透，基本就能走完整条用户态交互链：</p>
+<div class="table-wrapper"><table><thead><tr><th>名字</th><th>你在哪最容易遇到它</th><th>成功返回</th><th>常见失败/特殊值</th></tr></thead><tbody>
 <tr><td><code>SYS_DEBUG_WRITE</code></td><td>所有用户程序打印</td><td>写出长度</td><td><code>-1</code> 参数异常</td></tr>
 <tr><td><code>SYS_DEBUG_READ</code></td><td>shell 读键盘</td><td>一个字节</td><td><code>-11</code> 暂无输入</td></tr>
 <tr><td><code>SYS_EXEC</code></td><td>shell <code>run xxx</code></td><td>child sched id</td><td><code>-1</code> 找不到/非 ELF/映射失败</td></tr>
 <tr><td><code>SYS_WAIT</code></td><td>shell 前台等待子任务</td><td><code>0</code></td><td><code>-11</code> 还没退出</td></tr>
 <tr><td><code>SYS_YIELD</code></td><td>轮询或主动让出</td><td><code>0</code></td><td>通常不失败</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="4-从-ecall-到-handle_syscall跟读-traprs"><a class="header" href="#4-从-ecall-到-handle_syscall跟读-traprs">4. 从 ecall 到 handle_syscall（跟读 trap.rs）</a></h2>
 <p>用户态执行 <code>ecall</code> 后，<code>kernel/src/trap.rs</code> 会走到 <code>trap_handler()</code>。</p>
@@ -339,20 +291,15 @@ ret &lt; 0    → 出错或暂不可用
 <li>如果你看到返回值异常（比如一直是 <code>-11</code>），通常不是用户库错了，而是内核调度/阻塞路径没发生你预期的状态切换</li>
 </ul>
 <h2 id="41-trap-frame-里为什么是-x17--x10"><a class="header" href="#41-trap-frame-里为什么是-x17--x10">4.1 trap frame 里为什么是 <code>x[17]</code> / <code>x[10]</code>？</a></h2>
-<p>调度器保存的是一个通用寄存器数组 <code>x[0..31]</code>。<br>RISC-V 的 ABI 名字（<code>a0</code>/<code>a1</code>/<code>a7</code>）只是这些整数寄存器的“别名”：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>ABI 名</th><th>实际整数寄存器</th><th>trap frame 下标</th></tr>
-</thead>
-<tbody>
+<p>调度器保存的是一个通用寄存器数组 <code>x[0..31]</code>。<br />
+RISC-V 的 ABI 名字（<code>a0</code>/<code>a1</code>/<code>a7</code>）只是这些整数寄存器的“别名”：</p>
+<div class="table-wrapper"><table><thead><tr><th>ABI 名</th><th>实际整数寄存器</th><th>trap frame 下标</th></tr></thead><tbody>
 <tr><td><code>a0</code></td><td><code>x10</code></td><td><code>tf.x[10]</code></td></tr>
 <tr><td><code>a1</code></td><td><code>x11</code></td><td><code>tf.x[11]</code></td></tr>
 <tr><td><code>a2</code></td><td><code>x12</code></td><td><code>tf.x[12]</code></td></tr>
 <tr><td><code>a3</code></td><td><code>x13</code></td><td><code>tf.x[13]</code></td></tr>
 <tr><td><code>a7</code></td><td><code>x17</code></td><td><code>tf.x[17]</code></td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>所以你在 <code>trap_handler()</code> 里看到：</p>
 <pre><code class="language-text">nr = tf.x[17]
@@ -361,7 +308,8 @@ a0 = tf.x[10]
 </code></pre>
 <p>并不是“写死魔法数字”，而是在直接用 RISC-V 调用约定读寄存器。</p>
 <h2 id="42-sepc--4-为什么不能少"><a class="header" href="#42-sepc--4-为什么不能少">4.2 <code>sepc += 4</code> 为什么不能少？</a></h2>
-<p><code>ecall</code> 本身是一条指令。<br>如果 trap 返回前不把 <code>sepc</code> 前移 4 字节，CPU 回到用户态后会再次执行<strong>同一条</strong> <code>ecall</code>，然后再进 trap，形成“无限重复系统调用”。</p>
+<p><code>ecall</code> 本身是一条指令。<br />
+如果 trap 返回前不把 <code>sepc</code> 前移 4 字节，CPU 回到用户态后会再次执行<strong>同一条</strong> <code>ecall</code>，然后再进 trap，形成“无限重复系统调用”。</p>
 <p>这就是很多新手在自己写 trap 路径时最容易漏掉的一步。</p>
 <h2 id="43-从-handle_syscall-里跟-4-个真实例子"><a class="header" href="#43-从-handle_syscall-里跟-4-个真实例子">4.3 从 <code>handle_syscall()</code> 里跟 4 个真实例子</a></h2>
 <p>打开 <code>kernel/src/sched.rs</code> 的 <code>handle_syscall()</code>，建议按下面四个分支跟一遍：</p>
@@ -408,7 +356,8 @@ child == Empty        → ERR_GENERIC
 </code></pre>
 <p>于是 shell 的前台运行模型就清楚了：<code>run</code> 不是靠中断通知，而是靠 <code>wait -&gt; -11 -&gt; yield -&gt; wait</code> 轮询收尸。</p>
 <h2 id="44-abi-与调度为什么绑得这么紧"><a class="header" href="#44-abi-与调度为什么绑得这么紧">4.4 ABI 与调度为什么绑得这么紧？</a></h2>
-<p>很多教材会把“syscall”讲成纯接口，把“scheduler”讲成另一个主题。<br>但在 DeepRoot 里，两者是连着的：</p>
+<p>很多教材会把“syscall”讲成纯接口，把“scheduler”讲成另一个主题。<br />
+但在 DeepRoot 里，两者是连着的：</p>
 <ul>
 <li><code>SYS_EXIT</code> 会把当前任务标成 <code>Zombie</code></li>
 <li><code>SYS_IPC_RECV</code> 在收不到消息时会阻塞当前任务</li>
@@ -424,7 +373,8 @@ child == Empty        → ERR_GENERIC
 </ol>
 <h3 id="51-建议你亲自跑的最小实验"><a class="header" href="#51-建议你亲自跑的最小实验">5.1 建议你亲自跑的最小实验</a></h3>
 <h4 id="实验-a确认-err_again-不是错误而是暂时没准备好"><a class="header" href="#实验-a确认-err_again-不是错误而是暂时没准备好">实验 A：确认 <code>ERR_AGAIN</code> 不是“错误”，而是“暂时没准备好”</a></h4>
-<p>在 shell 读一行之前，串口通常大部分时间是空的。<br>如果你在 <code>SYS_DEBUG_READ</code> 分支临时加计数，会看到它反复走到：</p>
+<p>在 shell 读一行之前，串口通常大部分时间是空的。<br />
+如果你在 <code>SYS_DEBUG_READ</code> 分支临时加计数，会看到它反复走到：</p>
 <pre><code class="language-text">None =&gt; ERR_AGAIN
 </code></pre>
 <p>而 shell 并不会 panic，只是继续 <code>yield_now()</code> 再读。</p>
@@ -460,11 +410,11 @@ deeproot&gt; run hello
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                             <a rel="prev" href="../path/user-sched/05-syscall-return.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                                <i class="fa fa-angle-left"></i>
                             </a>
 
                             <a rel="next prefetch" href="../path/abi/01-registers.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                                <i class="fa fa-angle-right"></i>
                             </a>
 
                         <div style="clear: both"></div>
@@ -474,21 +424,16 @@ deeproot&gt; run hello
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                     <a rel="prev" href="../path/user-sched/05-syscall-return.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                        <i class="fa fa-angle-left"></i>
                     </a>
 
                     <a rel="next prefetch" href="../path/abi/01-registers.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                        <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
 
         </div>
 
-        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
-        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
-        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
-        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
-        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
 
 
@@ -497,16 +442,15 @@ deeproot&gt; run hello
         </script>
 
 
-        <script src="../elasticlunr-ef4e11c1.min.js"></script>
-        <script src="../mark-09e88c2c.min.js"></script>
-        <script src="../searcher-09f2665d.js"></script>
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
 
-        <script src="../clipboard-1626706a.min.js"></script>
-        <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-609e4cb8.js"></script>
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
 
         <!-- Custom JS scripts -->
-
 
 
     </div>

@@ -13,52 +13,40 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon-de23e50b.svg">
-        <link rel="shortcut icon" href="favicon-8114d1fc.png">
-        <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-e96d0476.css">
-        <link rel="stylesheet" href="css/chrome-d279d366.css">
-        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
-        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
-        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
 
-        <!-- Provide site root and default themes to javascript -->
+        <!-- Provide site root to javascript -->
         <script>
-            const path_to_root = "";
-            const default_light_theme = "light";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7851d977.js";
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-d263d424.js"></script>
+        <script src="toc.js"></script>
     </head>
     <body>
-    <div id="mdbook-help-container">
-        <div id="mdbook-help-popup">
-            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
-            <div>
-                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
-                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
-                <p>Press <kbd>?</kbd> to show this help</p>
-                <p>Press <kbd>Esc</kbd> to hide this help</p>
-            </div>
-        </div>
-    </div>
-    <div id="mdbook-body-container">
+    <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
-                let theme = localStorage.getItem('mdbook-theme');
-                let sidebar = localStorage.getItem('mdbook-sidebar');
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
 
                 if (theme.startsWith('"') && theme.endsWith('"')) {
                     localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
@@ -72,8 +60,7 @@
 
         <!-- Set the theme before any content is loaded, prevents flash -->
         <script>
-            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
-            let theme;
+            var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             const html = document.documentElement;
@@ -82,59 +69,55 @@
             html.classList.add("js");
         </script>
 
-        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            let sidebar = null;
-            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
             } else {
                 sidebar = 'hidden';
-                sidebar_toggle.checked = false;
             }
-            if (sidebar === 'visible') {
-                sidebar_toggle.checked = true;
-            } else {
-                html.classList.remove('sidebar-visible');
-            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
         </script>
 
-        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
                 <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
             </noscript>
-            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
             </div>
         </nav>
 
-        <div id="mdbook-page-wrapper" class="page-wrapper">
+        <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                <div id="mdbook-menu-bar-hover-placeholder"></div>
-                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
                         </label>
-                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
                         </button>
-                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
                         </button>
                     </div>
 
@@ -142,53 +125,45 @@
 
                     <div class="right-buttons">
                         <a href="print.html" title="Print this book" aria-label="Print this book">
-                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                            <i id="print-button" class="fa fa-print"></i>
                         </a>
                         <a href="https://github.com/wuyijing-dev/DeepRoot" title="Git repository" aria-label="Git repository">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                            <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
 
                     </div>
                 </div>
 
-                <div id="mdbook-search-wrapper" class="hidden">
-                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
-                        <div class="search-wrapper">
-                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
-                            <div class="spinner-wrapper">
-                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
-                            </div>
-                        </div>
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
                     </form>
-                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
-                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
-                        <ul id="mdbook-searchresults">
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
                         </ul>
                     </div>
                 </div>
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script>
-                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
-                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
-                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
                         link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
                     });
                 </script>
 
-                <div id="mdbook-content" class="content">
+                <div id="content" class="content">
                     <main>
                         <h1 id="deeproot-学习笔记"><a class="header" href="#deeproot-学习笔记">DeepRoot 学习笔记</a></h1>
 <blockquote>
 <p>版本选择：下拉框会跳转到 <code>docs/&lt;tag&gt;/</code> 下对应版本的教程站点（例如 <code>v1.4.1</code>、<code>v1.4.0</code>）。</p>
 </blockquote>
 <div style="margin: 0.6rem 0; padding: 0.6rem; border: 1px solid #ddd; border-radius: 8px;">
-  
-<div style="margin-bottom: 0.4rem; font-weight: 600;">选择版本</div>
-
+  <div style="margin-bottom: 0.4rem; font-weight: 600;">选择版本</div>
   <select id="drp-version-select" style="min-width: 12rem; padding: 0.35rem 0.5rem;"></select>
 </div>
-
 <script>
 (function () {
   const select = document.getElementById('drp-version-select');
@@ -226,10 +201,11 @@
 <ul>
 <li>会一点命令行</li>
 <li>愿意按步骤敲命令、看输出</li>
-<li>卡住时对照 <a href="#常见问题faq">常见问题</a></li>
+<li>卡住时对照 <a href="hands-on/faq.html">常见问题</a></li>
 </ul>
 <h2 id="文档对应哪个版本"><a class="header" href="#文档对应哪个版本">文档对应哪个版本？</a></h2>
-<p><strong>当前文档默认对齐：<code>v1.4.1</code></strong>（块上 DRFS + shell <code>ls</code>/<code>cat</code>）。<br><strong>冻结基线：<code>v1.4.0</code></strong>（块层替身初版）仍可通过页首选择器打开。</p>
+<p><strong>当前文档默认对齐：<code>v1.4.1</code></strong>（块上 DRFS + shell <code>ls</code>/<code>cat</code>）。<br />
+<strong>冻结基线：<code>v1.4.0</code></strong>（块层替身初版）仍可通过页首选择器打开。</p>
 <p>请核对：</p>
 <ul>
 <li>仓库根目录 <a href="https://github.com/wuyijing-dev/DeepRoot/blob/main/VERSION"><code>VERSION</code></a> 第一行</li>
@@ -239,16 +215,16 @@
 <p>若你跟的是更新的 <code>main</code>，以仓库里的 <code>VERSION</code> 为准；用选择器切换冻结快照。</p>
 <h2 id="怎么读请按这个顺序"><a class="header" href="#怎么读请按这个顺序">怎么读？（请按这个顺序）</a></h2>
 <ol>
-<li><a href="#这是什么">这是什么？</a> — 建立图像</li>
-<li><a href="#你需要准备什么详细">你需要准备什么</a> — 装工具</li>
-<li><a href="#第一次启动详细版">第一次启动</a> — <strong>必须先跑通 QEMU</strong></li>
-<li><a href="#仓库长什么样详细地图">仓库长什么样</a> — 建立代码地图</li>
-<li><a href="#学习路线图详细版">学习路线图</a> 起，从 <strong>0.1 读到 1.4</strong>
+<li><a href="intro/what-is-deeproot.html">这是什么？</a> — 建立图像</li>
+<li><a href="intro/prerequisites.html">你需要准备什么</a> — 装工具</li>
+<li><a href="intro/first-boot.html">第一次启动</a> — <strong>必须先跑通 QEMU</strong></li>
+<li><a href="intro/repo-map.html">仓库长什么样</a> — 建立代码地图</li>
+<li><a href="path/overview.html">学习路线图</a> 起，从 <strong>0.1 读到 1.4</strong>
 <ul>
 <li>每章固定结构：概念 → 源码跟读 → 动手验证 → 易错点</li>
 </ul>
 </li>
-<li>想创造时看 <a href="#shell-常用命令详细手册">动手玩</a></li>
+<li>想创造时看 <a href="hands-on/shell-commands.html">动手玩</a></li>
 </ol>
 <h2 id="每一章你该怎么学"><a class="header" href="#每一章你该怎么学">每一章你该怎么学？</a></h2>
 <p>不要只「看过标题」：</p>
@@ -256,7 +232,7 @@
 <li>打开章里点名的源码文件</li>
 <li>用编辑器搜索章里出现的符号（<code>SYS_EXEC</code>、<code>bring_up</code>…）</li>
 <li>做「动手验证」——至少做一半</li>
-<li>现象对不上时先查该章「易错点」，再查 <a href="#常见问题faq">FAQ</a></li>
+<li>现象对不上时先查该章「易错点」，再查 <a href="hands-on/faq.html">FAQ</a></li>
 </ol>
 <h2 id="这份文档不会做什么"><a class="header" href="#这份文档不会做什么">这份文档不会做什么？</a></h2>
 <ul>
@@ -264,27 +240,21 @@
 <li>不会把 Bad Apple 之类 demo 当成核心教学内容</li>
 <li>不会要求你「先做完习题才能开机」——内核始终是可运行的真内核</li>
 </ul>
-<p>准备好了？从 <a href="#这是什么">这是什么？</a> 开始。</p>
+<p>准备好了？从 <a href="intro/what-is-deeproot.html">这是什么？</a> 开始。</p>
 <blockquote>
 <p>在线站点由仓库 <code>docs/</code> 目录发布（mdBook 构建产物；Pages 选 main → /docs）。</p>
 </blockquote>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="这是什么"><a class="header" href="#这是什么">这是什么？</a></h1>
-<p>DeepRoot 是一个用 <strong>Rust</strong> 写的、跑在 <strong>RISC-V</strong> 上的<strong>能力微内核</strong>。<br>这份说明写给完全新手：你会慢慢碰到「特权级」「页表」「系统调用」这些词——先建立图像，细节后面按版本拆开讲。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="这是什么"><a class="header" href="#这是什么">这是什么？</a></h1>
+<p>DeepRoot 是一个用 <strong>Rust</strong> 写的、跑在 <strong>RISC-V</strong> 上的<strong>能力微内核</strong>。<br />
+这份说明写给完全新手：你会慢慢碰到「特权级」「页表」「系统调用」这些词——先建立图像，细节后面按版本拆开讲。</p>
 <h2 id="1-用一家咖啡馆类比操作系统"><a class="header" href="#1-用一家咖啡馆类比操作系统">1. 用一家咖啡馆类比操作系统</a></h2>
 <p>想象操作系统是一家店：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>角色</th><th>宏内核（如 Linux）大致像</th><th>DeepRoot 微内核大致像</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>角色</th><th>宏内核（如 Linux）大致像</th><th>DeepRoot 微内核大致像</th></tr></thead><tbody>
 <tr><td>老板（内核）</td><td>自己做咖啡、收银、扫地、修咖啡机</td><td>只定规矩：谁能进后厨、怎么传话、怎么排班</td></tr>
 <tr><td>员工（用户态）</td><td>较少；很多事老板亲力亲为</td><td>barista / 收银员是<strong>独立程序</strong>：console、ping、shell…</td></tr>
 <tr><td>权限</td><td>「你是不是店长/员工编号多少」</td><td>「你手里有没有这张<strong>工作证（capability）</strong>」</td></tr>
 <tr><td>说话方式</td><td>很多标准窗口（POSIX）</td><td>店内对讲机协议（<strong>自己的 syscall / IPC</strong>）</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>所以：学 DeepRoot 时，不要先问「<code>open()</code> 的 Linux 手册哪一页」，而要问：</p>
 <ol>
@@ -309,10 +279,12 @@ U-mode（User）      ← init / shell / hello 在这里
 <p>开机后你在终端里看到的第一大批字，早期往往是 <strong>S-mode 内核</strong>用 SBI 打出来的；之后 shell 的字则是用户态 <code>SYS_DEBUG_WRITE</code>。</p>
 <h2 id="3-deeproot-坚持的两件事"><a class="header" href="#3-deeproot-坚持的两件事">3. DeepRoot 坚持的两件事</a></h2>
 <h3 id="root-ledger根账本"><a class="header" href="#root-ledger根账本">Root Ledger（根账本）</a></h3>
-<p>内核里有一个不大的环形缓冲区，记录「启动了」「发生了某种 IPC」等事件。<br>它不是区块链，也不是安全审计产品——它是<strong>显微镜</strong>：学习时用来回答「刚才系统里发生了什么」。</p>
+<p>内核里有一个不大的环形缓冲区，记录「启动了」「发生了某种 IPC」等事件。<br />
+它不是区块链，也不是安全审计产品——它是<strong>显微镜</strong>：学习时用来回答「刚才系统里发生了什么」。</p>
 <p>代码入口可以先记：<code>kernel/src/ledger.rs</code>，启动时在 <code>kernel_main</code> 里就会 <code>LEDGER.record(Boot, …)</code>。</p>
 <h3 id="capability-provenance能力来源"><a class="header" href="#capability-provenance能力来源">Capability Provenance（能力来源）</a></h3>
-<p>每张「工作证」不只说你能干什么，还尽量记下<strong>它是怎么被开出来的</strong>（mint / derive …）。<br>学权限时，这比只看一个整数 flag 更有教学价值。</p>
+<p>每张「工作证」不只说你能干什么，还尽量记下<strong>它是怎么被开出来的</strong>（mint / derive …）。<br />
+学权限时，这比只看一个整数 flag 更有教学价值。</p>
 <h2 id="4-到-v141-你到底能得到什么"><a class="header" href="#4-到-v141-你到底能得到什么">4. 到 v1.4.1 你到底能得到什么？</a></h2>
 <p>已经齐的：</p>
 <ul>
@@ -333,8 +305,8 @@ U-mode（User）      ← init / shell / hello 在这里
 </ul>
 <h2 id="5-这份教程怎么用"><a class="header" href="#5-这份教程怎么用">5. 这份教程怎么用？</a></h2>
 <ol>
-<li>先按 <a href="#第一次启动详细版">第一次启动</a> 跑通。</li>
-<li>再按 <a href="#学习路线图详细版">学习路线图</a> <strong>从 0.1 读到 1.4</strong>；每一章都有：
+<li>先按 <a href="intro/first-boot.html">第一次启动</a> 跑通。</li>
+<li>再按 <a href="intro/../path/overview.html">学习路线图</a> <strong>从 0.1 读到 1.4</strong>；每一章都有：
 <ul>
 <li>概念</li>
 <li>建议打开的源码</li>
@@ -343,11 +315,10 @@ U-mode（User）      ← init / shell / hello 在这里
 <li>易错点</li>
 </ul>
 </li>
-<li>想自己加程序 → <a href="#自己写一个用户程序逐步教程">动手玩</a>。</li>
+<li>想自己加程序 → <a href="intro/../hands-on/write-user-prog.html">动手玩</a>。</li>
 </ol>
-<p>下一章：<a href="#你需要准备什么详细">你需要准备什么</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="你需要准备什么详细"><a class="header" href="#你需要准备什么详细">你需要准备什么（详细）</a></h1>
+<p>下一章：<a href="intro/prerequisites.html">你需要准备什么</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="你需要准备什么详细"><a class="header" href="#你需要准备什么详细">你需要准备什么（详细）</a></h1>
 <h2 id="1-硬件与操作系统"><a class="header" href="#1-硬件与操作系统">1. 硬件与操作系统</a></h2>
 <ul>
 <li>一台能装开发工具的电脑（作者在 <strong>Linux</strong> 上验证）</li>
@@ -378,30 +349,24 @@ qemu-system-riscv64 --version
 <pre><code class="language-bash">git --version
 </code></pre>
 <h3 id="25-常见可选工具"><a class="header" href="#25-常见可选工具">2.5 常见可选工具</a></h3>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>工具</th><th>用途</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>工具</th><th>用途</th></tr></thead><tbody>
 <tr><td><code>mdbook</code></td><td>本地预览本学习文档</td></tr>
 <tr><td><code>riscv64-unknown-elf-objdump</code></td><td>反汇编用户 ELF（进阶）</td></tr>
 <tr><td>编辑器</td><td>VS Code / Cursor / vim 均可</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>安装 mdbook：</p>
 <pre><code class="language-bash">cargo install mdbook
 </code></pre>
 <h2 id="3-建议先建立的最小概念"><a class="header" href="#3-建议先建立的最小概念">3. 建议先建立的最小概念</a></h2>
-<p>不要求精通。遇到词就查 <a href="#名词表">名词表</a>。</p>
+<p>不要求精通。遇到词就查 <a href="intro/../appendix/glossary.html">名词表</a>。</p>
 <ol>
 <li><strong>特权级</strong> M / S / U：谁能碰硬件</li>
 <li><strong>页表</strong>：虚址怎么变成物址</li>
 <li><strong>系统调用 / ecall</strong>：用户程序怎么求内核办事</li>
 <li><strong>ELF</strong>：可执行文件长什么样</li>
 </ol>
-<p>完全不懂也可以先完成 <a href="#第一次启动详细版">第一次启动</a>，再回头补。</p>
+<p>完全不懂也可以先完成 <a href="intro/first-boot.html">第一次启动</a>，再回头补。</p>
 <h2 id="4-平台备注"><a class="header" href="#4-平台备注">4. 平台备注</a></h2>
 <h3 id="linux推荐"><a class="header" href="#linux推荐">Linux（推荐）</a></h3>
 <p>按上面 apt/rustup 即可。</p>
@@ -428,9 +393,8 @@ qemu-system-riscv64 --version
 mdbook serve --open
 </code></pre>
 <p>在线：https://wuyijing-dev.github.io/DeepRoot/（仓库 Settings → Pages → <strong>main</strong> 分支 → <strong>/docs</strong> 目录）。</p>
-<p>下一章：<a href="#第一次启动详细版">第一次启动</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="第一次启动详细版"><a class="header" href="#第一次启动详细版">第一次启动（详细版）</a></h1>
+<p>下一章：<a href="intro/first-boot.html">第一次启动</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="第一次启动详细版"><a class="header" href="#第一次启动详细版">第一次启动（详细版）</a></h1>
 <p>目标：你不但能看到 <code>deeproot&gt;</code>，还能<strong>看懂启动日志在说什么</strong>，并知道失败时从哪查。</p>
 <h2 id="0-环境确认清单"><a class="header" href="#0-环境确认清单">0. 环境确认清单</a></h2>
 <p>在仓库根目录外先执行：</p>
@@ -470,18 +434,21 @@ git checkout v1.4.1   # 与本教程文字对齐；对照初版可用 v1.4.0
 <h2 id="3-构建时还有隐藏步骤"><a class="header" href="#3-构建时还有隐藏步骤">3. 构建时还有「隐藏步骤」</a></h2>
 <p>内核的 <code>kernel/build.rs</code> 会再启动若干次 <code>cargo</code>，把：</p>
 <p><code>init</code> / <code>console</code> / <code>ping</code> / <code>hello</code> / <code>shell</code> / <code>badapple</code> …</p>
-<p>编成 RISC-V ELF，复制到 <code>OUT_DIR</code>，供 <code>include_bytes!</code> 嵌入。<br>因此：<strong>第一次编译会久一点</strong>，磁盘上还会有 <code>target/user-build/</code>。</p>
+<p>编成 RISC-V ELF，复制到 <code>OUT_DIR</code>，供 <code>include_bytes!</code> 嵌入。<br />
+因此：<strong>第一次编译会久一点</strong>，磁盘上还会有 <code>target/user-build/</code>。</p>
 <p>若你只改了 <code>user/shell</code> 却发现 QEMU 里行为没变：先确认是否触发了 <code>build.rs</code> 的重编（改 <code>main.rs</code> 一般会），或执行一次干净重编。</p>
 <h2 id="4-启动日志导读按出现顺序理解"><a class="header" href="#4-启动日志导读按出现顺序理解">4. 启动日志导读（按出现顺序理解）</a></h2>
 <p>下面是「典型」顺序（个别行可能因版本微调）：</p>
 <h3 id="41-opensbi-的横幅"><a class="header" href="#41-opensbi-的横幅">4.1 OpenSBI 的横幅</a></h3>
-<p>你可能看到 OpenSBI 自己的版本、内存域、平台信息。<br>这是<strong>固件</strong>，还不是 DeepRoot。可以先略读。</p>
+<p>你可能看到 OpenSBI 自己的版本、内存域、平台信息。<br />
+这是<strong>固件</strong>，还不是 DeepRoot。可以先略读。</p>
 <h3 id="42-内核横幅"><a class="header" href="#42-内核横幅">4.2 内核横幅</a></h3>
 <pre><code class="language-text">  DeepRoot microkernel 1.4.1
   RISC-V S-mode · capability microkernel
   remote: git@github.com:wuyijing-dev/DeepRoot.git
 </code></pre>
-<p>来自 <code>kernel_main</code> 里的 <code>println!</code>（<code>kernel/src/main.rs</code>）。版本号来自仓库根 <code>VERSION</code> 第一行。<br>若版本不是你以为的那个，检查 <code>VERSION</code> 第一行与 <code>git describe</code>。</p>
+<p>来自 <code>kernel_main</code> 里的 <code>println!</code>（<code>kernel/src/main.rs</code>）。版本号来自仓库根 <code>VERSION</code> 第一行。<br />
+若版本不是你以为的那个，检查 <code>VERSION</code> 第一行与 <code>git describe</code>。</p>
 <h3 id="43-trap--mm--block--timer"><a class="header" href="#43-trap--mm--block--timer">4.3 trap / mm / block / timer</a></h3>
 <pre><code class="language-text">trap: early stvec=...
 mm: hart=... ram=... free=...
@@ -509,7 +476,8 @@ init: root server online
 shell: DeepRoot shell ready ...
 deeproot&gt;
 </code></pre>
-<p>之后 init 还可能继续打印 ping/console/hello，再 <code>handing off to shell</code>。<br><strong>提示符已经出现时，后面仍可能插入其它任务的日志</strong>——单串口共享，这是正常现象。</p>
+<p>之后 init 还可能继续打印 ping/console/hello，再 <code>handing off to shell</code>。<br />
+<strong>提示符已经出现时，后面仍可能插入其它任务的日志</strong>——单串口共享，这是正常现象。</p>
 <h2 id="5-交互验收请完整做一遍"><a class="header" href="#5-交互验收请完整做一遍">5. 交互验收（请完整做一遍）</a></h2>
 <pre><code class="language-text">deeproot&gt; help
 deeproot&gt; ls
@@ -525,17 +493,11 @@ deeproot&gt; run hello
 <li><code>run hello</code> 后出现 <code>hello: spawned ELF says hi</code>，然后提示符回来</li>
 </ul>
 <h2 id="6-退出与残留进程"><a class="header" href="#6-退出与残留进程">6. 退出与残留进程</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>场景</th><th>做法</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>场景</th><th>做法</th></tr></thead><tbody>
 <tr><td>正常离开 QEMU</td><td><code>Ctrl-A</code>，松开，再按 <code>X</code></td></tr>
 <tr><td>终端假死 / 快捷键无效</td><td>另开终端 <code>pkill -f qemu-system-riscv64</code></td></tr>
 <tr><td>只要测试能否启动</td><td><code>./scripts/run-qemu.sh --smoke</code></td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>注意：<code>pkill qemu-system-riscv</code>（名字太长且不带 <code>-f</code>）在 Linux 上常会匹配失败。</p>
 <h2 id="7-失败时怎么缩小范围"><a class="header" href="#7-失败时怎么缩小范围">7. 失败时怎么缩小范围？</a></h2>
@@ -545,10 +507,9 @@ deeproot&gt; run hello
 <li><strong>有横幅无 shell</strong>：看是否 panic；搜 <code>KERNEL PANIC</code> / <code>page fault</code>。</li>
 <li><strong>有 shell 不能输入</strong>：确认焦点；确认没有另一个 QEMU 占着；确认你没有在管道模式下运行。</li>
 </ol>
-<p>更全的条目见 <a href="#常见问题faq">常见问题</a>。</p>
-<p>下一章：<a href="#仓库长什么样详细地图">仓库长什么样</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="仓库长什么样详细地图"><a class="header" href="#仓库长什么样详细地图">仓库长什么样（详细地图）</a></h1>
+<p>更全的条目见 <a href="intro/../hands-on/faq.html">常见问题</a>。</p>
+<p>下一章：<a href="intro/repo-map.html">仓库长什么样</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="仓库长什么样详细地图"><a class="header" href="#仓库长什么样详细地图">仓库长什么样（详细地图）</a></h1>
 <p>第一次打开仓库时，先建立「地图」，<strong>不要</strong>从头到尾通读所有 <code>.rs</code>。</p>
 <h2 id="1-顶层一览"><a class="header" href="#1-顶层一览">1. 顶层一览</a></h2>
 <pre><code class="language-text">DeepRoot/
@@ -585,12 +546,7 @@ deeproot&gt; run hello
     └── badapple/           # 可选彩蛋（非主线）
 </code></pre>
 <h2 id="2-我想搞懂-x--打开这些文件"><a class="header" href="#2-我想搞懂-x--打开这些文件">2. 「我想搞懂 X → 打开这些文件」</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>你想搞懂…</th><th>先打开</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>你想搞懂…</th><th>先打开</th></tr></thead><tbody>
 <tr><td>开机入口</td><td><code>kernel/src/boot.rs</code>、<code>main.rs</code>、<code>sbi.rs</code></td></tr>
 <tr><td>页表 / 内存</td><td><code>kernel/src/mm/</code>（<code>memmap</code> → <code>frame</code> → <code>sv39</code>）</td></tr>
 <tr><td>能力</td><td><code>kernel/src/cap/</code>、<code>libs/deeproot-abi</code></td></tr>
@@ -599,8 +555,7 @@ deeproot&gt; run hello
 <tr><td>用户程序怎么进内核</td><td><code>libs/deeproot-user/src/lib.rs</code></td></tr>
 <tr><td>shell / ramfs</td><td><code>user/shell/</code>、<code>kernel/src/fs.rs</code>、<code>kernel/build.rs</code></td></tr>
 <tr><td>块层替身</td><td><code>kernel/src/block.rs</code></td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="3-构建时发生了什么必读"><a class="header" href="#3-构建时发生了什么必读">3. 构建时发生了什么？（必读）</a></h2>
 <pre><code class="language-text">./scripts/run-qemu.sh
@@ -615,14 +570,9 @@ deeproot&gt; run hello
 <li><strong>改用户程序 ≈ 要重编内核</strong>（嵌入的字节才会变）</li>
 <li>ramfs 里的 <code>hello</code> <strong>不是</strong>你拷进虚拟磁盘的文件</li>
 </ul>
-<p>细节在 <a href="#13-ramfs-与-run详细跟读">1.3 ramfs</a> 与 <a href="#自己写一个用户程序逐步教程">写用户程序</a>。</p>
+<p>细节在 <a href="intro/../path/08-fs.html">1.3 ramfs</a> 与 <a href="intro/../hands-on/write-user-prog.html">写用户程序</a>。</p>
 <h2 id="4-文档目录怎么对应源码"><a class="header" href="#4-文档目录怎么对应源码">4. 文档目录怎么对应源码？</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>文档章节</th><th>主要源码</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>文档章节</th><th>主要源码</th></tr></thead><tbody>
 <tr><td>0.1</td><td><code>boot</code> / <code>sbi</code> / <code>console</code> / 早期 <code>trap</code></td></tr>
 <tr><td>0.2</td><td><code>mm/*</code></td></tr>
 <tr><td>0.3–0.4</td><td><code>cap/*</code>、<code>ipc</code>、<code>ledger</code></td></tr>
@@ -632,26 +582,18 @@ deeproot&gt; run hello
 <tr><td>1.2</td><td><code>user/shell</code>、<code>SYS_DEBUG_READ</code></td></tr>
 <tr><td>1.3</td><td><code>fs.rs</code>、<code>SYS_EXEC</code></td></tr>
 <tr><td>1.4</td><td><code>block.rs</code></td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一章回主线：<a href="#学习路线图详细版">学习路线图</a>。若尚未开机，先去 <a href="#第一次启动详细版">第一次启动</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="学习路线图详细版"><a class="header" href="#学习路线图详细版">学习路线图（详细版）</a></h1>
+<p>下一章回主线：<a href="intro/../path/overview.html">学习路线图</a>。若尚未开机，先去 <a href="intro/first-boot.html">第一次启动</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="学习路线图详细版"><a class="header" href="#学习路线图详细版">学习路线图（详细版）</a></h1>
 <p>DeepRoot 用类似 Linux 的版本号：</p>
 <pre><code class="language-text">MAJOR.PATCHLEVEL.SUBLEVEL
 </code></pre>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>段</th><th>含义</th><th>初学者怎么用</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>段</th><th>含义</th><th>初学者怎么用</th></tr></thead><tbody>
 <tr><td>MAJOR</td><td>ABI 大断裂（0→1 表示稳定基线）</td><td>文档基线在 <strong>1.x</strong></td></tr>
 <tr><td>PATCHLEVEL</td><td><strong>一类用户可见能力</strong></td><td>按 0.1 → … → 1.4 读文档</td></tr>
 <tr><td>SUBLEVEL</td><td>系列内修修补补</td><td>学概念时可忽略小版本差异</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>完整注释清单在仓库根目录 <a href="https://github.com/wuyijing-dev/DeepRoot/blob/main/VERSION"><code>VERSION</code></a>。那是路线图原文；本章是人话导航。</p>
 <h2 id="1-总览图到-14"><a class="header" href="#1-总览图到-14">1. 总览图（到 1.4）</a></h2>
@@ -670,12 +612,7 @@ deeproot&gt; run hello
 </code></pre>
 <h2 id="2-每段你应该看见什么"><a class="header" href="#2-每段你应该看见什么">2. 每段你「应该看见」什么</a></h2>
 <p>读完一章，用这条清单自测（比背定义有用）：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>系列</th><th>你应该能指着现象说</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>系列</th><th>你应该能指着现象说</th></tr></thead><tbody>
 <tr><td>0.1</td><td>这行字来自内核 <code>println!</code> / SBI</td></tr>
 <tr><td>0.2</td><td>日志里有 <code>Sv39 identity map</code></td></tr>
 <tr><td>0.3–0.4</td><td>init 能和 ping/console 说话（IPC）</td></tr>
@@ -685,30 +622,29 @@ deeproot&gt; run hello
 <tr><td>1.2</td><td>你能在 <code>deeproot&gt;</code> 打字</td></tr>
 <tr><td>1.3</td><td><code>ls</code>/<code>cat</code>/<code>run</code> 对应 ramfs</td></tr>
 <tr><td>1.4</td><td>启动有 <code>block: ramdisk ready</code>…<code>DRFS</code>；<code>cat block.txt</code> 有内容</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="3-推荐学习节奏"><a class="header" href="#3-推荐学习节奏">3. 推荐学习节奏</a></h2>
 <ol>
-<li><strong>第 0 天</strong>：只做 <a href="#第一次启动详细版">第一次启动</a>，不改代码。</li>
+<li><strong>第 0 天</strong>：只做 <a href="path/../intro/first-boot.html">第一次启动</a>，不改代码。</li>
 <li><strong>然后</strong>：严格按下一章顺序；每章至少做「动手验证」里的一半。</li>
-<li><strong>卡壳时</strong>：先查 <a href="#常见问题faq">常见问题</a>，再对照该章「易错点」。</li>
-<li><strong>想创造时</strong>：完成 1.3 后再做 <a href="#自己写一个用户程序逐步教程">自己写用户程序</a>。</li>
+<li><strong>卡壳时</strong>：先查 <a href="path/../hands-on/faq.html">常见问题</a>，再对照该章「易错点」。</li>
+<li><strong>想创造时</strong>：完成 1.3 后再做 <a href="path/../hands-on/write-user-prog.html">自己写用户程序</a>。</li>
 </ol>
 <p>不要跳着改版本号学：请固定 <code>v1.4.1</code>（或用页首选择器打开冻结快照），否则日志和截图对不上。</p>
 <h2 id="4-一句话心态"><a class="header" href="#4-一句话心态">4. 一句话心态</a></h2>
-<p>先求「跑起来、看见现象」，再求「为什么这样设计」。<br>操作系统很大；DeepRoot 故意把教学关在 1.4 以内，就是为了让你能<strong>走完一条路</strong>。</p>
-<p>下一章：<a href="#01-启动与串口详细跟读">0.1 启动与串口</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="01-启动与串口详细跟读"><a class="header" href="#01-启动与串口详细跟读">0.1 启动与串口（详细跟读）</a></h1>
+<p>先求「跑起来、看见现象」，再求「为什么这样设计」。<br />
+操作系统很大；DeepRoot 故意把教学关在 1.4 以内，就是为了让你能<strong>走完一条路</strong>。</p>
+<p>下一章：<a href="path/01-boot.html">0.1 启动与串口</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="01-启动与串口详细跟读"><a class="header" href="#01-启动与串口详细跟读">0.1 启动与串口（详细跟读）</a></h1>
 <p>本章带你从「按下运行脚本」走到 <code>kernel_main</code>，并搞清字是怎么出现在屏幕上的。</p>
 <h2 id="本章拆读顺序"><a class="header" href="#本章拆读顺序">本章拆读顺序</a></h2>
 <ol>
-<li><a href="#011-从-qemu-到-_start">0.1.1 从 QEMU 到 <code>_start</code></a></li>
-<li><a href="#012-跟读-bootrs">0.1.2 跟读 <code>boot.rs</code></a></li>
-<li><a href="#013-跟读-kernel_main">0.1.3 跟读 <code>kernel_main</code></a></li>
-<li><a href="#014-sbi-控制台">0.1.4 SBI 控制台</a></li>
-<li><a href="#015-early-trap-与-stvec">0.1.5 early trap 与 <code>stvec</code></a></li>
+<li><a href="path/boot/01-boot-path.html">0.1.1 从 QEMU 到 <code>_start</code></a></li>
+<li><a href="path/boot/02-boot-rs.html">0.1.2 跟读 <code>boot.rs</code></a></li>
+<li><a href="path/boot/03-kernel-main.html">0.1.3 跟读 <code>kernel_main</code></a></li>
+<li><a href="path/boot/04-sbi-console.html">0.1.4 SBI 控制台</a></li>
+<li><a href="path/boot/05-early-trap.html">0.1.5 early trap 与 <code>stvec</code></a></li>
 </ol>
 <h2 id="1-上电之后谁先跑"><a class="header" href="#1-上电之后谁先跑">1. 上电之后谁先跑？</a></h2>
 <p>在 QEMU <code>virt</code> + <code>-bios default</code> 时：</p>
@@ -738,7 +674,8 @@ deeproot&gt; run hello
 <p>如果 BSS 没清干净，你会遇到「全局变量里是垃圾」这种最难查的鬼畜 bug。所以开机第一课往往是：相信链接脚本 + 清 BSS。</p>
 <p>你可以把这一步当成“把现场整理干净”。后面 <code>trap</code>、<code>mm</code>、<code>servers</code> 之所以能稳定工作，很多初始化都默认“BSS 是 0”。</p>
 <h3 id="21-为什么栈一定要先于-rust-建好"><a class="header" href="#21-为什么栈一定要先于-rust-建好">2.1 为什么栈一定要先于 Rust 建好？</a></h3>
-<p>因为 <code>call kernel_main</code>、函数参数传递、局部变量、返回地址保存，都默认“当前 hart 已经有一块可用栈”。<br>如果 <code>sp</code> 没设好，哪怕只是一个普通 Rust 函数调用，都可能把数据写到随机地址，结果通常不是“报一个好懂的错”，而是直接死机或诡异 trap。</p>
+<p>因为 <code>call kernel_main</code>、函数参数传递、局部变量、返回地址保存，都默认“当前 hart 已经有一块可用栈”。<br />
+如果 <code>sp</code> 没设好，哪怕只是一个普通 Rust 函数调用，都可能把数据写到随机地址，结果通常不是“报一个好懂的错”，而是直接死机或诡异 trap。</p>
 <h2 id="3-跟读-kernel_mainkernelsrcmainrs"><a class="header" href="#3-跟读-kernel_mainkernelsrcmainrs">3. 跟读 <code>kernel_main</code>（<code>kernel/src/main.rs</code>）</a></h2>
 <p>当前启动顺序（读代码时请逐行对）：</p>
 <pre><code class="language-text">ledger::init + Boot 事件
@@ -759,7 +696,8 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li><code>servers::bring_up</code>：装入多个 U-mode ELF 并把控制权交给调度器；这一步通常“不返回”</li>
 </ul>
 <h3 id="31-为什么-serversbring_up-放在最后"><a class="header" href="#31-为什么-serversbring_up-放在最后">3.1 为什么 <code>servers::bring_up()</code> 放在最后？</a></h3>
-<p>因为它一旦把用户态服务器们装好，并切到调度器入口，系统就从“单线程的启动脚本阶段”进入“多任务动态运行阶段”了。<br>在这之后：</p>
+<p>因为它一旦把用户态服务器们装好，并切到调度器入口，系统就从“单线程的启动脚本阶段”进入“多任务动态运行阶段”了。<br />
+在这之后：</p>
 <ul>
 <li>trap 会不时因为 ecall/时钟中断回来</li>
 <li>调度器会在多个任务之间切换</li>
@@ -796,9 +734,11 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li><code>console_putchar</code>：一次只写 1 个字节，适合最早期、最保守路径</li>
 <li><code>console_write</code>：尝试一次写整个缓冲区，适合 shell 输出、大量文本、ASCII 动画</li>
 </ul>
-<p>这不是“写法不同但效果一样”那么简单。<br>在 QEMU 里，大量逐字节输出会明显拖慢交互，因此后来的 bulk write 对 shell 体验和 Bad Apple 之类场景都很关键。</p>
+<p>这不是“写法不同但效果一样”那么简单。<br />
+在 QEMU 里，大量逐字节输出会明显拖慢交互，因此后来的 bulk write 对 shell 体验和 Bad Apple 之类场景都很关键。</p>
 <h2 id="5-trap-为什么这么早初始化"><a class="header" href="#5-trap-为什么这么早初始化">5. Trap 为什么这么早初始化？</a></h2>
-<p>没有陷阱入口时，一次非法指令/缺页可能直接让你懵在固件里。<br><code>trap::init</code> 先挂上向量，后面用户态 ecall、时钟中断才有地方可去。</p>
+<p>没有陷阱入口时，一次非法指令/缺页可能直接让你懵在固件里。<br />
+<code>trap::init</code> 先挂上向量，后面用户态 ecall、时钟中断才有地方可去。</p>
 <p>你在日志里看到的 <code>trap: early stvec=...</code> / <code>trap: user stvec=...</code>，就是在说：「入口地址已经写进 <code>stvec</code>」。</p>
 <h3 id="51-early_trap-和-user-trap-的区别"><a class="header" href="#51-early_trap-和-user-trap-的区别">5.1 <code>early_trap</code> 和 <code>user trap</code> 的区别</a></h3>
 <p>这里很值得你区分两种阶段：</p>
@@ -816,9 +756,11 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li>trap 返回前要能恢复用户寄存器并 <code>sret</code></li>
 </ul>
 <p>所以真正的 <code>trap_vector</code> 会保存大量寄存器，再进 <code>trap_handler()</code> 做 ecall / timer / fault 分发。</p>
-<p>这两套路径不能混。<br>如果在“还没准备 trap frame”的时候就切到用户态 trap 向量，保存/恢复逻辑会直接踩空。</p>
+<p>这两套路径不能混。<br />
+如果在“还没准备 trap frame”的时候就切到用户态 trap 向量，保存/恢复逻辑会直接踩空。</p>
 <h3 id="52-stvec-是什么时候从-early-切到-user-的"><a class="header" href="#52-stvec-是什么时候从-early-切到-user-的">5.2 <code>stvec</code> 是什么时候从 early 切到 user 的？</a></h3>
-<p>启动初期 <code>trap::init()</code> 会把 <code>stvec</code> 设成 <code>early_trap_vector</code>。<br>等服务器和调度器准备得差不多后，系统才调用 <code>trap::enable_user()</code>，把 <code>stvec</code> 改成 <code>trap_vector</code>。</p>
+<p>启动初期 <code>trap::init()</code> 会把 <code>stvec</code> 设成 <code>early_trap_vector</code>。<br />
+等服务器和调度器准备得差不多后，系统才调用 <code>trap::enable_user()</code>，把 <code>stvec</code> 改成 <code>trap_vector</code>。</p>
 <p>这就是日志里你会看到两条不同的 trap 初始化信息的原因：</p>
 <ul>
 <li><code>trap: early stvec=...</code></li>
@@ -835,33 +777,32 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <p><code>DeepRoot microkernel 1.4.1</code> / <code>canopy ready</code> / <code>ping: pong</code> / <code>hello: spawned ELF says hi</code> / <code>shell: DeepRoot shell ready</code> / <code>block: ramdisk ready</code> / <code>DRFS</code> / <code>init: handing off to shell</code>。</p>
 <p>你可以把这些字符串当成“里程碑坐标”：某一项缺失，通常就意味着启动链路在对应阶段还没成功走完。</p>
 <h3 id="61-我建议你学会的分段排错法"><a class="header" href="#61-我建议你学会的分段排错法">6.1 我建议你学会的“分段排错法”</a></h3>
-<p>如果系统没有完全起来，不要一把抓全部日志。<br>按阶段切：</p>
+<p>如果系统没有完全起来，不要一把抓全部日志。<br />
+按阶段切：</p>
 <ol>
-<li><strong>连 OpenSBI 后都没进内核横幅</strong><br>查 <code>_start</code>、链接地址、<code>-kernel</code> 是否正确</li>
-<li><strong>有横幅，但没 <code>trap: early stvec</code> / <code>mm:</code></strong><br>查 <code>kernel_main</code> 顺序、早期 panic</li>
-<li><strong>有 <code>mm:</code> / <code>block:</code>，但没有 <code>shell:</code></strong><br>查 <code>servers::bring_up()</code>、ELF 加载、调度入口</li>
-<li><strong>有 <code>shell:</code>，但不能输入</strong><br>查 <code>console_getchar()</code> 与 shell 输入循环</li>
+<li><strong>连 OpenSBI 后都没进内核横幅</strong><br />
+查 <code>_start</code>、链接地址、<code>-kernel</code> 是否正确</li>
+<li><strong>有横幅，但没 <code>trap: early stvec</code> / <code>mm:</code></strong><br />
+查 <code>kernel_main</code> 顺序、早期 panic</li>
+<li><strong>有 <code>mm:</code> / <code>block:</code>，但没有 <code>shell:</code></strong><br />
+查 <code>servers::bring_up()</code>、ELF 加载、调度入口</li>
+<li><strong>有 <code>shell:</code>，但不能输入</strong><br />
+查 <code>console_getchar()</code> 与 shell 输入循环</li>
 </ol>
 <h2 id="7-易错点"><a class="header" href="#7-易错点">7. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>现象</th><th>可能原因</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>现象</th><th>可能原因</th></tr></thead><tbody>
 <tr><td>完全无输出</td><td>内核没进到 <code>kernel_main</code>，或 SBI 控制台不可用</td></tr>
 <tr><td>只有 OpenSBI 横幅</td><td>内核入口地址/链接地址与 OpenSBI 期望不符</td></tr>
 <tr><td>乱码</td><td>极少见；先查是否混用了错误的串口参数</td></tr>
 <tr><td>早期就 trap 死循环</td><td><code>stvec</code> 未正确设置，或早期访问了未准备好的内存/寄存器环境</td></tr>
 <tr><td>有 shell 但按键怪异</td><td>往往不是 shell 解析本身，而是 SBI getchar 路径/EID/返回值解析错</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="8-小结"><a class="header" href="#8-小结">8. 小结</a></h2>
-<p>0.1 的学习成果是：你能指着屏幕上的一行字，说出它大概经过<br><strong>Rust 格式化 → 内核 console → SBI → UART → QEMU → 你的终端</strong>。</p>
-<p>下一章：<a href="#02-内存与页表详细跟读">0.2 内存与页表</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="011-从-qemu-到-_start"><a class="header" href="#011-从-qemu-到-_start">0.1.1 从 QEMU 到 <code>_start</code></a></h1>
+<p>0.1 的学习成果是：你能指着屏幕上的一行字，说出它大概经过<br />
+<strong>Rust 格式化 → 内核 console → SBI → UART → QEMU → 你的终端</strong>。</p>
+<p>下一章：<a href="path/02-mm.html">0.2 内存与页表</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="011-从-qemu-到-_start"><a class="header" href="#011-从-qemu-到-_start">0.1.1 从 QEMU 到 <code>_start</code></a></h1>
 <p>这一页只讲：<strong>按下 <code>./scripts/run-qemu.sh</code> 以后，控制权是怎样进入 DeepRoot 的。</strong></p>
 <h2 id="1-时间线"><a class="header" href="#1-时间线">1. 时间线</a></h2>
 <pre><code class="language-text">主机 shell
@@ -888,9 +829,8 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li>后面的 trap、页表、shell 文档都没意义</li>
 <li>你要查的不是 Rust 逻辑，而是启动链接与 QEMU/OpenSBI 约定</li>
 </ul>
-<p>下一页：<a href="#012-跟读-bootrs">0.1.2 跟读 <code>boot.rs</code></a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="012-跟读-bootrs"><a class="header" href="#012-跟读-bootrs">0.1.2 跟读 <code>boot.rs</code></a></h1>
+<p>下一页：<a href="path/boot/02-boot-rs.html">0.1.2 跟读 <code>boot.rs</code></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="012-跟读-bootrs"><a class="header" href="#012-跟读-bootrs">0.1.2 跟读 <code>boot.rs</code></a></h1>
 <p>这一页只回答：<strong><code>_start</code> 在进 Rust 之前到底做了什么准备。</strong></p>
 <h2 id="1-关键动作"><a class="header" href="#1-关键动作">1. 关键动作</a></h2>
 <ol>
@@ -906,9 +846,11 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li><code>hartid</code></li>
 <li><code>dtb_pa</code></li>
 </ul>
-<p>传给内核。<br>而清 BSS 和后续动作可能会覆盖寄存器，所以要先暂存。</p>
+<p>传给内核。<br />
+而清 BSS 和后续动作可能会覆盖寄存器，所以要先暂存。</p>
 <h2 id="3-为什么清-bss"><a class="header" href="#3-为什么清-bss">3. 为什么清 BSS</a></h2>
-<p>未初始化全局变量依赖 BSS 全 0。<br>这一层如果错了，后面很多“看似高级”的 bug 其实都只是启动基础没做好。</p>
+<p>未初始化全局变量依赖 BSS 全 0。<br />
+这一层如果错了，后面很多“看似高级”的 bug 其实都只是启动基础没做好。</p>
 <h2 id="4-为什么这里还不是正常-rust-世界"><a class="header" href="#4-为什么这里还不是正常-rust-世界">4. 为什么这里还不是“正常 Rust 世界”</a></h2>
 <p>此时还没有：</p>
 <ul>
@@ -918,9 +860,8 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li>稳定的页表环境</li>
 </ul>
 <p>所以这段汇编几乎每一行都不是“优化”，而是必需品。</p>
-<p>下一页：<a href="#013-跟读-kernel_main">0.1.3 跟读 <code>kernel_main</code></a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="013-跟读-kernel_main"><a class="header" href="#013-跟读-kernel_main">0.1.3 跟读 <code>kernel_main</code></a></h1>
+<p>下一页：<a href="path/boot/03-kernel-main.html">0.1.3 跟读 <code>kernel_main</code></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="013-跟读-kernel_main"><a class="header" href="#013-跟读-kernel_main">0.1.3 跟读 <code>kernel_main</code></a></h1>
 <p>这一页只讲：<strong>Rust 世界里的启动顺序为什么要这样排。</strong></p>
 <h2 id="1-顺序"><a class="header" href="#1-顺序">1. 顺序</a></h2>
 <pre><code class="language-text">ledger::init
@@ -946,9 +887,8 @@ servers::bring_up
 <li>后续输出不再只是“线性启动日志”</li>
 </ul>
 <p>所以把它放最后，教学上最清晰。</p>
-<p>下一页：<a href="#014-sbi-控制台">0.1.4 SBI 控制台</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="014-sbi-控制台"><a class="header" href="#014-sbi-控制台">0.1.4 SBI 控制台</a></h1>
+<p>下一页：<a href="path/boot/04-sbi-console.html">0.1.4 SBI 控制台</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="014-sbi-控制台"><a class="header" href="#014-sbi-控制台">0.1.4 SBI 控制台</a></h1>
 <p>这一页只讲：<strong>屏幕上的字是怎么从内核流到你的终端上的。</strong></p>
 <h2 id="1-路径"><a class="header" href="#1-路径">1. 路径</a></h2>
 <pre><code class="language-text">println!
@@ -964,16 +904,17 @@ servers::bring_up
 <li><code>console_write</code>：批量写，交互体验更好</li>
 </ul>
 <h2 id="3-读输入为什么危险"><a class="header" href="#3-读输入为什么危险">3. 读输入为什么危险</a></h2>
-<p><code>console_getchar</code> 走的是 legacy SBI 0.1 接口，EID 必须是 <code>0x02</code>。<br>这个地方一旦弄错，shell 往往会表现成：</p>
+<p><code>console_getchar</code> 走的是 legacy SBI 0.1 接口，EID 必须是 <code>0x02</code>。<br />
+这个地方一旦弄错，shell 往往会表现成：</p>
 <ul>
 <li>一回车就 unknown</li>
 <li>收到奇怪的空字节</li>
 </ul>
 <h2 id="4-为什么这页属于启动"><a class="header" href="#4-为什么这页属于启动">4. 为什么这页属于“启动”</a></h2>
-<p>因为你在最早期看到的所有横幅、panic、trap 提示，全靠这条路径。<br>如果控制台不可用，内核其实可能已经出问题了，只是你看不见。</p>
-<p>下一页：<a href="#015-early-trap-与-stvec">0.1.5 early trap 与 <code>stvec</code></a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="015-early-trap-与-stvec"><a class="header" href="#015-early-trap-与-stvec">0.1.5 early trap 与 <code>stvec</code></a></h1>
+<p>因为你在最早期看到的所有横幅、panic、trap 提示，全靠这条路径。<br />
+如果控制台不可用，内核其实可能已经出问题了，只是你看不见。</p>
+<p>下一页：<a href="path/boot/05-early-trap.html">0.1.5 early trap 与 <code>stvec</code></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="015-early-trap-与-stvec"><a class="header" href="#015-early-trap-与-stvec">0.1.5 early trap 与 <code>stvec</code></a></h1>
 <p>这一页只讲：<strong>为什么系统一开始要先用 early trap，之后再切到用户态 trap。</strong></p>
 <h2 id="1-两个阶段"><a class="header" href="#1-两个阶段">1. 两个阶段</a></h2>
 <h3 id="early-trap"><a class="header" href="#early-trap">early trap</a></h3>
@@ -1008,31 +949,26 @@ servers::bring_up
 <li><code>trap: early stvec=...</code> 之后但用户态没起来：查 <code>kernel_main</code> 顺序</li>
 <li><code>trap: user stvec=...</code> 之后才出问题：查 ecall/timer/fault 分支</li>
 </ul>
-<p>下一章：<a href="#02-内存与页表详细跟读">0.2 内存与页表</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="02-内存与页表详细跟读"><a class="header" href="#02-内存与页表详细跟读">0.2 内存与页表（详细跟读）</a></h1>
-<p>没有内存管理，内核只能「瞎猫碰死耗子」地用物理地址。<br>0.2 的目标是：知道 RAM 在哪、能分配物理页、能建 Sv39 页表并打开虚拟内存。</p>
+<p>下一章：<a href="path/boot/../02-mm.html">0.2 内存与页表</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="02-内存与页表详细跟读"><a class="header" href="#02-内存与页表详细跟读">0.2 内存与页表（详细跟读）</a></h1>
+<p>没有内存管理，内核只能「瞎猫碰死耗子」地用物理地址。<br />
+0.2 的目标是：知道 RAM 在哪、能分配物理页、能建 Sv39 页表并打开虚拟内存。</p>
 <h2 id="本章拆读顺序-1"><a class="header" href="#本章拆读顺序-1">本章拆读顺序</a></h2>
 <ol>
-<li><a href="#021-ram-发现与-dtb-回退">0.2.1 RAM 发现与 DTB 回退</a></li>
-<li><a href="#022-frame-allocator-与-heap">0.2.2 frame allocator 与 heap</a></li>
-<li><a href="#023-sv39-身份映射">0.2.3 Sv39 身份映射</a></li>
-<li><a href="#024-为什么这决定-elf-装载">0.2.4 为什么这决定 ELF 装载</a></li>
+<li><a href="path/mm/01-memory-map.html">0.2.1 RAM 发现与 DTB 回退</a></li>
+<li><a href="path/mm/02-frame-heap.html">0.2.2 frame allocator 与 heap</a></li>
+<li><a href="path/mm/03-sv39.html">0.2.3 Sv39 身份映射</a></li>
+<li><a href="path/mm/04-elf-preview.html">0.2.4 为什么这决定 ELF 装载</a></li>
 </ol>
 <h2 id="1-先分清三个词"><a class="header" href="#1-先分清三个词">1. 先分清三个词</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>术语</th><th>一句话</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>术语</th><th>一句话</th></tr></thead><tbody>
 <tr><td>物理地址</td><td>总线上的真实位置</td></tr>
 <tr><td>虚拟地址</td><td>CPU 当前「以为」的地址</td></tr>
 <tr><td>页表</td><td>虚 → 实的翻译手册（Sv39 为三层）</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>打开虚拟内存后：你在代码里写的指针，先查页表，再访问物理页。<br>权限位（R/W/X/U）不对，就会 <strong>page fault</strong>。</p>
+<p>打开虚拟内存后：你在代码里写的指针，先查页表，再访问物理页。<br />
+权限位（R/W/X/U）不对，就会 <strong>page fault</strong>。</p>
 <h2 id="2-mminit-的推荐阅读顺序"><a class="header" href="#2-mminit-的推荐阅读顺序">2. <code>mm::init</code> 的推荐阅读顺序</a></h2>
 <p>打开 <code>kernel/src/mm/mod.rs</code>，按其调用顺序往下钻：</p>
 <ol>
@@ -1073,7 +1009,8 @@ servers::bring_up
 <li>页表项（PTE）的构造：有效位 V、权限 R/W/X、用户态 U、物理页号 PPN</li>
 <li>把一页映射进某张页表的帮助函数</li>
 </ul>
-<p>打开 <code>aspace.rs</code>（若存在）或调度相关代码：每个用户任务保存自己的 <strong>根页表物理地址</strong>。<br>切换任务 ≈ 写 <code>satp</code> 指向下一张根 + <code>sfence.vma</code>（具体以代码为准）。</p>
+<p>打开 <code>aspace.rs</code>（若存在）或调度相关代码：每个用户任务保存自己的 <strong>根页表物理地址</strong>。<br />
+切换任务 ≈ 写 <code>satp</code> 指向下一张根 + <code>sfence.vma</code>（具体以代码为准）。</p>
 <p>跟读时要能回答：</p>
 <ul>
 <li>页表项里 PPN、R/W/X/V 各位大概在哪用到？</li>
@@ -1085,7 +1022,8 @@ servers::bring_up
 <p><code>user/hello/linker.ld</code> 里类似：</p>
 <pre><code class="language-text">. = 0x14000000;
 </code></pre>
-<p>这不是「物理内存真的从这开始」，而是 <strong>希望程序跑在这个虚址</strong>。<br>加载器（<code>kernel/src/elf.rs</code>）必须：</p>
+<p>这不是「物理内存真的从这开始」，而是 <strong>希望程序跑在这个虚址</strong>。<br />
+加载器（<code>kernel/src/elf.rs</code>）必须：</p>
 <ol>
 <li>解析 PT_LOAD</li>
 <li>分配物理页</li>
@@ -1099,23 +1037,17 @@ servers::bring_up
 <li>（进阶）在 frame alloc 里临时计数，打印分配了多少页——看 boot 结束时数字是否稳定。</li>
 </ol>
 <h2 id="6-易错点"><a class="header" href="#6-易错点">6. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>现象</th><th>排查</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>现象</th><th>排查</th></tr></thead><tbody>
 <tr><td><code>ram</code> 范围离谱</td><td>DTB 解析 / 默认值问题（DeepRoot 历史上修过）</td></tr>
 <tr><td>一进用户态就 fault</td><td>ELF 映射、栈页、用户权限位</td></tr>
 <tr><td>OOM / alloc None</td><td>空闲页耗尽或泄漏（教学内核很少 free）</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="7-小结"><a class="header" href="#7-小结">7. 小结</a></h2>
-<p>0.2 之后，内核不再「裸奔物理地址」，而是：<strong>可分配的物理页 + 可切换的翻译手册</strong>。<br>这是 1.1「每任务地址空间」的地基。</p>
-<p>下一章：<a href="#0304-能力与-ipc详细跟读">0.3–0.4 能力与 IPC</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="021-ram-发现与-dtb-回退"><a class="header" href="#021-ram-发现与-dtb-回退">0.2.1 RAM 发现与 DTB 回退</a></h1>
+<p>0.2 之后，内核不再「裸奔物理地址」，而是：<strong>可分配的物理页 + 可切换的翻译手册</strong>。<br />
+这是 1.1「每任务地址空间」的地基。</p>
+<p>下一章：<a href="path/03-cap-ipc.html">0.3–0.4 能力与 IPC</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="021-ram-发现与-dtb-回退"><a class="header" href="#021-ram-发现与-dtb-回退">0.2.1 RAM 发现与 DTB 回退</a></h1>
 <p>这一页只讲：<strong>内核怎么知道“哪段物理内存是 RAM，可以拿来用”。</strong></p>
 <h2 id="1-关键文件"><a class="header" href="#1-关键文件">1. 关键文件</a></h2>
 <ul>
@@ -1123,7 +1055,8 @@ servers::bring_up
 <li><code>kernel/src/mm/memmap.rs</code></li>
 </ul>
 <h2 id="2-思路"><a class="header" href="#2-思路">2. 思路</a></h2>
-<p>优先从 DTB 里拿内存信息；<br>如果拿不到，再回退到 QEMU <code>virt</code> 的已知默认布局。</p>
+<p>优先从 DTB 里拿内存信息；<br />
+如果拿不到，再回退到 QEMU <code>virt</code> 的已知默认布局。</p>
 <h2 id="3-为什么这一步是整个内存系统的地基"><a class="header" href="#3-为什么这一步是整个内存系统的地基">3. 为什么这一步是整个内存系统的地基</a></h2>
 <p>frame allocator、页表页、用户页、内核堆，全都建立在“我先知道哪段 RAM 可用”这个前提上。</p>
 <h2 id="4-你该观察什么"><a class="header" href="#4-你该观察什么">4. 你该观察什么</a></h2>
@@ -1134,9 +1067,8 @@ servers::bring_up
 <li>free 区间</li>
 </ul>
 <p>如果这里离谱，后面几乎都会跟着离谱。</p>
-<p>下一页：<a href="#022-frame-allocator-与-heap">0.2.2 frame allocator 与 heap</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="022-frame-allocator-与-heap"><a class="header" href="#022-frame-allocator-与-heap">0.2.2 frame allocator 与 heap</a></h1>
+<p>下一页：<a href="path/mm/02-frame-heap.html">0.2.2 frame allocator 与 heap</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="022-frame-allocator-与-heap"><a class="header" href="#022-frame-allocator-与-heap">0.2.2 frame allocator 与 heap</a></h1>
 <p>这一页只讲：<strong>页从哪里来，普通动态分配又从哪里来。</strong></p>
 <h2 id="1-两类分配"><a class="header" href="#1-两类分配">1. 两类分配</a></h2>
 <h3 id="frame-allocator"><a class="header" href="#frame-allocator">frame allocator</a></h3>
@@ -1150,7 +1082,8 @@ servers::bring_up
 <li>适合较小、较灵活的数据结构</li>
 </ul>
 <h2 id="2-为什么要分开"><a class="header" href="#2-为什么要分开">2. 为什么要分开</a></h2>
-<p>因为“我要一页 4KiB 可映射内存”和“我要一小块 Rust 动态对象”不是同一件事。<br>把两者混成一层，会让后续页表和 ELF 加载更难理解。</p>
+<p>因为“我要一页 4KiB 可映射内存”和“我要一小块 Rust 动态对象”不是同一件事。<br />
+把两者混成一层，会让后续页表和 ELF 加载更难理解。</p>
 <h2 id="3-阅读建议"><a class="header" href="#3-阅读建议">3. 阅读建议</a></h2>
 <p>先看：</p>
 <ul>
@@ -1158,20 +1091,22 @@ servers::bring_up
 <li><code>frame::alloc</code></li>
 <li>heap 初始化入口</li>
 </ul>
-<p>先建立感觉：<br><strong>内核不是凭空 <code>Box::new</code> 出整个系统的，一些路径必须直接拿物理页。</strong></p>
-<p>下一页：<a href="#023-sv39-身份映射">0.2.3 Sv39 身份映射</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="023-sv39-身份映射"><a class="header" href="#023-sv39-身份映射">0.2.3 Sv39 身份映射</a></h1>
+<p>先建立感觉：<br />
+<strong>内核不是凭空 <code>Box::new</code> 出整个系统的，一些路径必须直接拿物理页。</strong></p>
+<p>下一页：<a href="path/mm/03-sv39.html">0.2.3 Sv39 身份映射</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="023-sv39-身份映射"><a class="header" href="#023-sv39-身份映射">0.2.3 Sv39 身份映射</a></h1>
 <p>这一页只讲：<strong>DeepRoot 早期为什么先做 identity map。</strong></p>
 <h2 id="1-sv39-是什么"><a class="header" href="#1-sv39-是什么">1. Sv39 是什么</a></h2>
-<p>RISC-V 64 位常见分页模式之一。<br>对新手先记住一句话：</p>
+<p>RISC-V 64 位常见分页模式之一。<br />
+对新手先记住一句话：</p>
 <pre><code class="language-text">虚拟地址 -&gt; 页表 -&gt; 物理地址
 </code></pre>
 <h2 id="2-identity-map-的教学价值"><a class="header" href="#2-identity-map-的教学价值">2. identity map 的教学价值</a></h2>
 <p>在早期阶段，把一段 RAM 做成：</p>
 <pre><code class="language-text">VA == PA
 </code></pre>
-<p>能让你少掉很多“地址搬运”的心智负担。<br>这样先把页表、切换、访问打通，再去理解更复杂的用户态地址空间。</p>
+<p>能让你少掉很多“地址搬运”的心智负担。<br />
+这样先把页表、切换、访问打通，再去理解更复杂的用户态地址空间。</p>
 <h2 id="3-关键文件"><a class="header" href="#3-关键文件">3. 关键文件</a></h2>
 <ul>
 <li><code>kernel/src/mm/sv39.rs</code></li>
@@ -1185,10 +1120,10 @@ servers::bring_up
 <li><code>U</code></li>
 </ul>
 <h2 id="4-为什么这一步和用户态暂时还不是一回事"><a class="header" href="#4-为什么这一步和用户态暂时还不是一回事">4. 为什么这一步和用户态暂时还不是一回事</a></h2>
-<p>早期 identity map 更像“内核先站稳脚跟”。<br>真正每任务单独页表、用户 <code>U</code> 位映射，是 1.1 那一批才重点讲的事情。</p>
-<p>下一页：<a href="#024-为什么这决定-elf-装载">0.2.4 为什么这决定 ELF 装载</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="024-为什么这决定-elf-装载"><a class="header" href="#024-为什么这决定-elf-装载">0.2.4 为什么这决定 ELF 装载</a></h1>
+<p>早期 identity map 更像“内核先站稳脚跟”。<br />
+真正每任务单独页表、用户 <code>U</code> 位映射，是 1.1 那一批才重点讲的事情。</p>
+<p>下一页：<a href="path/mm/04-elf-preview.html">0.2.4 为什么这决定 ELF 装载</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="024-为什么这决定-elf-装载"><a class="header" href="#024-为什么这决定-elf-装载">0.2.4 为什么这决定 ELF 装载</a></h1>
 <p>这一页只回答：<strong>为什么 0.2 的页表工作，其实已经在为 1.1 的 <code>spawn/exec</code> 铺路。</strong></p>
 <h2 id="1-elf-不是读进内存就能跑"><a class="header" href="#1-elf-不是读进内存就能跑">1. ELF 不是“读进内存就能跑”</a></h2>
 <p>后面的加载器要做的是：</p>
@@ -1207,19 +1142,19 @@ servers::bring_up
 <li>栈地址可疑</li>
 <li><code>satp</code> 切换后直接炸</li>
 </ul>
-<p>因此读 0.2 时别把它当“纯理论章”。<br>它其实是在给 1.1 的用户态可执行文件铺水泥。</p>
-<p>下一章：<a href="#0304-能力与-ipc详细跟读">0.3–0.4 能力与 IPC</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="0304-能力与-ipc详细跟读"><a class="header" href="#0304-能力与-ipc详细跟读">0.3–0.4 能力与 IPC（详细跟读）</a></h1>
+<p>因此读 0.2 时别把它当“纯理论章”。<br />
+它其实是在给 1.1 的用户态可执行文件铺水泥。</p>
+<p>下一章：<a href="path/mm/../03-cap-ipc.html">0.3–0.4 能力与 IPC</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="0304-能力与-ipc详细跟读"><a class="header" href="#0304-能力与-ipc详细跟读">0.3–0.4 能力与 IPC（详细跟读）</a></h1>
 <p>本章是 DeepRoot 最「微内核味道」的部分：权限用票（capability），协作用消息（IPC），过程可记账（Ledger）。</p>
 <h2 id="本章拆读顺序-2"><a class="header" href="#本章拆读顺序-2">本章拆读顺序</a></h2>
 <p>如果你想按“像书一样”的顺序读，请接着看这些子章节：</p>
 <ol>
-<li><a href="#031-capability-模型">0.3.1 Capability 模型</a></li>
-<li><a href="#032-启动时的-cspace-安装">0.3.2 启动时的 CSpace 安装</a></li>
-<li><a href="#041-call--recv--reply">0.4.1 call / recv / reply</a></li>
-<li><a href="#042-root-ledger-怎么看">0.4.2 Root Ledger 怎么看</a></li>
-<li><a href="#043-ipc-与调度状态切换">0.4.3 IPC 与调度状态切换</a></li>
+<li><a href="path/cap-ipc/01-cap-model.html">0.3.1 Capability 模型</a></li>
+<li><a href="path/cap-ipc/02-boot-cspace.html">0.3.2 启动时的 CSpace 安装</a></li>
+<li><a href="path/cap-ipc/03-ipc-call-flow.html">0.4.1 call / recv / reply</a></li>
+<li><a href="path/cap-ipc/04-ledger.html">0.4.2 Root Ledger 怎么看</a></li>
+<li><a href="path/cap-ipc/05-ipc-sched.html">0.4.3 IPC 与调度状态切换</a></li>
 </ol>
 <h2 id="1-capability把权限当成票"><a class="header" href="#1-capability把权限当成票">1. Capability：把权限当成票</a></h2>
 <h3 id="11-为什么不用uid0-全能"><a class="header" href="#11-为什么不用uid0-全能">1.1 为什么不用「UID=0 全能」？</a></h3>
@@ -1260,7 +1195,8 @@ servers::bring_up
 <pre><code class="language-text">ledger::init();
 LEDGER.record(Boot, ...);
 </code></pre>
-<p>之后 trap / panic / IPC 路径也会记。<br>用户态可通过 <code>SYS_LEDGER_DUMP</code>（若 shell 未暴露，可自己写个小程序或在内核临时 dump）观察。</p>
+<p>之后 trap / panic / IPC 路径也会记。<br />
+用户态可通过 <code>SYS_LEDGER_DUMP</code>（若 shell 未暴露，可自己写个小程序或在内核临时 dump）观察。</p>
 <p>学习用法：</p>
 <ol>
 <li>跑一次 boot</li>
@@ -1282,9 +1218,11 @@ LEDGER.record(Boot, ...);
 <li><code>block_current_call</code> / <code>block_current_ipc</code></li>
 <li><code>wakeup_ipc</code> / <code>complete_call</code></li>
 </ul>
-<p>IPC 不是「拷贝完字符串就返回」那么简单：经常伴随 <strong>Blocked ↔ Ready</strong> 状态切换。<br>若服务器从未被调度，客户端会永远卡在 call 上——这就是为什么 0.6 调度必须和 0.4 IPC 一起理解。</p>
+<p>IPC 不是「拷贝完字符串就返回」那么简单：经常伴随 <strong>Blocked ↔ Ready</strong> 状态切换。<br />
+若服务器从未被调度，客户端会永远卡在 call 上——这就是为什么 0.6 调度必须和 0.4 IPC 一起理解。</p>
 <h3 id="42-用户态包装"><a class="header" href="#42-用户态包装">4.2 用户态包装</a></h3>
-<p><code>libs/deeproot-user</code> 里 <code>ipc_call</code> / <code>ipc_recv</code> / <code>ipc_reply</code> 只是把参数塞进 <code>a0…</code>、<code>a7=SYS_*</code> 再 <code>ecall</code>。<br>真正策略在内核；用户库尽量薄。</p>
+<p><code>libs/deeproot-user</code> 里 <code>ipc_call</code> / <code>ipc_recv</code> / <code>ipc_reply</code> 只是把参数塞进 <code>a0…</code>、<code>a7=SYS_*</code> 再 <code>ecall</code>。<br />
+真正策略在内核；用户库尽量薄。</p>
 <h2 id="5-动手验证-1"><a class="header" href="#5-动手验证-1">5. 动手验证</a></h2>
 <ol>
 <li>改 ping 的回复字符串，确认日志变化。</li>
@@ -1292,23 +1230,17 @@ LEDGER.record(Boot, ...);
 <li>在 <code>ipc_call</code> 成功路径上加 ledger 记录（若尚未有），dump 对比。</li>
 </ol>
 <h2 id="6-易错点-1"><a class="header" href="#6-易错点-1">6. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>现象</th><th>原因</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>现象</th><th>原因</th></tr></thead><tbody>
 <tr><td>call 一直不返回</td><td>对方没 recv / badge 不一致 / 调度没跑到服务器</td></tr>
 <tr><td><code>ERR_AGAIN</code></td><td>非阻塞语义或暂时不可用（读串口更常见）</td></tr>
 <tr><td>有 cap 仍失败</td><td>rights 不够，或 cap 类型不匹配</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="7-小结-1"><a class="header" href="#7-小结-1">7. 小结</a></h2>
-<p>能力回答「<strong>能不能</strong>」；IPC 回答「<strong>怎么协作</strong>」；Ledger 回答「<strong>刚才发生了什么</strong>」。<br>三者一起，才是 DeepRoot 要教的内核味道。</p>
-<p>下一章：<a href="#0506-用户态与调度详细跟读">0.5–0.6 用户态与调度</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="031-capability-模型"><a class="header" href="#031-capability-模型">0.3.1 Capability 模型</a></h1>
+<p>能力回答「<strong>能不能</strong>」；IPC 回答「<strong>怎么协作</strong>」；Ledger 回答「<strong>刚才发生了什么</strong>」。<br />
+三者一起，才是 DeepRoot 要教的内核味道。</p>
+<p>下一章：<a href="path/04-user-sched.html">0.5–0.6 用户态与调度</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="031-capability-模型"><a class="header" href="#031-capability-模型">0.3.1 Capability 模型</a></h1>
 <p>这一页只回答一个问题：<strong>DeepRoot 为什么要把权限做成 capability，而不是“我是 root 所以都能做”？</strong></p>
 <h2 id="1-心智模型"><a class="header" href="#1-心智模型">1. 心智模型</a></h2>
 <p>把 capability 想成一张由内核签发、放在任务自己口袋里的“票”：</p>
@@ -1345,28 +1277,22 @@ LEDGER.record(Boot, ...);
 <p>derive 更像“从现有票再裁一张更受限制的票”。</p>
 <h3 id="33-revoke"><a class="header" href="#33-revoke">3.3 revoke</a></h3>
 <p>revoke 不是删一个整数，而是沿着来源关系把一棵子树收回。</p>
-<p>这就是为什么文档一直强调 <strong>Capability Provenance</strong>：<br>没有来源关系，<code>revoke subtree</code> 这件事在教学上就讲不清楚。</p>
+<p>这就是为什么文档一直强调 <strong>Capability Provenance</strong>：<br />
+没有来源关系，<code>revoke subtree</code> 这件事在教学上就讲不清楚。</p>
 <h2 id="4-最小实验"><a class="header" href="#4-最小实验">4. 最小实验</a></h2>
 <ol>
 <li>打开 capability 相关 ABI 定义，认清 <code>CapType</code> 枚举有哪些值。</li>
 <li>对照 <code>sched.rs</code> 中 <code>SYS_CAP_MINT</code> / <code>SYS_CAP_DERIVE</code> / <code>SYS_CAP_REVOKE</code> 分支，看它们最后为什么都回到 <code>ERR_GENERIC</code> 或“slot 编号”。</li>
 </ol>
 <h2 id="5-易错点"><a class="header" href="#5-易错点">5. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>误解</th><th>正确理解</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>误解</th><th>正确理解</th></tr></thead><tbody>
 <tr><td>cap 就是一个数字句柄</td><td>句柄只是外表，真正关键是类型、rights、来源</td></tr>
 <tr><td>revoke 只是删当前 slot</td><td>真正重要的是来源树上的回收范围</td></tr>
 <tr><td>有 slot 就一定能成功</td><td>还要看 cap 类型和 rights 是否匹配</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一页：<a href="#032-启动时的-cspace-安装">0.3.2 启动时的 CSpace 安装</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="032-启动时的-cspace-安装"><a class="header" href="#032-启动时的-cspace-安装">0.3.2 启动时的 CSpace 安装</a></h1>
+<p>下一页：<a href="path/cap-ipc/02-boot-cspace.html">0.3.2 启动时的 CSpace 安装</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="032-启动时的-cspace-安装"><a class="header" href="#032-启动时的-cspace-安装">0.3.2 启动时的 CSpace 安装</a></h1>
 <p>这一页只回答：<strong>init 为什么一开机就能对 ping / console 说话？</strong></p>
 <h2 id="1-关键文件-1"><a class="header" href="#1-关键文件-1">1. 关键文件</a></h2>
 <ul>
@@ -1392,7 +1318,9 @@ LEDGER.record(Boot, ...);
 <ul>
 <li><code>0</code> 是“系统保留的 ping 号”</li>
 </ul>
-<p>其实不是。<br><code>0</code> 的真正含义是：<strong>当前任务 CSpace 里的第 0 个槽位</strong>。<br>换一个任务、换一种安装顺序，slot 0 完全可能对应别的对象。</p>
+<p>其实不是。<br />
+<code>0</code> 的真正含义是：<strong>当前任务 CSpace 里的第 0 个槽位</strong>。<br />
+换一个任务、换一种安装顺序，slot 0 完全可能对应别的对象。</p>
 <h2 id="4-你应该顺着源码验证什么"><a class="header" href="#4-你应该顺着源码验证什么">4. 你应该顺着源码验证什么</a></h2>
 <ol>
 <li>在 <code>servers.rs</code> 里找到 endpoint 创建处</li>
@@ -1400,21 +1328,14 @@ LEDGER.record(Boot, ...);
 <li>回到 <code>user/init/src/main.rs</code>，看 <code>ipc_call(0, ...)</code> 为什么会成功</li>
 </ol>
 <h2 id="5-易错点-1"><a class="header" href="#5-易错点-1">5. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>症状</th><th>常见根因</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>症状</th><th>常见根因</th></tr></thead><tbody>
 <tr><td><code>ipc_call(0, …)</code> 一直失败</td><td>slot 0 根本不是 endpoint</td></tr>
 <tr><td>有 endpoint 仍失败</td><td>rights 不够，或 badge/类型不匹配</td></tr>
 <tr><td>init 能说话，别的任务不行</td><td>因为票只安装给了 init</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一页：<a href="#041-call--recv--reply">0.4.1 call / recv / reply</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="041-call--recv--reply"><a class="header" href="#041-call--recv--reply">0.4.1 call / recv / reply</a></h1>
+<p>下一页：<a href="path/cap-ipc/03-ipc-call-flow.html">0.4.1 call / recv / reply</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="041-call--recv--reply"><a class="header" href="#041-call--recv--reply">0.4.1 call / recv / reply</a></h1>
 <p>这一页只讲：<strong>一条同步 IPC 从 caller 到 server 再回 caller，到底走了哪几步？</strong></p>
 <h2 id="1-先看哪些文件"><a class="header" href="#1-先看哪些文件">1. 先看哪些文件</a></h2>
 <ul>
@@ -1442,7 +1363,8 @@ LEDGER.record(Boot, ...);
 </code></pre>
 <h2 id="3-两个你必须记住的点"><a class="header" href="#3-两个你必须记住的点">3. 两个你必须记住的点</a></h2>
 <h3 id="31-ipc_call-不是发完就不管了"><a class="header" href="#31-ipc_call-不是发完就不管了">3.1 <code>ipc_call</code> 不是“发完就不管了”</a></h3>
-<p>它是同步 IPC。<br>caller 通常要么立刻拿到 reply，要么进入等待 reply 的阻塞状态。</p>
+<p>它是同步 IPC。<br />
+caller 通常要么立刻拿到 reply，要么进入等待 reply 的阻塞状态。</p>
 <h3 id="32-ipc_recv-也不是忙等"><a class="header" href="#32-ipc_recv-也不是忙等">3.2 <code>ipc_recv</code> 也不是忙等</a></h3>
 <p>server 没消息时，内核可以把它标成 <code>Blocked</code>，等消息来时再唤醒。</p>
 <h2 id="4-从-schedrs-看-syscall-分支"><a class="header" href="#4-从-schedrs-看-syscall-分支">4. 从 <code>sched.rs</code> 看 syscall 分支</a></h2>
@@ -1466,24 +1388,18 @@ LEDGER.record(Boot, ...);
 <li>让 init 对一个错误 slot 做 <code>ipc_call</code>，观察它得到负返回值。</li>
 </ol>
 <h2 id="6-易错点-2"><a class="header" href="#6-易错点-2">6. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>现象</th><th>根因</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>现象</th><th>根因</th></tr></thead><tbody>
 <tr><td>call 一直不返回</td><td>对方没 recv、对方没被调度、或者 badge 不匹配</td></tr>
 <tr><td>server 在线但 caller 仍卡住</td><td>reply 没送回正确 caller</td></tr>
 <tr><td>以为 IPC 只是函数调用</td><td>实际上它伴随任务状态切换</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一页：<a href="#042-root-ledger-怎么看">0.4.2 Root Ledger 怎么看</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="042-root-ledger-怎么看"><a class="header" href="#042-root-ledger-怎么看">0.4.2 Root Ledger 怎么看</a></h1>
+<p>下一页：<a href="path/cap-ipc/04-ledger.html">0.4.2 Root Ledger 怎么看</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="042-root-ledger-怎么看"><a class="header" href="#042-root-ledger-怎么看">0.4.2 Root Ledger 怎么看</a></h1>
 <p>这一页只回答：<strong>系统里刚刚发生了什么，怎么不靠猜？</strong></p>
 <h2 id="1-ledger-的角色"><a class="header" href="#1-ledger-的角色">1. Ledger 的角色</a></h2>
-<p>Root Ledger 是一个环形事件账本。<br>它不是“日志文件系统”，也不是安全产品；它的教学价值在于：</p>
+<p>Root Ledger 是一个环形事件账本。<br />
+它不是“日志文件系统”，也不是安全产品；它的教学价值在于：</p>
 <ul>
 <li>启动时记下 Boot</li>
 <li>trap 时记下 Trap</li>
@@ -1522,23 +1438,17 @@ LEDGER.record(Boot, ...)
 <li>ping 也打印了</li>
 <li>init 又在做 IPC</li>
 </ul>
-<p>但 Ledger 能逼你按顺序看：<br><strong>哪个先发生、哪个后发生、哪个是同一条因果链上的后续动作。</strong></p>
+<p>但 Ledger 能逼你按顺序看：<br />
+<strong>哪个先发生、哪个后发生、哪个是同一条因果链上的后续动作。</strong></p>
 <h2 id="5-易错点-2"><a class="header" href="#5-易错点-2">5. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>误解</th><th>纠正</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>误解</th><th>纠正</th></tr></thead><tbody>
 <tr><td>Ledger 是普通 printf 替代品</td><td>不是，它记录的是结构化事件</td></tr>
 <tr><td>看到一条事件就说明全部成功</td><td>还要结合后续事件顺序理解</td></tr>
 <tr><td>不会用就删掉</td><td>它正是这套教程里最值钱的观察工具之一</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一页：<a href="#043-ipc-与调度状态切换">0.4.3 IPC 与调度状态切换</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="043-ipc-与调度状态切换"><a class="header" href="#043-ipc-与调度状态切换">0.4.3 IPC 与调度状态切换</a></h1>
+<p>下一页：<a href="path/cap-ipc/05-ipc-sched.html">0.4.3 IPC 与调度状态切换</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="043-ipc-与调度状态切换"><a class="header" href="#043-ipc-与调度状态切换">0.4.3 IPC 与调度状态切换</a></h1>
 <p>这一页只讲：<strong>为什么 IPC 一定要和调度器一起读。</strong></p>
 <h2 id="1-关键状态"><a class="header" href="#1-关键状态">1. 关键状态</a></h2>
 <p>看 <code>sched.rs</code> 里的：</p>
@@ -1571,7 +1481,8 @@ LEDGER.record(Boot, ...)
 <pre><code class="language-text">Blocked -&gt; Ready -&gt; Running
 </code></pre>
 <h2 id="3-为什么只看-ipcrs会看不懂"><a class="header" href="#3-为什么只看-ipcrs会看不懂">3. 为什么“只看 ipc.rs”会看不懂</a></h2>
-<p>因为 <code>ipc.rs</code> 更像对象与消息队列的地方；<br>但“谁停住、谁恢复、返回值写给谁”，这些都落在调度器里。</p>
+<p>因为 <code>ipc.rs</code> 更像对象与消息队列的地方；<br />
+但“谁停住、谁恢复、返回值写给谁”，这些都落在调度器里。</p>
 <p>所以真正的阅读路径应该是：</p>
 <pre><code class="language-text">ipc.rs 看消息对象
 sched.rs 看任务状态
@@ -1589,17 +1500,16 @@ trap.rs 看 syscall 入口
 <li>还是任务醒了，但返回值没送回原 caller？</li>
 </ol>
 <p>只要把这三问分开，很多“IPC 好玄学”的感觉就会消失。</p>
-<p>下一章：<a href="#0506-用户态与调度详细跟读">0.5–0.6 用户态与调度</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="0506-用户态与调度详细跟读"><a class="header" href="#0506-用户态与调度详细跟读">0.5–0.6 用户态与调度（详细跟读）</a></h1>
+<p>下一章：<a href="path/cap-ipc/../04-user-sched.html">0.5–0.6 用户态与调度</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="0506-用户态与调度详细跟读"><a class="header" href="#0506-用户态与调度详细跟读">0.5–0.6 用户态与调度（详细跟读）</a></h1>
 <p>到了这一段，DeepRoot 不再是「内核独唱」，而是一台小剧场：多个 U-mode 演员 + 内核导演（调度器）。</p>
 <h2 id="本章拆读顺序-3"><a class="header" href="#本章拆读顺序-3">本章拆读顺序</a></h2>
 <ol>
-<li><a href="#051-用户程序最小骨架">0.5.1 用户程序最小骨架</a></li>
-<li><a href="#052-serversbring_up-跟读">0.5.2 <code>servers::bring_up</code> 跟读</a></li>
-<li><a href="#061-taskstate-与-blockreason">0.6.1 TaskState 与 BlockReason</a></li>
-<li><a href="#062-timer--preempt">0.6.2 timer / preempt</a></li>
-<li><a href="#063-syscall-返回值到底写给谁">0.6.3 syscall 返回值到底写给谁</a></li>
+<li><a href="path/user-sched/01-user-runtime.html">0.5.1 用户程序最小骨架</a></li>
+<li><a href="path/user-sched/02-bring-up.html">0.5.2 <code>servers::bring_up</code> 跟读</a></li>
+<li><a href="path/user-sched/03-task-states.html">0.6.1 TaskState 与 BlockReason</a></li>
+<li><a href="path/user-sched/04-timer-preempt.html">0.6.2 timer / preempt</a></li>
+<li><a href="path/user-sched/05-syscall-return.html">0.6.3 syscall 返回值到底写给谁</a></li>
 </ol>
 <h2 id="1-用户程序的最小骨架"><a class="header" href="#1-用户程序的最小骨架">1. 用户程序的最小骨架</a></h2>
 <p>打开任意 <code>user/*/src/main.rs</code>，顶部几乎都有同样的故事：</p>
@@ -1633,19 +1543,13 @@ trap.rs 看 syscall 入口
 <p>链接脚本决定每个 ELF 的加载基址（例如 ping/console/init/shell 各不相同），避免在「早期共享认知」阶段撞车；1.1 起每任务自有页表后，更是各活各的虚址空间。</p>
 <h2 id="3-调度器你要认识的状态"><a class="header" href="#3-调度器你要认识的状态">3. 调度器你要认识的状态</a></h2>
 <p>在 <code>sched.rs</code> 里找 <code>TaskState</code>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>状态</th><th>含义</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>状态</th><th>含义</th></tr></thead><tbody>
 <tr><td>Empty</td><td>槽位空闲</td></tr>
 <tr><td>Ready</td><td>可运行</td></tr>
 <tr><td>Running</td><td>正在跑</td></tr>
 <tr><td>Blocked</td><td>等 IPC 等事件</td></tr>
 <tr><td>Zombie</td><td>已退出，等待收尸（<code>SYS_WAIT</code>）</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>关键 API（名字以代码为准）：</p>
 <ul>
@@ -1679,21 +1583,14 @@ trap.rs 看 syscall 入口
 <li>阅读 <code>SYS_YIELD</code> 分支：idle 任务在无可运行任务时为何 <code>wfi</code>？</li>
 </ol>
 <h2 id="7-易错点-1"><a class="header" href="#7-易错点-1">7. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>现象</th><th>原因</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>现象</th><th>原因</th></tr></thead><tbody>
 <tr><td>用户程序一运行就 fault</td><td>栈没映射、入口错、satp 错</td></tr>
 <tr><td>阻塞在 IPC 再也看不见 shell</td><td>服务器没被调度 / 死锁</td></tr>
 <tr><td>修改 user 程序无生效</td><td>内核未重编嵌入的 ELF</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一章：<a href="#10-冻结-abi详细表">1.0 冻结 ABI</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="051-用户程序最小骨架"><a class="header" href="#051-用户程序最小骨架">0.5.1 用户程序最小骨架</a></h1>
+<p>下一章：<a href="path/05-abi.html">1.0 冻结 ABI</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="051-用户程序最小骨架"><a class="header" href="#051-用户程序最小骨架">0.5.1 用户程序最小骨架</a></h1>
 <p>这一页只讲：<strong>DeepRoot 用户程序最小可执行长什么样。</strong></p>
 <h2 id="1-共同骨架"><a class="header" href="#1-共同骨架">1. 共同骨架</a></h2>
 <p>打开任意 <code>user/*/src/main.rs</code>，你都会看到：</p>
@@ -1715,10 +1612,10 @@ trap.rs 看 syscall 入口
 <li>输出靠 <code>deeproot_user::sys::debug_write</code></li>
 </ul>
 <h2 id="3-为什么-main-结束要显式-exit"><a class="header" href="#3-为什么-main-结束要显式-exit">3. 为什么 <code>main</code> 结束要显式 exit</a></h2>
-<p>因为内核需要知道任务生命周期。<br>如果用户程序自己结束了但不发 <code>SYS_EXIT</code>，调度器就难以把它转成 <code>Zombie</code> 并等待收尸。</p>
-<p>下一页：<a href="#052-serversbring_up-跟读">0.5.2 <code>servers::bring_up</code> 跟读</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="052-serversbring_up-跟读"><a class="header" href="#052-serversbring_up-跟读">0.5.2 <code>servers::bring_up</code> 跟读</a></h1>
+<p>因为内核需要知道任务生命周期。<br />
+如果用户程序自己结束了但不发 <code>SYS_EXIT</code>，调度器就难以把它转成 <code>Zombie</code> 并等待收尸。</p>
+<p>下一页：<a href="path/user-sched/02-bring-up.html">0.5.2 <code>servers::bring_up</code> 跟读</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="052-serversbring_up-跟读"><a class="header" href="#052-serversbring_up-跟读">0.5.2 <code>servers::bring_up</code> 跟读</a></h1>
 <p>这一页只讲：<strong>多个用户服务器是怎样被一口气装起来的。</strong></p>
 <h2 id="1-关键文件-2"><a class="header" href="#1-关键文件-2">1. 关键文件</a></h2>
 <ul>
@@ -1746,9 +1643,8 @@ trap.rs 看 syscall 入口
 <li>trap 切换</li>
 </ul>
 <p>如果你能独立复述 <code>bring_up</code>，说明你已经开始真正理解系统不是“一坨神秘启动代码”。</p>
-<p>下一页：<a href="#061-taskstate-与-blockreason">0.6.1 TaskState 与 BlockReason</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="061-taskstate-与-blockreason"><a class="header" href="#061-taskstate-与-blockreason">0.6.1 TaskState 与 BlockReason</a></h1>
+<p>下一页：<a href="path/user-sched/03-task-states.html">0.6.1 TaskState 与 BlockReason</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="061-taskstate-与-blockreason"><a class="header" href="#061-taskstate-与-blockreason">0.6.1 TaskState 与 BlockReason</a></h1>
 <p>这一页只讲：<strong>调度器眼里的任务到底有哪些状态。</strong></p>
 <h2 id="1-taskstate"><a class="header" href="#1-taskstate">1. <code>TaskState</code></a></h2>
 <p>最常见：</p>
@@ -1774,9 +1670,8 @@ trap.rs 看 syscall 入口
 <li>子任务看起来结束了却没被回收</li>
 </ul>
 <p>其实这些往往只是任务正处在另一个合法状态里。</p>
-<p>下一页：<a href="#062-timer--preempt">0.6.2 timer / preempt</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="062-timer--preempt"><a class="header" href="#062-timer--preempt">0.6.2 timer / preempt</a></h1>
+<p>下一页：<a href="path/user-sched/04-timer-preempt.html">0.6.2 timer / preempt</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="062-timer--preempt"><a class="header" href="#062-timer--preempt">0.6.2 timer / preempt</a></h1>
 <p>这一页只讲：<strong>为什么一个死循环用户任务不会永久霸占系统。</strong></p>
 <h2 id="1-关键文件-3"><a class="header" href="#1-关键文件-3">1. 关键文件</a></h2>
 <ul>
@@ -1798,10 +1693,10 @@ trap.rs 看 syscall 入口
 <li>shell、server、其它任务都没机会恢复运行</li>
 </ul>
 <h2 id="4-为什么日志故意安静"><a class="header" href="#4-为什么日志故意安静">4. 为什么日志故意安静</a></h2>
-<p>源码里已经刻意减少 tick spam。<br>原因很现实：串口是共享的，时钟中断若每次都狂打日志，会直接毁掉交互体验。</p>
-<p>下一页：<a href="#063-syscall-返回值到底写给谁">0.6.3 syscall 返回值到底写给谁</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="063-syscall-返回值到底写给谁"><a class="header" href="#063-syscall-返回值到底写给谁">0.6.3 syscall 返回值到底写给谁</a></h1>
+<p>源码里已经刻意减少 tick spam。<br />
+原因很现实：串口是共享的，时钟中断若每次都狂打日志，会直接毁掉交互体验。</p>
+<p>下一页：<a href="path/user-sched/05-syscall-return.html">0.6.3 syscall 返回值到底写给谁</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="063-syscall-返回值到底写给谁"><a class="header" href="#063-syscall-返回值到底写给谁">0.6.3 syscall 返回值到底写给谁</a></h1>
 <p>这一页只讲：<strong>当一次 syscall 中间发生了阻塞/切换，返回值最终该写回哪个任务。</strong></p>
 <h2 id="1-直觉陷阱"><a class="header" href="#1-直觉陷阱">1. 直觉陷阱</a></h2>
 <p>很多新手会以为：</p>
@@ -1832,29 +1727,23 @@ trap.rs 看 syscall 入口
 <li><code>SYS_IPC_CALL</code></li>
 <li>reply 之后 caller 如何恢复</li>
 </ul>
-<p>下一章：<a href="#10-冻结-abi详细表">1.0 冻结 ABI</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="10-冻结-abi详细表"><a class="header" href="#10-冻结-abi详细表">1.0 冻结 ABI（详细表）</a></h1>
-<p>ABI = Application Binary Interface：用户程序与内核之间的「接线标准」。<br>1.0 把底座钉住；1.1–1.4 只<strong>追加</strong>新号码。</p>
+<p>下一章：<a href="path/user-sched/../05-abi.html">1.0 冻结 ABI</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="10-冻结-abi详细表"><a class="header" href="#10-冻结-abi详细表">1.0 冻结 ABI（详细表）</a></h1>
+<p>ABI = Application Binary Interface：用户程序与内核之间的「接线标准」。<br />
+1.0 把底座钉住；1.1–1.4 只<strong>追加</strong>新号码。</p>
 <h2 id="本章拆读顺序-4"><a class="header" href="#本章拆读顺序-4">本章拆读顺序</a></h2>
 <ol>
-<li><a href="#101-寄存器调用约定">1.0.1 寄存器调用约定</a></li>
-<li><a href="#102-错误码与核心-syscall">1.0.2 错误码与核心 syscall</a></li>
-<li><a href="#103-traprs-如何解码-ecall">1.0.3 <code>trap.rs</code> 如何解码 ecall</a></li>
-<li><a href="#104-四个-syscall-实战跟读">1.0.4 四个 syscall 实战跟读</a></li>
+<li><a href="path/abi/01-registers.html">1.0.1 寄存器调用约定</a></li>
+<li><a href="path/abi/02-errors-core-syscalls.html">1.0.2 错误码与核心 syscall</a></li>
+<li><a href="path/abi/03-trap-decode.html">1.0.3 <code>trap.rs</code> 如何解码 ecall</a></li>
+<li><a href="path/abi/04-guided-syscalls.html">1.0.4 四个 syscall 实战跟读</a></li>
 </ol>
 <h2 id="1-调用约定risc-v-用户态"><a class="header" href="#1-调用约定risc-v-用户态">1. 调用约定（RISC-V 用户态）</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>寄存器</th><th>用途</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>寄存器</th><th>用途</th></tr></thead><tbody>
 <tr><td><code>a7</code></td><td>syscall 号 <code>SYS_*</code></td></tr>
 <tr><td><code>a0</code>–<code>a3</code></td><td>参数（不够再扩展，当前够用）</td></tr>
 <tr><td><code>a0</code></td><td>返回值（负号常表示 <code>ERR_*</code>）</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>封装见 <code>libs/deeproot-user/src/lib.rs</code> 的 <code>ecall</code>。</p>
 <h2 id="11-用户态怎么发-ecall跟源码对齐"><a class="header" href="#11-用户态怎么发-ecall跟源码对齐">1.1 用户态怎么“发 ecall”（跟源码对齐）</a></h2>
@@ -1886,19 +1775,14 @@ a0..a3 放参数
 a0 收返回值
 负值表示错误
 </code></pre>
-<p>所以 ABI 最怕的不是“代码写得丑”，而是<strong>内核和用户态对同一组寄存器有不同理解</strong>。<br>一旦一边觉得 <code>a0</code> 是路径指针、另一边把它当 sched id，系统往往不会优雅报错，而是直接跑向 <code>ERR_GENERIC</code>、page fault，甚至乱码输出。</p>
+<p>所以 ABI 最怕的不是“代码写得丑”，而是<strong>内核和用户态对同一组寄存器有不同理解</strong>。<br />
+一旦一边觉得 <code>a0</code> 是路径指针、另一边把它当 sched id，系统往往不会优雅报错，而是直接跑向 <code>ERR_GENERIC</code>、page fault，甚至乱码输出。</p>
 <h2 id="2-错误码"><a class="header" href="#2-错误码">2. 错误码</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>常量</th><th>值</th><th>含义</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>常量</th><th>值</th><th>含义</th></tr></thead><tbody>
 <tr><td><code>ERR_GENERIC</code></td><td>-1</td><td>泛型失败</td></tr>
 <tr><td><code>ERR_AGAIN</code></td><td>-11</td><td>暂时没有（如串口无新字节、wait 子任务还在跑）</td></tr>
 <tr><td><code>ERR_NOSYS</code></td><td>-38</td><td>未知 syscall</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>在学习时你可以用一个经验法则判断“这是策略问题还是数据问题”：</p>
 <ul>
@@ -1907,7 +1791,8 @@ a0 收返回值
 <li><code>ERR_GENERIC</code>：多半是参数/路径/ELF 映射失败（比如 <code>SYS_EXEC</code> 找不到 ramfs 文件，或 ELF magic 不对）</li>
 </ul>
 <h3 id="21-为什么-deeproot-喜欢返回负数"><a class="header" href="#21-为什么-deeproot-喜欢返回负数">2.1 为什么 DeepRoot 喜欢返回负数？</a></h3>
-<p>因为用户态封装统一把 <code>ecall</code> 返回值视为 <code>isize</code>。<br>这让调用者只需要做一个非常朴素的判断：</p>
+<p>因为用户态封装统一把 <code>ecall</code> 返回值视为 <code>isize</code>。<br />
+这让调用者只需要做一个非常朴素的判断：</p>
 <pre><code class="language-text">ret &gt;= 0   → 成功，正数/0 可能自带业务含义
 ret &lt; 0    → 出错或暂不可用
 </code></pre>
@@ -1924,12 +1809,7 @@ ret &lt; 0    → 出错或暂不可用
 <p>下表以 <code>libs/deeproot-abi/src/syscall.rs</code> 为准；学的时候请打开文件核对。</p>
 </blockquote>
 <h3 id="31-10-基线09"><a class="header" href="#31-10-基线09">3.1 1.0 基线（0–9）</a></h3>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>号</th><th>名字</th><th>参数直觉</th><th>典型用途</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>号</th><th>名字</th><th>参数直觉</th><th>典型用途</th></tr></thead><tbody>
 <tr><td>0</td><td><code>SYS_DEBUG_WRITE</code></td><td>ptr, len</td><td>调试打印</td></tr>
 <tr><td>1</td><td><code>SYS_LEDGER_DUMP</code></td><td>—</td><td>打印账本</td></tr>
 <tr><td>2</td><td><code>SYS_CAP_DERIVE</code></td><td>…</td><td>派生能力</td></tr>
@@ -1940,16 +1820,10 @@ ret &lt; 0    → 出错或暂不可用
 <tr><td>7</td><td><code>SYS_IPC_REPLY</code></td><td>badge, label, word0</td><td>回复</td></tr>
 <tr><td>8</td><td><code>SYS_YIELD</code></td><td>—</td><td>让出 CPU</td></tr>
 <tr><td>9</td><td><code>SYS_EXIT</code></td><td>code</td><td>退出并变僵尸</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h3 id="32-1114-追加"><a class="header" href="#32-1114-追加">3.2 1.1–1.4 追加</a></h3>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>号</th><th>名字</th><th>参数直觉</th><th>系列</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>号</th><th>名字</th><th>参数直觉</th><th>系列</th></tr></thead><tbody>
 <tr><td>10</td><td><code>SYS_SPAWN</code></td><td>blob_id（0=hello）</td><td>1.1</td></tr>
 <tr><td>11</td><td><code>SYS_DEBUG_READ</code></td><td>— → 字节或 <code>-11</code></td><td>1.2</td></tr>
 <tr><td>12</td><td><code>SYS_FS_LIST</code></td><td>—</td><td>1.3</td></tr>
@@ -1957,24 +1831,18 @@ ret &lt; 0    → 出错或暂不可用
 <tr><td>14</td><td><code>SYS_EXEC</code></td><td>path_ptr, len → sched id</td><td>1.3</td></tr>
 <tr><td>15</td><td><code>SYS_TIME</code></td><td>— → 毫秒</td><td>彩蛋/节奏</td></tr>
 <tr><td>16</td><td><code>SYS_WAIT</code></td><td>sched_id → 0 / <code>-11</code></td><td>shell 等待子任务</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h3 id="33-先记住-5-个最常用-syscall"><a class="header" href="#33-先记住-5-个最常用-syscall">3.3 先记住 5 个最常用 syscall</a></h3>
-<p>如果你是第一次读 DeepRoot，不要一上来背完整 syscall 表。<br>先把下面 5 个吃透，基本就能走完整条用户态交互链：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>名字</th><th>你在哪最容易遇到它</th><th>成功返回</th><th>常见失败/特殊值</th></tr>
-</thead>
-<tbody>
+<p>如果你是第一次读 DeepRoot，不要一上来背完整 syscall 表。<br />
+先把下面 5 个吃透，基本就能走完整条用户态交互链：</p>
+<div class="table-wrapper"><table><thead><tr><th>名字</th><th>你在哪最容易遇到它</th><th>成功返回</th><th>常见失败/特殊值</th></tr></thead><tbody>
 <tr><td><code>SYS_DEBUG_WRITE</code></td><td>所有用户程序打印</td><td>写出长度</td><td><code>-1</code> 参数异常</td></tr>
 <tr><td><code>SYS_DEBUG_READ</code></td><td>shell 读键盘</td><td>一个字节</td><td><code>-11</code> 暂无输入</td></tr>
 <tr><td><code>SYS_EXEC</code></td><td>shell <code>run xxx</code></td><td>child sched id</td><td><code>-1</code> 找不到/非 ELF/映射失败</td></tr>
 <tr><td><code>SYS_WAIT</code></td><td>shell 前台等待子任务</td><td><code>0</code></td><td><code>-11</code> 还没退出</td></tr>
 <tr><td><code>SYS_YIELD</code></td><td>轮询或主动让出</td><td><code>0</code></td><td>通常不失败</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="4-从-ecall-到-handle_syscall跟读-traprs"><a class="header" href="#4-从-ecall-到-handle_syscall跟读-traprs">4. 从 ecall 到 handle_syscall（跟读 trap.rs）</a></h2>
 <p>用户态执行 <code>ecall</code> 后，<code>kernel/src/trap.rs</code> 会走到 <code>trap_handler()</code>。</p>
@@ -1993,20 +1861,15 @@ ret &lt; 0    → 出错或暂不可用
 <li>如果你看到返回值异常（比如一直是 <code>-11</code>），通常不是用户库错了，而是内核调度/阻塞路径没发生你预期的状态切换</li>
 </ul>
 <h2 id="41-trap-frame-里为什么是-x17--x10"><a class="header" href="#41-trap-frame-里为什么是-x17--x10">4.1 trap frame 里为什么是 <code>x[17]</code> / <code>x[10]</code>？</a></h2>
-<p>调度器保存的是一个通用寄存器数组 <code>x[0..31]</code>。<br>RISC-V 的 ABI 名字（<code>a0</code>/<code>a1</code>/<code>a7</code>）只是这些整数寄存器的“别名”：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>ABI 名</th><th>实际整数寄存器</th><th>trap frame 下标</th></tr>
-</thead>
-<tbody>
+<p>调度器保存的是一个通用寄存器数组 <code>x[0..31]</code>。<br />
+RISC-V 的 ABI 名字（<code>a0</code>/<code>a1</code>/<code>a7</code>）只是这些整数寄存器的“别名”：</p>
+<div class="table-wrapper"><table><thead><tr><th>ABI 名</th><th>实际整数寄存器</th><th>trap frame 下标</th></tr></thead><tbody>
 <tr><td><code>a0</code></td><td><code>x10</code></td><td><code>tf.x[10]</code></td></tr>
 <tr><td><code>a1</code></td><td><code>x11</code></td><td><code>tf.x[11]</code></td></tr>
 <tr><td><code>a2</code></td><td><code>x12</code></td><td><code>tf.x[12]</code></td></tr>
 <tr><td><code>a3</code></td><td><code>x13</code></td><td><code>tf.x[13]</code></td></tr>
 <tr><td><code>a7</code></td><td><code>x17</code></td><td><code>tf.x[17]</code></td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>所以你在 <code>trap_handler()</code> 里看到：</p>
 <pre><code class="language-text">nr = tf.x[17]
@@ -2015,7 +1878,8 @@ a0 = tf.x[10]
 </code></pre>
 <p>并不是“写死魔法数字”，而是在直接用 RISC-V 调用约定读寄存器。</p>
 <h2 id="42-sepc--4-为什么不能少"><a class="header" href="#42-sepc--4-为什么不能少">4.2 <code>sepc += 4</code> 为什么不能少？</a></h2>
-<p><code>ecall</code> 本身是一条指令。<br>如果 trap 返回前不把 <code>sepc</code> 前移 4 字节，CPU 回到用户态后会再次执行<strong>同一条</strong> <code>ecall</code>，然后再进 trap，形成“无限重复系统调用”。</p>
+<p><code>ecall</code> 本身是一条指令。<br />
+如果 trap 返回前不把 <code>sepc</code> 前移 4 字节，CPU 回到用户态后会再次执行<strong>同一条</strong> <code>ecall</code>，然后再进 trap，形成“无限重复系统调用”。</p>
 <p>这就是很多新手在自己写 trap 路径时最容易漏掉的一步。</p>
 <h2 id="43-从-handle_syscall-里跟-4-个真实例子"><a class="header" href="#43-从-handle_syscall-里跟-4-个真实例子">4.3 从 <code>handle_syscall()</code> 里跟 4 个真实例子</a></h2>
 <p>打开 <code>kernel/src/sched.rs</code> 的 <code>handle_syscall()</code>，建议按下面四个分支跟一遍：</p>
@@ -2062,7 +1926,8 @@ child == Empty        → ERR_GENERIC
 </code></pre>
 <p>于是 shell 的前台运行模型就清楚了：<code>run</code> 不是靠中断通知，而是靠 <code>wait -&gt; -11 -&gt; yield -&gt; wait</code> 轮询收尸。</p>
 <h2 id="44-abi-与调度为什么绑得这么紧"><a class="header" href="#44-abi-与调度为什么绑得这么紧">4.4 ABI 与调度为什么绑得这么紧？</a></h2>
-<p>很多教材会把“syscall”讲成纯接口，把“scheduler”讲成另一个主题。<br>但在 DeepRoot 里，两者是连着的：</p>
+<p>很多教材会把“syscall”讲成纯接口，把“scheduler”讲成另一个主题。<br />
+但在 DeepRoot 里，两者是连着的：</p>
 <ul>
 <li><code>SYS_EXIT</code> 会把当前任务标成 <code>Zombie</code></li>
 <li><code>SYS_IPC_RECV</code> 在收不到消息时会阻塞当前任务</li>
@@ -2078,7 +1943,8 @@ child == Empty        → ERR_GENERIC
 </ol>
 <h3 id="51-建议你亲自跑的最小实验"><a class="header" href="#51-建议你亲自跑的最小实验">5.1 建议你亲自跑的最小实验</a></h3>
 <h4 id="实验-a确认-err_again-不是错误而是暂时没准备好"><a class="header" href="#实验-a确认-err_again-不是错误而是暂时没准备好">实验 A：确认 <code>ERR_AGAIN</code> 不是“错误”，而是“暂时没准备好”</a></h4>
-<p>在 shell 读一行之前，串口通常大部分时间是空的。<br>如果你在 <code>SYS_DEBUG_READ</code> 分支临时加计数，会看到它反复走到：</p>
+<p>在 shell 读一行之前，串口通常大部分时间是空的。<br />
+如果你在 <code>SYS_DEBUG_READ</code> 分支临时加计数，会看到它反复走到：</p>
 <pre><code class="language-text">None =&gt; ERR_AGAIN
 </code></pre>
 <p>而 shell 并不会 panic，只是继续 <code>yield_now()</code> 再读。</p>
@@ -2107,25 +1973,18 @@ deeproot&gt; run hello
 <li>以为 syscall 返回值总是马上写回当前 CPU 正在跑的那个任务 → IPC/阻塞路径下，返回值归属要看“谁发起了那次 syscall”。</li>
 <li>只记 syscall 名字，不记参数放在哪个寄存器 → 一到 trap frame 就会完全看不懂 <code>tf.x[10]</code> / <code>tf.x[17]</code> 这些代码。</li>
 </ul>
-<p>下一章：<a href="#11-地址空间与-spawn详细跟读">1.1 地址空间与 spawn</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="101-寄存器调用约定"><a class="header" href="#101-寄存器调用约定">1.0.1 寄存器调用约定</a></h1>
+<p>下一章：<a href="path/06-as-spawn.html">1.1 地址空间与 spawn</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="101-寄存器调用约定"><a class="header" href="#101-寄存器调用约定">1.0.1 寄存器调用约定</a></h1>
 <p>这一页只回答：<strong>用户态到底把 syscall 号和参数塞进哪个寄存器？</strong></p>
 <h2 id="1-最短表格"><a class="header" href="#1-最短表格">1. 最短表格</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>含义</th><th>RISC-V ABI 名字</th><th>trap frame 下标</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>含义</th><th>RISC-V ABI 名字</th><th>trap frame 下标</th></tr></thead><tbody>
 <tr><td>syscall 号</td><td><code>a7</code></td><td><code>x17</code></td></tr>
 <tr><td>参数 0</td><td><code>a0</code></td><td><code>x10</code></td></tr>
 <tr><td>参数 1</td><td><code>a1</code></td><td><code>x11</code></td></tr>
 <tr><td>参数 2</td><td><code>a2</code></td><td><code>x12</code></td></tr>
 <tr><td>参数 3</td><td><code>a3</code></td><td><code>x13</code></td></tr>
 <tr><td>返回值</td><td><code>a0</code></td><td><code>x10</code></td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="2-对照哪些源码"><a class="header" href="#2-对照哪些源码">2. 对照哪些源码</a></h2>
 <ul>
@@ -2139,9 +1998,11 @@ a0..a3 = 参数
 ecall
 从 a0 取 ret
 </code></pre>
-<p>所以从用户态看，syscall 非常薄：<br>它只负责摆好寄存器，然后跳进内核。</p>
+<p>所以从用户态看，syscall 非常薄：<br />
+它只负责摆好寄存器，然后跳进内核。</p>
 <h2 id="4-为什么-trap-里会看到-tfx17"><a class="header" href="#4-为什么-trap-里会看到-tfx17">4. 为什么 trap 里会看到 <code>tf.x[17]</code></a></h2>
-<p>因为内核保存的是“整套整数寄存器数组”，而不是 ABI 别名。<br><code>a7</code> 只是 <code>x17</code> 的另一个名字，所以：</p>
+<p>因为内核保存的是“整套整数寄存器数组”，而不是 ABI 别名。<br />
+<code>a7</code> 只是 <code>x17</code> 的另一个名字，所以：</p>
 <pre><code class="language-text">tf.x[17] == a7 == syscall 号
 </code></pre>
 <h2 id="5-最小实验-1"><a class="header" href="#5-最小实验-1">5. 最小实验</a></h2>
@@ -2149,22 +2010,15 @@ ecall
 <li>对照 <code>sys::exec()</code> 与 <code>trap_handler()</code>，确认 path 指针长度分别来自 <code>a0/a1</code>。</li>
 <li>自己把一条 syscall 的参数画成寄存器表。</li>
 </ol>
-<p>下一页：<a href="#102-错误码与核心-syscall">1.0.2 错误码与核心 syscall</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="102-错误码与核心-syscall"><a class="header" href="#102-错误码与核心-syscall">1.0.2 错误码与核心 syscall</a></h1>
+<p>下一页：<a href="path/abi/02-errors-core-syscalls.html">1.0.2 错误码与核心 syscall</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="102-错误码与核心-syscall"><a class="header" href="#102-错误码与核心-syscall">1.0.2 错误码与核心 syscall</a></h1>
 <p>这一页只讲：<strong>新手先该记住哪些 syscall，以及负返回值怎么读。</strong></p>
 <h2 id="1-三个最重要的错误码"><a class="header" href="#1-三个最重要的错误码">1. 三个最重要的错误码</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>常量</th><th>值</th><th>直觉</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>常量</th><th>值</th><th>直觉</th></tr></thead><tbody>
 <tr><td><code>ERR_GENERIC</code></td><td><code>-1</code></td><td>失败了，但原因要继续往里查</td></tr>
 <tr><td><code>ERR_AGAIN</code></td><td><code>-11</code></td><td>现在还不行，稍后重试</td></tr>
 <tr><td><code>ERR_NOSYS</code></td><td><code>-38</code></td><td>syscall 号不存在 / ABI 不匹配</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="2-为什么-err_again-不是坏事"><a class="header" href="#2-为什么-err_again-不是坏事">2. 为什么 <code>ERR_AGAIN</code> 不是“坏事”</a></h2>
 <p>它经常表示“资源暂时没准备好”：</p>
@@ -2177,19 +2031,13 @@ ecall
 <pre><code class="language-text">是不是这条 syscall 本来就设计成轮询语义？
 </code></pre>
 <h2 id="3-新手优先吃透的-5-个-syscall"><a class="header" href="#3-新手优先吃透的-5-个-syscall">3. 新手优先吃透的 5 个 syscall</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>syscall</th><th>你在哪里会遇到</th><th>成功返回</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>syscall</th><th>你在哪里会遇到</th><th>成功返回</th></tr></thead><tbody>
 <tr><td><code>SYS_DEBUG_WRITE</code></td><td>所有用户态打印</td><td>写出长度</td></tr>
 <tr><td><code>SYS_DEBUG_READ</code></td><td>shell 输入</td><td>字节值</td></tr>
 <tr><td><code>SYS_EXEC</code></td><td><code>run hello</code></td><td>child sched id</td></tr>
 <tr><td><code>SYS_WAIT</code></td><td>shell 前台等待</td><td><code>0</code></td></tr>
 <tr><td><code>SYS_YIELD</code></td><td>轮询 / 主动让出</td><td><code>0</code></td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>把这 5 个看懂，基本就能读懂 shell 主循环。</p>
 <h2 id="4-什么时候查完整-syscall-表"><a class="header" href="#4-什么时候查完整-syscall-表">4. 什么时候查完整 syscall 表</a></h2>
@@ -2200,9 +2048,8 @@ ecall
 <li>spawn 与地址空间路径</li>
 </ul>
 <p>时，再回去看全表。否则一开始背所有 <code>SYS_*</code> 性价比不高。</p>
-<p>下一页：<a href="#103-traprs-如何解码-ecall">1.0.3 <code>trap.rs</code> 如何解码 ecall</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="103-traprs-如何解码-ecall"><a class="header" href="#103-traprs-如何解码-ecall">1.0.3 <code>trap.rs</code> 如何解码 ecall</a></h1>
+<p>下一页：<a href="path/abi/03-trap-decode.html">1.0.3 <code>trap.rs</code> 如何解码 ecall</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="103-traprs-如何解码-ecall"><a class="header" href="#103-traprs-如何解码-ecall">1.0.3 <code>trap.rs</code> 如何解码 ecall</a></h1>
 <p>这一页只讲：<strong>内核怎么把一条用户态 <code>ecall</code> 识别成具体 syscall。</strong></p>
 <h2 id="1-关键文件-4"><a class="header" href="#1-关键文件-4">1. 关键文件</a></h2>
 <ul>
@@ -2220,9 +2067,11 @@ ecall
 <li><code>restore_user()</code> → <code>sret</code></li>
 </ol>
 <h2 id="3-为什么-sepc--4-不能漏"><a class="header" href="#3-为什么-sepc--4-不能漏">3. 为什么 <code>sepc += 4</code> 不能漏</a></h2>
-<p>因为 <code>ecall</code> 本身也是一条指令。<br>如果不前移 <code>sepc</code>，返回用户态后会再次执行同一条 <code>ecall</code>，形成无限 trap。</p>
+<p>因为 <code>ecall</code> 本身也是一条指令。<br />
+如果不前移 <code>sepc</code>，返回用户态后会再次执行同一条 <code>ecall</code>，形成无限 trap。</p>
 <h2 id="4-返回值为什么不一定写给当前正在跑的那个任务"><a class="header" href="#4-返回值为什么不一定写给当前正在跑的那个任务">4. 返回值为什么不一定写给“当前正在跑的那个任务”</a></h2>
-<p>在简单路径里，两者常常是同一个任务。<br>但一旦 syscall 中间触发了阻塞/调度切换，内核必须记住：</p>
+<p>在简单路径里，两者常常是同一个任务。<br />
+但一旦 syscall 中间触发了阻塞/调度切换，内核必须记住：</p>
 <pre><code class="language-text">这次返回值属于谁发起的 syscall
 而不是“最后谁正好在 CPU 上”
 </code></pre>
@@ -2232,9 +2081,8 @@ ecall
 <li>对照 <code>trap.rs</code> 和 <code>05-abi.md</code> 当前主章，把 <code>x17 / x10..13</code> 再手写一遍。</li>
 <li>自己解释一遍“如果不做 <code>sepc += 4</code> 会怎样”。</li>
 </ol>
-<p>下一页：<a href="#104-四个-syscall-实战跟读">1.0.4 四个 syscall 实战跟读</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="104-四个-syscall-实战跟读"><a class="header" href="#104-四个-syscall-实战跟读">1.0.4 四个 syscall 实战跟读</a></h1>
+<p>下一页：<a href="path/abi/04-guided-syscalls.html">1.0.4 四个 syscall 实战跟读</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="104-四个-syscall-实战跟读"><a class="header" href="#104-四个-syscall-实战跟读">1.0.4 四个 syscall 实战跟读</a></h1>
 <p>这一页只做一件事：<strong>带你把 4 个最常见 syscall 从用户态一路跟到内核分支。</strong></p>
 <h2 id="1-sys_debug_write"><a class="header" href="#1-sys_debug_write">1. <code>SYS_DEBUG_WRITE</code></a></h2>
 <p>用户态：</p>
@@ -2300,18 +2148,18 @@ Empty  -&gt; ERR_GENERIC
 <li>为什么 <code>SYS_EXEC</code> 成功返回的是 sched id 而不是布尔值？</li>
 <li>为什么 <code>SYS_WAIT</code> 成功返回 <code>0</code> 也足够有意义？</li>
 </ol>
-<p>下一章：<a href="#11-地址空间与-spawn详细跟读">1.1 地址空间与 spawn</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="11-地址空间与-spawn详细跟读"><a class="header" href="#11-地址空间与-spawn详细跟读">1.1 地址空间与 spawn（详细跟读）</a></h1>
+<p>下一章：<a href="path/abi/../06-as-spawn.html">1.1 地址空间与 spawn</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="11-地址空间与-spawn详细跟读"><a class="header" href="#11-地址空间与-spawn详细跟读">1.1 地址空间与 spawn（详细跟读）</a></h1>
 <h2 id="本章拆读顺序-5"><a class="header" href="#本章拆读顺序-5">本章拆读顺序</a></h2>
 <ol>
-<li><a href="#111-per-task-页表">1.1.1 per-task 页表</a></li>
-<li><a href="#112-sys_spawn-控制流">1.1.2 <code>SYS_SPAWN</code> 控制流</a></li>
-<li><a href="#113-跟读-elfrs">1.1.3 跟读 <code>elf.rs</code></a></li>
-<li><a href="#114-zombie-与-sys_wait">1.1.4 Zombie 与 <code>SYS_WAIT</code></a></li>
+<li><a href="path/as-spawn/01-per-task-as.html">1.1.1 per-task 页表</a></li>
+<li><a href="path/as-spawn/02-sys-spawn.html">1.1.2 <code>SYS_SPAWN</code> 控制流</a></li>
+<li><a href="path/as-spawn/03-elf-loader.html">1.1.3 跟读 <code>elf.rs</code></a></li>
+<li><a href="path/as-spawn/04-zombie-wait.html">1.1.4 Zombie 与 <code>SYS_WAIT</code></a></li>
 </ol>
 <h2 id="1-为什么要每任务一张页表"><a class="header" href="#1-为什么要每任务一张页表">1. 为什么要「每任务一张页表」？</a></h2>
-<p>若所有用户程序共用内核那套「大一统」映射，隔离很弱，一个程序乱写容易牵连别人。<br>1.1 起：</p>
+<p>若所有用户程序共用内核那套「大一统」映射，隔离很弱，一个程序乱写容易牵连别人。<br />
+1.1 起：</p>
 <ul>
 <li>每个任务有自己的 <strong>根页表</strong>（<code>UserTask.root_pa</code> / <code>AddrSpace</code>）</li>
 <li>调度切换时调度器会调用 <code>UserTask.activate_as()</code>：如果 <code>root_pa != 0</code>，就用 <code>sv39::activate(root_pa)</code> 切换到该任务的根页表环境（也就是“真正打开了它的地址空间”）</li>
@@ -2349,7 +2197,8 @@ Empty  -&gt; ERR_GENERIC
 <p>历史上 badapple 变大时就碰到过上限，需要调大 <code>MAX_PAGES</code>。</p>
 <p>另一个“会导致诡异 page fault”的细节：ELF 加载器会把多个 <code>PT_LOAD</code> 可能落在同一页上的段做<strong>合并</strong>（合并权限位），避免出现“前一步把页映成 R-X，下一段又把它覆盖成 R-W 却不允许执行”的情况。</p>
 <h2 id="4-僵尸与等待"><a class="header" href="#4-僵尸与等待">4. 僵尸与等待</a></h2>
-<p>任务 <code>SYS_EXIT</code> → <code>Zombie</code>。<br>若不回收，槽位会耗尽。shell 的 <code>run</code>：</p>
+<p>任务 <code>SYS_EXIT</code> → <code>Zombie</code>。<br />
+若不回收，槽位会耗尽。shell 的 <code>run</code>：</p>
 <pre><code class="language-text">exec(path) → id
 循环: wait(id)；若 ERR_AGAIN 则 yield；否则结束
 </code></pre>
@@ -2362,21 +2211,14 @@ Empty  -&gt; ERR_GENERIC
 <li>把 <code>SYS_SPAWN</code> 换成非法 blob id，看返回值。</li>
 </ol>
 <h2 id="6-易错点-4"><a class="header" href="#6-易错点-4">6. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>现象</th><th>原因</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>现象</th><th>原因</th></tr></thead><tbody>
 <tr><td><code>exec failed</code></td><td>找不到文件 / 非 ELF / 映射失败 / 页数不足</td></tr>
 <tr><td>hello 无输出但返回了</td><td>调度未运行到它，或输出被刷屏淹没</td></tr>
 <tr><td>第二次 spawn 失败</td><td>僵尸未回收、槽位满</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一章：<a href="#12-shell详细跟读">1.2 Shell</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="111-per-task-页表"><a class="header" href="#111-per-task-页表">1.1.1 per-task 页表</a></h1>
+<p>下一章：<a href="path/07-shell.html">1.2 Shell</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="111-per-task-页表"><a class="header" href="#111-per-task-页表">1.1.1 per-task 页表</a></h1>
 <p>这一页只讲：<strong>为什么 1.1 之后每个任务都该有自己的地址空间。</strong></p>
 <h2 id="1-如果大家共用一张页表会怎样"><a class="header" href="#1-如果大家共用一张页表会怎样">1. 如果大家共用一张页表，会怎样？</a></h2>
 <ul>
@@ -2407,10 +2249,10 @@ Empty  -&gt; ERR_GENERIC
 <li>它最终要落成“某个物理页表根被写进 CSR 环境”</li>
 </ul>
 <h2 id="4-为什么这对后续-spawnexec-很关键"><a class="header" href="#4-为什么这对后续-spawnexec-很关键">4. 为什么这对后续 <code>spawn/exec</code> 很关键</a></h2>
-<p>ELF 不是直接“跑字节”，而是要先被映射进当前任务自己的虚拟地址空间。<br>没有 per-task 页表，<code>exec</code> 只是“看起来像进程”，隔离却讲不圆。</p>
-<p>下一页：<a href="#112-sys_spawn-控制流">1.1.2 <code>SYS_SPAWN</code> 控制流</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="112-sys_spawn-控制流"><a class="header" href="#112-sys_spawn-控制流">1.1.2 <code>SYS_SPAWN</code> 控制流</a></h1>
+<p>ELF 不是直接“跑字节”，而是要先被映射进当前任务自己的虚拟地址空间。<br />
+没有 per-task 页表，<code>exec</code> 只是“看起来像进程”，隔离却讲不圆。</p>
+<p>下一页：<a href="path/as-spawn/02-sys-spawn.html">1.1.2 <code>SYS_SPAWN</code> 控制流</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="112-sys_spawn-控制流"><a class="header" href="#112-sys_spawn-控制流">1.1.2 <code>SYS_SPAWN</code> 控制流</a></h1>
 <p>这一页只讲：<strong><code>sys::spawn(0)</code> 从用户态到新任务出生，到底走了哪几步。</strong></p>
 <h2 id="1-关键文件-5"><a class="header" href="#1-关键文件-5">1. 关键文件</a></h2>
 <ul>
@@ -2432,17 +2274,18 @@ Empty  -&gt; ERR_GENERIC
 <li>返回 child sched id</li>
 </ol>
 <h2 id="3-为什么只支持-blob_id0"><a class="header" href="#3-为什么只支持-blob_id0">3. 为什么只支持 <code>blob_id=0</code></a></h2>
-<p>因为它是教学阶段的最小脚手架。<br><code>SYS_SPAWN</code> 更像“硬编码的演示入口”；真正更像操作系统的，是后来的 <code>SYS_EXEC(path)</code>。</p>
+<p>因为它是教学阶段的最小脚手架。<br />
+<code>SYS_SPAWN</code> 更像“硬编码的演示入口”；真正更像操作系统的，是后来的 <code>SYS_EXEC(path)</code>。</p>
 <h2 id="4-槽位和栈为什么绑在一起"><a class="header" href="#4-槽位和栈为什么绑在一起">4. 槽位和栈为什么绑在一起</a></h2>
-<p>调度器会先找一个空闲 sched 槽位，然后用这个槽位序号计算 spawn 栈的虚址基址。<br>这样每个 child 的栈地址区间都比较稳定，方便理解和排错。</p>
+<p>调度器会先找一个空闲 sched 槽位，然后用这个槽位序号计算 spawn 栈的虚址基址。<br />
+这样每个 child 的栈地址区间都比较稳定，方便理解和排错。</p>
 <h2 id="5-最小实验-3"><a class="header" href="#5-最小实验-3">5. 最小实验</a></h2>
 <ol>
 <li>让 init 连续 <code>spawn(0)</code> 两次，观察返回的 id 是否不同。</li>
 <li>给非法 <code>blob_id</code>，确认返回 <code>ERR_GENERIC</code>。</li>
 </ol>
-<p>下一页：<a href="#113-跟读-elfrs">1.1.3 跟读 <code>elf.rs</code></a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="113-跟读-elfrs"><a class="header" href="#113-跟读-elfrs">1.1.3 跟读 <code>elf.rs</code></a></h1>
+<p>下一页：<a href="path/as-spawn/03-elf-loader.html">1.1.3 跟读 <code>elf.rs</code></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="113-跟读-elfrs"><a class="header" href="#113-跟读-elfrs">1.1.3 跟读 <code>elf.rs</code></a></h1>
 <p>这一页只讲：<strong>一个 ELF 字节数组怎样变成可运行任务。</strong></p>
 <h2 id="1-关键文件-6"><a class="header" href="#1-关键文件-6">1. 关键文件</a></h2>
 <ul>
@@ -2469,27 +2312,21 @@ Empty  -&gt; ERR_GENERIC
 </code></pre>
 <p>如果你跳过其中任意一层，最后看到的往往只是“进用户态就 page fault”。</p>
 <h2 id="4-max_pages-为什么重要"><a class="header" href="#4-max_pages-为什么重要">4. <code>MAX_PAGES</code> 为什么重要</a></h2>
-<p>教学内核不会无限制加载任意大小 ELF。<br>如果程序太大（例如嵌了很多帧数据的用户程序），会因为页数上限被拒绝。</p>
+<p>教学内核不会无限制加载任意大小 ELF。<br />
+如果程序太大（例如嵌了很多帧数据的用户程序），会因为页数上限被拒绝。</p>
 <p>这时 shell 往往只会告诉你：</p>
 <pre><code class="language-text">exec failed
 </code></pre>
 <p>真正原因要回到 <code>elf.rs</code> 去找。</p>
 <h2 id="5-易错点-3"><a class="header" href="#5-易错点-3">5. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>现象</th><th>根因</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>现象</th><th>根因</th></tr></thead><tbody>
 <tr><td>bad header</td><td>根本不是 ELF</td></tr>
 <tr><td>not RISC-V ET_EXEC</td><td>类型或架构不对</td></tr>
 <tr><td>进用户态就 fault</td><td>栈、入口、权限位或映射范围有问题</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一页：<a href="#114-zombie-与-sys_wait">1.1.4 Zombie 与 <code>SYS_WAIT</code></a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="114-zombie-与-sys_wait"><a class="header" href="#114-zombie-与-sys_wait">1.1.4 Zombie 与 <code>SYS_WAIT</code></a></h1>
+<p>下一页：<a href="path/as-spawn/04-zombie-wait.html">1.1.4 Zombie 与 <code>SYS_WAIT</code></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="114-zombie-与-sys_wait"><a class="header" href="#114-zombie-与-sys_wait">1.1.4 Zombie 与 <code>SYS_WAIT</code></a></h1>
 <p>这一页只讲：<strong>为什么任务 exit 以后不会立刻完全消失。</strong></p>
 <h2 id="1-zombie-是什么"><a class="header" href="#1-zombie-是什么">1. Zombie 是什么</a></h2>
 <p>在 DeepRoot 里，任务 <code>SYS_EXIT</code> 之后通常不是“当场彻底删掉”，而是先进入：</p>
@@ -2520,15 +2357,14 @@ while wait(id) == -11:
 <li>连续 <code>run hello</code> 两次，确认第二次仍能成功。</li>
 <li>故意让一个用户程序不 exit，观察 shell 为什么不返回提示符。</li>
 </ol>
-<p>下一章：<a href="#12-shell详细跟读">1.2 Shell</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="12-shell详细跟读"><a class="header" href="#12-shell详细跟读">1.2 Shell（详细跟读）</a></h1>
+<p>下一章：<a href="path/as-spawn/../07-shell.html">1.2 Shell</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="12-shell详细跟读"><a class="header" href="#12-shell详细跟读">1.2 Shell（详细跟读）</a></h1>
 <p>shell 是你最常触摸的用户程序。把它读懂，你就打通了「串口字节 → 解析 → syscall」整条链。</p>
 <h2 id="本章拆读顺序-6"><a class="header" href="#本章拆读顺序-6">本章拆读顺序</a></h2>
 <ol>
-<li><a href="#shell-主循环">1.2.1 shell 主循环</a></li>
-<li><a href="#read_line-与共享串口">1.2.2 <code>read_line</code> 与共享串口</a></li>
-<li><a href="#run_path-与前台等待">1.2.3 <code>run_path</code> 与前台等待</a></li>
+<li><a href="path/shell/01-main-loop.html">1.2.1 shell 主循环</a></li>
+<li><a href="path/shell/02-read-line.html">1.2.2 <code>read_line</code> 与共享串口</a></li>
+<li><a href="path/shell/03-run-path.html">1.2.3 <code>run_path</code> 与前台等待</a></li>
 </ol>
 <h2 id="1-主循环结构usershellsrcmainrs"><a class="header" href="#1-主循环结构usershellsrcmainrs">1. 主循环结构（<code>user/shell/src/main.rs</code>）</a></h2>
 <p>伪代码：</p>
@@ -2578,23 +2414,17 @@ loop:
 <li><code>run hello</code> 时观察：是否必须等 hello 结束后才出现下一行提示符。</li>
 </ol>
 <h2 id="4-自己加一个-builtin练习"><a class="header" href="#4-自己加一个-builtin练习">4. 自己加一个 builtin（练习）</a></h2>
-<p>例如加 <code>yield</code> 命令：解析到后调用 <code>sys::yield_now()</code> 几次。<br>这能帮你确认：「shell 改动 → 重编内核嵌入 → QEMU 可见」。</p>
+<p>例如加 <code>yield</code> 命令：解析到后调用 <code>sys::yield_now()</code> 几次。<br />
+这能帮你确认：「shell 改动 → 重编内核嵌入 → QEMU 可见」。</p>
 <h2 id="5-易错点-4"><a class="header" href="#5-易错点-4">5. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>现象</th><th>原因</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>现象</th><th>原因</th></tr></thead><tbody>
 <tr><td>每个命令都 unknown 且无回显</td><td>getchar EID/返回值解析错（经典坑）</td></tr>
 <tr><td>有回显但命令总不对</td><td>trim / <code>\r</code> 没剥干净</td></tr>
 <tr><td>run 后提示符消失很久</td><td>子任务没 exit，或 wait 没用上</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一章：<a href="#13-ramfs-与-run详细跟读">1.3 ramfs 与 run</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="shell-主循环"><a class="header" href="#shell-主循环">shell 主循环</a></h1>
+<p>下一章：<a href="path/08-fs.html">1.3 ramfs 与 run</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="shell-主循环"><a class="header" href="#shell-主循环">shell 主循环</a></h1>
 <p>这一页只讲：<code>user/shell</code> 启动后在干什么。</p>
 <h2 id="1-就绪"><a class="header" href="#1-就绪">1. 就绪</a></h2>
 <p>打印类似：</p>
@@ -2610,10 +2440,10 @@ unknown         → 打一行提示
 </code></pre>
 <p>没有管道、没有变量、没有通配符——故意保持小。</p>
 <h2 id="3-和内核日志抢串口"><a class="header" href="#3-和内核日志抢串口">3. 和内核日志抢串口</a></h2>
-<p>shell 用 <code>SYS_DEBUG_WRITE</code>；内核 <code>println!</code> 也走 SBI。<br>同一条 UART 上，服务器日志可能插在你的输入中间——这是教学机的常态，不是输入坏了。</p>
-<p>下一页：<a href="#read_line-与共享串口">read_line 与共享串口</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="read_line-与共享串口"><a class="header" href="#read_line-与共享串口"><code>read_line</code> 与共享串口</a></h1>
+<p>shell 用 <code>SYS_DEBUG_WRITE</code>；内核 <code>println!</code> 也走 SBI。<br />
+同一条 UART 上，服务器日志可能插在你的输入中间——这是教学机的常态，不是输入坏了。</p>
+<p>下一页：<a href="path/shell/02-read-line.html">read_line 与共享串口</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="read_line-与共享串口"><a class="header" href="#read_line-与共享串口"><code>read_line</code> 与共享串口</a></h1>
 <p>这一页只讲：<strong>你敲的每个键怎么变成一行命令。</strong></p>
 <h2 id="1-逐字节不是终端驱动整行"><a class="header" href="#1-逐字节不是终端驱动整行">1. 逐字节，不是「终端驱动整行」</a></h2>
 <p>shell 循环调用读串口字节（经 syscall）：</p>
@@ -2624,12 +2454,12 @@ unknown         → 打一行提示
 <li>暂无数据：常见返回 <code>ERR_AGAIN</code>，<code>yield</code> 后再试</li>
 </ul>
 <h2 id="2-为什么要-yield"><a class="header" href="#2-为什么要-yield">2. 为什么要 <code>yield</code>？</a></h2>
-<p>单 hart 上还有 ping / console / idle。<br>shell 若忙等空串口，会饿死别人；让出 CPU 后调度器才能转一圈。</p>
+<p>单 hart 上还有 ping / console / idle。<br />
+shell 若忙等空串口，会饿死别人；让出 CPU 后调度器才能转一圈。</p>
 <h2 id="3-缓冲区上限"><a class="header" href="#3-缓冲区上限">3. 缓冲区上限</a></h2>
 <p>行缓冲很小（约 64 字节）。超长粘贴会被截断——别当 bash 用。</p>
-<p>下一页：<a href="#run_path-与前台等待">run_path 与前台等待</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="run_path-与前台等待"><a class="header" href="#run_path-与前台等待"><code>run_path</code> 与前台等待</a></h1>
+<p>下一页：<a href="path/shell/03-run-path.html">run_path 与前台等待</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="run_path-与前台等待"><a class="header" href="#run_path-与前台等待"><code>run_path</code> 与前台等待</a></h1>
 <p>这一页只讲：<strong><code>run hello</code> 为什么会「卡住」直到程序结束。</strong></p>
 <h2 id="1-控制流"><a class="header" href="#1-控制流">1. 控制流</a></h2>
 <pre><code class="language-text">id = SYS_EXEC(path)
@@ -2649,42 +2479,30 @@ else:
 <li>地址空间 / 装载失败（少见，看内核日志）</li>
 </ul>
 <h2 id="3-和-cat-的分工"><a class="header" href="#3-和-cat-的分工">3. 和 <code>cat</code> 的分工</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>命令</th><th>目的</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>命令</th><th>目的</th></tr></thead><tbody>
 <tr><td><code>cat hello</code></td><td>发现是 ELF → 提示用 <code>run</code></td></tr>
 <tr><td><code>run hello</code></td><td>真正创建用户任务</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一章：<a href="#13-ramfs-与-run详细跟读">1.3 ramfs 与 run</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="13-ramfs-与-run详细跟读"><a class="header" href="#13-ramfs-与-run详细跟读">1.3 ramfs 与 run（详细跟读）</a></h1>
+<p>下一章：<a href="path/shell/../08-fs.html">1.3 ramfs 与 run</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="13-ramfs-与-run详细跟读"><a class="header" href="#13-ramfs-与-run详细跟读">1.3 ramfs 与 run（详细跟读）</a></h1>
 <p>到了 1.3，shell 终于能说「打开名叫 <code>hello</code> 的东西并跑它」，而不只是 <code>SYS_SPAWN(0)</code> 这种硬编码 blob。</p>
 <h2 id="本章拆读顺序-7"><a class="header" href="#本章拆读顺序-7">本章拆读顺序</a></h2>
 <ol>
-<li><a href="#ramfs-模型与-141-块文件">1.3.1 ramfs 模型</a></li>
-<li><a href="#buildrs-如何产出嵌入字节">1.3.2 <code>build.rs</code> 如何产出嵌入字节</a></li>
-<li><a href="#133-fs_list--fs_cat--exec">1.3.3 <code>FS_LIST</code> / <code>FS_CAT</code> / <code>EXEC</code></a></li>
-<li><a href="#sys_spawn-vs-sys_exec">1.3.4 <code>SYS_SPAWN</code> vs <code>SYS_EXEC</code></a></li>
+<li><a href="path/fs/01-ramfs-model.html">1.3.1 ramfs 模型</a></li>
+<li><a href="path/fs/02-build-pipeline.html">1.3.2 <code>build.rs</code> 如何产出嵌入字节</a></li>
+<li><a href="path/fs/03-fs-syscalls.html">1.3.3 <code>FS_LIST</code> / <code>FS_CAT</code> / <code>EXEC</code></a></li>
+<li><a href="path/fs/04-spawn-vs-exec.html">1.3.4 <code>SYS_SPAWN</code> vs <code>SYS_EXEC</code></a></li>
 </ol>
 <h2 id="1-ramfs-是什么以及不是什么"><a class="header" href="#1-ramfs-是什么以及不是什么">1. ramfs 是什么（以及不是什么）</a></h2>
-<p><strong>是</strong>：内核里一张静态表 <code>FILES[]</code>：<code>名字 → &amp;'static [u8]</code>。<br><strong>不是</strong>：可挂载的磁盘文件系统、可写目录、用户态 VFS、POSIX <code>open/read</code>。</p>
+<p><strong>是</strong>：内核里一张静态表 <code>FILES[]</code>：<code>名字 → &amp;'static [u8]</code>。<br />
+<strong>不是</strong>：可挂载的磁盘文件系统、可写目录、用户态 VFS、POSIX <code>open/read</code>。</p>
 <p>代码在 <code>kernel/src/fs.rs</code>。表里同时放了：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>名字</th><th>内容类型</th><th>用途</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>名字</th><th>内容类型</th><th>用途</th></tr></thead><tbody>
 <tr><td><code>readme.txt</code> / <code>hello.txt</code> / <code>version</code></td><td>纯文本</td><td><code>cat</code> 练习</td></tr>
 <tr><td><code>hello</code></td><td>完整 ELF</td><td><code>run hello</code></td></tr>
 <tr><td><code>badapple</code></td><td>完整 ELF（很大）</td><td>彩蛋，非主线</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>判断 ELF 的方式很朴素：前 4 字节是 <code>\x7fELF</code>。</p>
 <h2 id="2-文件字节从哪来构建链路"><a class="header" href="#2-文件字节从哪来构建链路">2. 文件字节从哪来？构建链路</a></h2>
@@ -2741,18 +2559,12 @@ fs::cat(path):
 </code></pre>
 <p>这解释了：<code>run hello</code> 期间为什么看不到新的 <code>deeproot&gt;</code>——shell 在前台等待。</p>
 <h2 id="4-sys_spawn-和-sys_exec-差在哪"><a class="header" href="#4-sys_spawn-和-sys_exec-差在哪">4. <code>SYS_SPAWN</code> 和 <code>SYS_EXEC</code> 差在哪？</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th></th><th><code>SYS_SPAWN</code></th><th><code>SYS_EXEC</code></th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th></th><th><code>SYS_SPAWN</code></th><th><code>SYS_EXEC</code></th></tr></thead><tbody>
 <tr><td>参数</td><td>blob id（目前仅 <code>0=hello</code>）</td><td>路径字符串</td></tr>
 <tr><td>数据源</td><td><code>servers::HELLO_ELF</code></td><td><code>fs::lookup</code></td></tr>
 <tr><td>谁在用</td><td>init 演示</td><td>shell <code>run</code></td></tr>
 <tr><td>扩展性</td><td>每加一个程序要改分支</td><td>往 <code>FILES</code> 加一项即可</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>学到这里：路径 exec 是更「像操作系统」的接口；blob id 是早期脚手架。</p>
 <h2 id="5-动手验证请逐条做"><a class="header" href="#5-动手验证请逐条做">5. 动手验证（请逐条做）</a></h2>
@@ -2766,7 +2578,7 @@ fs::cat(path):
 <li>（可选）改 <code>readme.txt</code> 的静态字符串，重编，确认 <code>cat</code> 变了。</li>
 </ol>
 <h2 id="6-想加自己的-elf-进-ramfs"><a class="header" href="#6-想加自己的-elf-进-ramfs">6. 想加自己的 ELF 进 ramfs？</a></h2>
-<p>完整步骤见 <a href="#自己写一个用户程序逐步教程">自己写一个用户程序</a>。最短心智模型：</p>
+<p>完整步骤见 <a href="path/../hands-on/write-user-prog.html">自己写一个用户程序</a>。最短心智模型：</p>
 <pre><code class="language-text">新建 user/foo
 → build.rs 多编一个包
 → fs.rs FILES 多一项
@@ -2774,24 +2586,18 @@ fs::cat(path):
 → 整仓重编
 </code></pre>
 <h2 id="7-易错点-2"><a class="header" href="#7-易错点-2">7. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>现象</th><th>原因</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>现象</th><th>原因</th></tr></thead><tbody>
 <tr><td>改了 hello 没变化</td><td>内核没重编 / 跑了旧镜像</td></tr>
 <tr><td><code>exec failed</code></td><td>路径错、不是 ELF、映射失败、<code>MAX_PAGES</code> 不够</td></tr>
 <tr><td><code>cat</code> 空白</td><td>文件是空的，或非 UTF-8 走了 binary 分支</td></tr>
 <tr><td>第二次 <code>run</code> 失败</td><td>子任务没 <code>exit</code>，或 <code>wait</code> 没回收槽位</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="8-小结-1"><a class="header" href="#8-小结-1">8. 小结</a></h2>
-<p>1.3 教你的是：<strong>路径 → 静态字节 →（可选）加载为任务</strong>。<br>块设备章会告诉你：旁边还有一块「假磁盘」，但今天 shell 读的文件<strong>仍然主要来自这张嵌入表</strong>。</p>
-<p>下一章：<a href="#14-块设备教学替身详细说明">1.4 块设备</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="ramfs-模型与-141-块文件"><a class="header" href="#ramfs-模型与-141-块文件">ramfs 模型（与 1.4.1 块文件）</a></h1>
+<p>1.3 教你的是：<strong>路径 → 静态字节 →（可选）加载为任务</strong>。<br />
+块设备章会告诉你：旁边还有一块「假磁盘」，但今天 shell 读的文件<strong>仍然主要来自这张嵌入表</strong>。</p>
+<p>下一章：<a href="path/09-block.html">1.4 块设备</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="ramfs-模型与-141-块文件"><a class="header" href="#ramfs-模型与-141-块文件">ramfs 模型（与 1.4.1 块文件）</a></h1>
 <p>这一页讲：<strong>DeepRoot 的「文件」从哪来，shell 怎么看见它们。</strong></p>
 <h2 id="1-两条来源141"><a class="header" href="#1-两条来源141">1. 两条来源（1.4.1）</a></h2>
 <pre><code class="language-text">embed ramfs （fs.rs FILES[]）
@@ -2802,11 +2608,14 @@ block DRFS （block.rs DISK[]）
   ← init 时格式化的教学镜像
   ← 目前主要是文本（block.txt 等）
 </code></pre>
-<p><code>ls</code> 会打印两节：<code>fs: ramfs /</code> 与 <code>fs: block /</code>。<br><code>cat</code> 先查 embed，未命中再查 DRFS。<br><code>run</code> / <code>SYS_EXEC</code> <strong>只</strong>走 <code>fs::lookup</code>（embed）。</p>
+<p><code>ls</code> 会打印两节：<code>fs: ramfs /</code> 与 <code>fs: block /</code>。<br />
+<code>cat</code> 先查 embed，未命中再查 DRFS。<br />
+<code>run</code> / <code>SYS_EXEC</code> <strong>只</strong>走 <code>fs::lookup</code>（embed）。</p>
 <h2 id="2-embed-表长什么样"><a class="header" href="#2-embed-表长什么样">2. embed 表长什么样</a></h2>
 <pre><code class="language-text">名字 -&gt; &amp;'static [u8]
 </code></pre>
-<p>例如 <code>version</code>、<code>readme.txt</code>、<code>hello</code>（ELF）。<br>构建时 <code>kernel/build.rs</code> 把用户程序编成字节，再 <code>include_bytes!</code> 嵌进内核。</p>
+<p>例如 <code>version</code>、<code>readme.txt</code>、<code>hello</code>（ELF）。<br />
+构建时 <code>kernel/build.rs</code> 把用户程序编成字节，再 <code>include_bytes!</code> 嵌进内核。</p>
 <h2 id="3-它仍然不是"><a class="header" href="#3-它仍然不是">3. 它仍然不是</a></h2>
 <ul>
 <li>可拔插的真实磁盘（后端是内存 ramdisk）</li>
@@ -2819,12 +2628,12 @@ block DRFS （block.rs DISK[]）
 <li><strong>1.4.0</strong>：块层模块出现在启动路径上。</li>
 <li><strong>1.4.1</strong>：同一套 <code>ls</code>/<code>cat</code> 开始读块上布局，为以后换 virtio 留接口形状。</li>
 </ol>
-<p>下一页：<a href="#buildrs-如何产出嵌入字节">build.rs 如何产出嵌入字节</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="buildrs-如何产出嵌入字节"><a class="header" href="#buildrs-如何产出嵌入字节"><code>build.rs</code> 如何产出嵌入字节</a></h1>
+<p>下一页：<a href="path/fs/02-build-pipeline.html">build.rs 如何产出嵌入字节</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="buildrs-如何产出嵌入字节"><a class="header" href="#buildrs-如何产出嵌入字节"><code>build.rs</code> 如何产出嵌入字节</a></h1>
 <p>这一页只讲：<strong>ELF 是怎么变成内核里的静态字节的。</strong></p>
 <h2 id="1-谁在编译用户程序"><a class="header" href="#1-谁在编译用户程序">1. 谁在编译用户程序？</a></h2>
-<p>不是你手动 <code>cargo build -p deeproot-hello</code> 再拷进内核。<br><code>kernel/build.rs</code> 在编内核时会再拉起 cargo，目标仍是 <code>riscv64gc-unknown-none-elf</code>，把产物拷到 <code>OUT_DIR</code>。</p>
+<p>不是你手动 <code>cargo build -p deeproot-hello</code> 再拷进内核。<br />
+<code>kernel/build.rs</code> 在编内核时会再拉起 cargo，目标仍是 <code>riscv64gc-unknown-none-elf</code>，把产物拷到 <code>OUT_DIR</code>。</p>
 <h2 id="2-内核怎么引用"><a class="header" href="#2-内核怎么引用">2. 内核怎么引用？</a></h2>
 <p><code>fs.rs</code>（以及早期的 <code>servers.rs</code> 路径）用：</p>
 <pre><code class="language-text">include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-hello"))
@@ -2835,24 +2644,18 @@ block DRFS （block.rs DISK[]）
 <li>第一次全量构建会慢，因为要编一串用户包</li>
 </ul>
 <h2 id="3-和-drfs-的分工141"><a class="header" href="#3-和-drfs-的分工141">3. 和 DRFS 的分工（1.4.1）</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th></th><th>embed（本页）</th><th>block DRFS</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th></th><th>embed（本页）</th><th>block DRFS</th></tr></thead><tbody>
 <tr><td>何时写入</td><td>编译期</td><td>运行时 <code>block::init</code></td></tr>
 <tr><td>典型内容</td><td>ELF + 少量文本</td><td>教学文本文件</td></tr>
 <tr><td><code>run</code></td><td>可以</td><td>不可以（今天）</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一页：<a href="#133-fs_list--fs_cat--exec">FS_LIST / FS_CAT / EXEC</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="133-fs_list--fs_cat--exec"><a class="header" href="#133-fs_list--fs_cat--exec">1.3.3 <code>FS_LIST</code> / <code>FS_CAT</code> / <code>EXEC</code></a></h1>
+<p>下一页：<a href="path/fs/03-fs-syscalls.html">FS_LIST / FS_CAT / EXEC</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="133-fs_list--fs_cat--exec"><a class="header" href="#133-fs_list--fs_cat--exec">1.3.3 <code>FS_LIST</code> / <code>FS_CAT</code> / <code>EXEC</code></a></h1>
 <p>这一页只讲：<strong>shell 的 <code>ls</code> / <code>cat</code> / <code>run</code> 在内核里各自走哪条路径。</strong></p>
 <h2 id="1-fs_list"><a class="header" href="#1-fs_list">1. <code>FS_LIST</code></a></h2>
-<p><code>ls</code> -&gt; <code>SYS_FS_LIST</code> -&gt; <code>fs::list()</code><br>先打印 embed <code>FILES</code>，若块层 ready 再打印 <code>fs: block /</code> 下的 DRFS 目录。</p>
+<p><code>ls</code> -&gt; <code>SYS_FS_LIST</code> -&gt; <code>fs::list()</code><br />
+先打印 embed <code>FILES</code>，若块层 ready 再打印 <code>fs: block /</code> 下的 DRFS 目录。</p>
 <h2 id="2-fs_cat"><a class="header" href="#2-fs_cat">2. <code>FS_CAT</code></a></h2>
 <p><code>cat path</code> -&gt; <code>SYS_FS_CAT</code></p>
 <p>内核会：</p>
@@ -2873,36 +2676,30 @@ block DRFS （block.rs DISK[]）
 </ol>
 <h2 id="4-为什么列表输出是内核日志风"><a class="header" href="#4-为什么列表输出是内核日志风">4. 为什么列表输出是“内核日志风”</a></h2>
 <p>因为当前教学树优先的是“你能直接看见”，而不是先设计一套复杂的目录项缓冲区 ABI。</p>
-<p>下一页：<a href="#sys_spawn-vs-sys_exec">1.3.4 <code>SYS_SPAWN</code> vs <code>SYS_EXEC</code></a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="sys_spawn-vs-sys_exec"><a class="header" href="#sys_spawn-vs-sys_exec"><code>SYS_SPAWN</code> vs <code>SYS_EXEC</code></a></h1>
+<p>下一页：<a href="path/fs/04-spawn-vs-exec.html">1.3.4 <code>SYS_SPAWN</code> vs <code>SYS_EXEC</code></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="sys_spawn-vs-sys_exec"><a class="header" href="#sys_spawn-vs-sys_exec"><code>SYS_SPAWN</code> vs <code>SYS_EXEC</code></a></h1>
 <p>这一页只讲：<strong>两种「跑起来一个 ELF」差在哪。</strong></p>
 <h2 id="1-对照表"><a class="header" href="#1-对照表">1. 对照表</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th></th><th><code>SYS_SPAWN</code></th><th><code>SYS_EXEC</code></th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th></th><th><code>SYS_SPAWN</code></th><th><code>SYS_EXEC</code></th></tr></thead><tbody>
 <tr><td>参数</td><td>blob id（教学里常见 <code>0=hello</code>）</td><td>路径字符串</td></tr>
 <tr><td>字节从哪来</td><td>内核里写死的映射（如 <code>HELLO_ELF</code>）</td><td><code>fs::lookup</code>（<strong>仅 embed</strong>）</td></tr>
 <tr><td>谁在用</td><td>init 早期演示</td><td>shell <code>run</code> / <code>hello</code></td></tr>
 <tr><td>扩展方式</td><td>每加程序改分支</td><td>往 <code>FILES</code> 加一项即可</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="2-为什么-shell-用-exec"><a class="header" href="#2-为什么-shell-用-exec">2. 为什么 shell 用 EXEC？</a></h2>
-<p>因为路径模型更接近「操作系统」：用户输入名字，内核解析，再装载。<br>blob id 适合启动早期、还没有路径概念时的脚手架。</p>
+<p>因为路径模型更接近「操作系统」：用户输入名字，内核解析，再装载。<br />
+blob id 适合启动早期、还没有路径概念时的脚手架。</p>
 <h2 id="3-和块层的边界"><a class="header" href="#3-和块层的边界">3. 和块层的边界</a></h2>
-<p><code>SYS_EXEC</code> <strong>不会</strong>去 <code>block::lookup</code>。<br>块上文本用 <code>cat</code>；要执行的程序仍须挂进 embed ramfs（见 <a href="#自己写一个用户程序逐步教程">自己写用户程序</a>）。</p>
-<p>下一节建议：<a href="#shell-常用命令详细手册">Shell 常用命令</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="14-块设备教学替身详细说明"><a class="header" href="#14-块设备教学替身详细说明">1.4 块设备教学替身（详细说明）</a></h1>
+<p><code>SYS_EXEC</code> <strong>不会</strong>去 <code>block::lookup</code>。<br />
+块上文本用 <code>cat</code>；要执行的程序仍须挂进 embed ramfs（见 <a href="path/fs/../../hands-on/write-user-prog.html">自己写用户程序</a>）。</p>
+<p>下一节建议：<a href="path/fs/../../hands-on/shell-commands.html">Shell 常用命令</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="14-块设备教学替身详细说明"><a class="header" href="#14-块设备教学替身详细说明">1.4 块设备教学替身（详细说明）</a></h1>
 <h2 id="本章拆读顺序-8"><a class="header" href="#本章拆读顺序-8">本章拆读顺序</a></h2>
 <ol>
-<li><a href="#为什么先做替身">为什么先做替身</a></li>
-<li><a href="#跟读-blockrs">跟读 <code>block.rs</code></a></li>
-<li><a href="#143-以后怎么走向-virtio-blk">以后怎么走向 virtio-blk</a></li>
+<li><a href="path/block/01-why-standin.html">为什么先做替身</a></li>
+<li><a href="path/block/02-read-block-rs.html">跟读 <code>block.rs</code></a></li>
+<li><a href="path/block/03-next-step-virtio.html">以后怎么走向 virtio-blk</a></li>
 </ol>
 <h2 id="1-这一章要解决什么心理预期"><a class="header" href="#1-这一章要解决什么心理预期">1. 这一章要解决什么心理预期？</a></h2>
 <p>很多人看到路线图写「块设备」，期待立刻：</p>
@@ -2911,7 +2708,8 @@ block DRFS （block.rs DISK[]）
 <li>virtio-blk 队列、descriptor</li>
 <li>可持久化的文件系统</li>
 </ul>
-<p><strong>教学树先交的是替身</strong>：一块内存数组假装磁盘，上面再放一个极简 <strong>DRFS</strong> 镜像。<br>目的：</p>
+<p><strong>教学树先交的是替身</strong>：一块内存数组假装磁盘，上面再放一个极简 <strong>DRFS</strong> 镜像。<br />
+目的：</p>
 <ol>
 <li>启动路径上<strong>出现块层模块</strong>（<code>block::init</code>）</li>
 <li>留下 <code>read</code> / <code>write</code> / <code>lookup</code>，以后可换真实后端</li>
@@ -2951,17 +2749,11 @@ READY: AtomicBool    // init 成功后为 true
                  ├── FILES[] （embed：ELF + 部分文本）
                  └── block::lookup （DRFS 文本）
 </code></pre>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>操作</th><th>embed ramfs</th><th>block DRFS</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>操作</th><th>embed ramfs</th><th>block DRFS</th></tr></thead><tbody>
 <tr><td><code>ls</code></td><td>列出</td><td>另起一节 <code>fs: block /</code></td></tr>
 <tr><td><code>cat</code></td><td>文本 / ELF 提示</td><td>文本（如 <code>cat block.txt</code>）</td></tr>
 <tr><td><code>run</code> / <code>SYS_EXEC</code></td><td>ELF only</td><td><strong>不</strong>从此加载</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>读 <code>VERSION</code> 时：1.4.0 = 替身就位；1.4.1 = 路径 API 真正吃到块上的文件。</p>
 <h2 id="4-启动顺序里它排在哪"><a class="header" href="#4-启动顺序里它排在哪">4. 启动顺序里它排在哪？</a></h2>
@@ -2983,30 +2775,23 @@ block 抽象：read/write + DRFS（或其它布局）
     ↓
 backend：ramdisk  或  virtio-blk
 </code></pre>
-<p>今天只有 ramdisk backend。真实 virtio 是进阶课题，见 <a href="#下一步可以看什么">下一步</a>。</p>
+<p>今天只有 ramdisk backend。真实 virtio 是进阶课题，见 <a href="path/../appendix/next.html">下一步</a>。</p>
 <h2 id="7-易错点-3"><a class="header" href="#7-易错点-3">7. 易错点</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>误解</th><th>纠正</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>误解</th><th>纠正</th></tr></thead><tbody>
 <tr><td>「1.4 应该能挂 U 盘」</td><td>仍是 ramdisk；布局已是可迁移的 DRFS</td></tr>
 <tr><td>「所有文件都在 DISK 里」</td><td>ELF 仍在 <code>include_bytes!</code></td></tr>
 <tr><td>「没有 virtio 就是没完成 1.4」</td><td>看 <code>VERSION</code>：替身 + 块上文本即本系列交付</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="8-教学路径到此14-系列"><a class="header" href="#8-教学路径到此14-系列">8. 教学路径到此（1.4 系列）</a></h2>
 <p>恭喜：串口 → 页表 → 能力 → IPC → 用户态 → 调度 → ABI → spawn → shell → ramfs → <strong>块上 DRFS 文本</strong>。</p>
 <p>接下来建议：</p>
 <ol>
-<li><a href="#shell-常用命令详细手册">Shell 常用命令</a></li>
-<li><a href="#自己写一个用户程序逐步教程">自己写一个用户程序</a></li>
-<li><a href="#常见问题faq">常见问题</a></li>
+<li><a href="path/../hands-on/shell-commands.html">Shell 常用命令</a></li>
+<li><a href="path/../hands-on/write-user-prog.html">自己写一个用户程序</a></li>
+<li><a href="path/../hands-on/faq.html">常见问题</a></li>
 </ol>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="为什么先做替身"><a class="header" href="#为什么先做替身">为什么先做替身</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="为什么先做替身"><a class="header" href="#为什么先做替身">为什么先做替身</a></h1>
 <p>这一页只讲：<strong>为什么 1.4 不是直接上完整 virtio-blk。</strong></p>
 <h2 id="1-教学权衡"><a class="header" href="#1-教学权衡">1. 教学权衡</a></h2>
 <p>如果在新手刚学完 shell / ramfs / exec 之后，马上丢给他完整 virtio 队列与持久化 FS，曲线会陡到很难继续。</p>
@@ -3018,9 +2803,8 @@ backend：ramdisk  或  virtio-blk
 <li>从 1.4.1 起还有 DRFS 布局，让 <code>ls</code> / <code>cat</code> 真正读到「盘上」的文本</li>
 </ul>
 <p>真实 virtio 可以以后再换 backend，不必先改 shell 习惯。</p>
-<p>下一页：<a href="#跟读-blockrs">跟读 <code>block.rs</code></a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="跟读-blockrs"><a class="header" href="#跟读-blockrs">跟读 <code>block.rs</code></a></h1>
+<p>下一页：<a href="path/block/02-read-block-rs.html">跟读 <code>block.rs</code></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="跟读-blockrs"><a class="header" href="#跟读-blockrs">跟读 <code>block.rs</code></a></h1>
 <p>这一页只讲：<strong>当前块层代码到底已经做到了什么（对齐 1.4.1）。</strong></p>
 <h2 id="1-关键状态-1"><a class="header" href="#1-关键状态-1">1. 关键状态</a></h2>
 <pre><code class="language-text">DISK  : [u8; 16KiB] 静态「磁盘」
@@ -3051,9 +2835,8 @@ READY : AtomicBool
 <li>极简 on-disk 布局如何支撑「按路径取内容」</li>
 <li>换 virtio 后端时，理想上只换 <code>DISK[]</code> 的访问方式，不必改 shell 路径习惯</li>
 </ul>
-<p>下一页：<a href="#143-以后怎么走向-virtio-blk">以后怎么走向 virtio-blk</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="143-以后怎么走向-virtio-blk"><a class="header" href="#143-以后怎么走向-virtio-blk">1.4.3 以后怎么走向 virtio-blk</a></h1>
+<p>下一页：<a href="path/block/03-next-step-virtio.html">以后怎么走向 virtio-blk</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="143-以后怎么走向-virtio-blk"><a class="header" href="#143-以后怎么走向-virtio-blk">1.4.3 以后怎么走向 virtio-blk</a></h1>
 <p>这一页只讲：<strong>如果以后要把 stand-in 换成真块设备，应该怎么想。</strong></p>
 <h2 id="1-理想分层"><a class="header" href="#1-理想分层">1. 理想分层</a></h2>
 <pre><code class="language-text">更高层文件系统 / 路径接口
@@ -3063,7 +2846,8 @@ block 抽象（read/write）
 具体后端：ramdisk 或 virtio-blk
 </code></pre>
 <h2 id="2-为什么现在先不展开"><a class="header" href="#2-为什么现在先不展开">2. 为什么现在先不展开</a></h2>
-<p>因为完整 virtio 已超出 1.4 主线必要难度。<br>你先把「路径 → exec」和「DRFS on ramdisk」读懂，收获更大。</p>
+<p>因为完整 virtio 已超出 1.4 主线必要难度。<br />
+你先把「路径 → exec」和「DRFS on ramdisk」读懂，收获更大。</p>
 <h2 id="3-真正继续做下去时要补什么"><a class="header" href="#3-真正继续做下去时要补什么">3. 真正继续做下去时要补什么</a></h2>
 <ul>
 <li>QEMU 挂真实磁盘镜像</li>
@@ -3072,17 +2856,12 @@ block 抽象（read/write）
 <li>同步与中断</li>
 <li>更高层文件系统如何消费 block 接口</li>
 </ul>
-<p>下一节建议去：<a href="#自己写一个用户程序逐步教程">自己写一个用户程序</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="shell-常用命令详细手册"><a class="header" href="#shell-常用命令详细手册">Shell 常用命令（详细手册）</a></h1>
-<p>提示符：<code>deeproot&gt;</code><br>解析器在 <code>user/shell/src/main.rs</code>：非常朴素——<strong>没有</strong>引号、管道、变量、通配符。</p>
+<p>下一节建议去：<a href="path/block/../../hands-on/write-user-prog.html">自己写一个用户程序</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="shell-常用命令详细手册"><a class="header" href="#shell-常用命令详细手册">Shell 常用命令（详细手册）</a></h1>
+<p>提示符：<code>deeproot&gt;</code><br />
+解析器在 <code>user/shell/src/main.rs</code>：非常朴素——<strong>没有</strong>引号、管道、变量、通配符。</p>
 <h2 id="1-命令一览"><a class="header" href="#1-命令一览">1. 命令一览</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>你输入</th><th>实际行为</th><th>底层</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>你输入</th><th>实际行为</th><th>底层</th></tr></thead><tbody>
 <tr><td><code>help</code></td><td>打印内置帮助文本</td><td>仅用户态字符串</td></tr>
 <tr><td><code>ls</code></td><td>列出 embed ramfs + 块上 DRFS</td><td><code>SYS_FS_LIST</code></td></tr>
 <tr><td><code>cat &lt;文件&gt;</code></td><td>显示文本；ELF 则提示 <code>run</code></td><td><code>SYS_FS_CAT</code></td></tr>
@@ -3092,8 +2871,7 @@ block 抽象（read/write）
 <tr><td><code>exit</code></td><td>shell 退出</td><td><code>SYS_EXIT</code></td></tr>
 <tr><td>（空行）</td><td>再出提示符</td><td>—</td></tr>
 <tr><td>其它</td><td><code>shell: unknown - type: help</code></td><td>—</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="2-推荐练习顺序请照做"><a class="header" href="#2-推荐练习顺序请照做">2. 推荐练习顺序（请照做）</a></h2>
 <h3 id="练习-a确认输入链路"><a class="header" href="#练习-a确认输入链路">练习 A：确认输入链路</a></h3>
@@ -3102,7 +2880,7 @@ block 抽象（read/write）
 <li>输入 <code>he</code>，退格删掉，改成 <code>help</code>。</li>
 <li>只按回车：应安静地再出现 <code>deeproot&gt;</code>。</li>
 </ol>
-<p>若「一按键就 unknown」或完全无回显 → 见 <a href="#常见问题faq">FAQ：不能输入</a>。</p>
+<p>若「一按键就 unknown」或完全无回显 → 见 <a href="hands-on/faq.html">FAQ：不能输入</a>。</p>
 <h3 id="练习-b认文件系统"><a class="header" href="#练习-b认文件系统">练习 B：认文件系统</a></h3>
 <pre><code class="language-text">deeproot&gt; ls
 deeproot&gt; cat readme.txt
@@ -3146,11 +2924,13 @@ deeproot&gt; cat hello
 </ul>
 <p>如果串口暂时没有新字节，<code>read_line</code> 会得到一个负返回值（常见是 <code>-11</code>），然后执行 <code>sys::yield_now()</code> 再继续等，因此你看到的体验是“能输入，但系统在忙着切别的任务”。</p>
 <h3 id="31-空格"><a class="header" href="#31-空格">3.1 空格</a></h3>
-<p><code>catreadme.txt</code>（没空格）不会被识别成 <code>cat</code>。<br><code>run  hello</code>（多空格）——<code>trim</code> 只剥两端，中间依赖你写对；<code>run </code> 后面再 trim path。</p>
+<p><code>catreadme.txt</code>（没空格）不会被识别成 <code>cat</code>。<br />
+<code>run  hello</code>（多空格）——<code>trim</code> 只剥两端，中间依赖你写对；<code>run </code> 后面再 trim path。</p>
 <h3 id="32-路径"><a class="header" href="#32-路径">3.2 路径</a></h3>
 <p><code>cat /version</code> 与 <code>cat version</code> 通常都行（内核 <code>normalize</code> 剥 <code>/</code>）。</p>
 <h3 id="33-阻塞"><a class="header" href="#33-阻塞">3.3 阻塞</a></h3>
-<p><code>run</code> / <code>hello</code> / <code>badapple</code> 会占用 shell，直到子任务 <code>SYS_EXIT</code> 并被 <code>wait</code> 收尸。<br>这是刻意的「前台」模型，不是 bug。</p>
+<p><code>run</code> / <code>hello</code> / <code>badapple</code> 会占用 shell，直到子任务 <code>SYS_EXIT</code> 并被 <code>wait</code> 收尸。<br />
+这是刻意的「前台」模型，不是 bug。</p>
 <p>更“源码向”的理解：shell 的 <code>run_path</code> 逻辑大致是：</p>
 <pre><code class="language-text">id = sys::exec(path)
 if id &lt; 0: 直接打印 exec failed
@@ -3164,35 +2944,29 @@ else:
 <h3 id="34-缓冲区"><a class="header" href="#34-缓冲区">3.4 缓冲区</a></h3>
 <p>一行最多约 64 字节（<code>buf = [0u8; 64]</code>）。别贴超长命令；超过缓冲区上限的部分不会再被加入到这一行里。</p>
 <h2 id="4-和-linux-shell-的对照防脑补"><a class="header" href="#4-和-linux-shell-的对照防脑补">4. 和 Linux shell 的对照（防脑补）</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>Linux 习惯</th><th>DeepRoot shell</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>Linux 习惯</th><th>DeepRoot shell</th></tr></thead><tbody>
 <tr><td><code>ls /bin</code></td><td>embed 表 + DRFS 目录，无真实 Linux 目录树</td></tr>
 <tr><td><code>./a.out</code></td><td>用 <code>run name</code>；ELF 目前只来自 embed <code>FILES</code></td></tr>
 <tr><td><code>Ctrl-C</code> 杀进程</td><td>未实现；长任务用程序自己的退出键或重启 QEMU</td></tr>
 <tr><td>管道 <code>|</code></td><td>无</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>下一章：<a href="#自己写一个用户程序逐步教程">自己写一个用户程序</a>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="自己写一个用户程序逐步教程"><a class="header" href="#自己写一个用户程序逐步教程">自己写一个用户程序（逐步教程）</a></h1>
-<p>目标：新增一个可 <code>run</code> 的 ELF，例如打印 <code>echo: …</code> 的小程序 <code>echo</code>。<br>做完后你应彻底理解：<strong>用户包 → build.rs → ramfs → shell</strong>。</p>
+<p>下一章：<a href="hands-on/write-user-prog.html">自己写一个用户程序</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="自己写一个用户程序逐步教程"><a class="header" href="#自己写一个用户程序逐步教程">自己写一个用户程序（逐步教程）</a></h1>
+<p>目标：新增一个可 <code>run</code> 的 ELF，例如打印 <code>echo: …</code> 的小程序 <code>echo</code>。<br />
+做完后你应彻底理解：<strong>用户包 → build.rs → ramfs → shell</strong>。</p>
 <h2 id="本章拆读顺序-9"><a class="header" href="#本章拆读顺序-9">本章拆读顺序</a></h2>
 <ol>
-<li><a href="#步骤-1复制-hello-模板">步骤 1：复制 hello 模板</a></li>
-<li><a href="#步骤-2注册到-workspace-与-build">步骤 2：注册到 workspace 与 build</a></li>
-<li><a href="#步骤-3挂进-ramfs-与-shell">步骤 3：挂进 ramfs 与 shell</a></li>
-<li><a href="#步骤-4构建运行调试">步骤 4：构建、运行、调试</a></li>
+<li><a href="hands-on/write-user-prog/01-clone-template.html">步骤 1：复制 hello 模板</a></li>
+<li><a href="hands-on/write-user-prog/02-register-build.html">步骤 2：注册到 workspace 与 build</a></li>
+<li><a href="hands-on/write-user-prog/03-ramfs-shell.html">步骤 3：挂进 ramfs 与 shell</a></li>
+<li><a href="hands-on/write-user-prog/04-build-debug.html">步骤 4：构建、运行、调试</a></li>
 </ol>
 <p>下面以包名 <code>deeproot-echo</code>、ramfs 名 <code>echo</code> 为例。</p>
 <h2 id="0-前置"><a class="header" href="#0-前置">0. 前置</a></h2>
 <ul>
 <li>已能 <code>./scripts/run-qemu.sh</code> 并看到 <code>deeproot&gt;</code></li>
-<li>读过 <a href="#13-ramfs-与-run详细跟读">1.3 ramfs</a></li>
+<li>读过 <a href="hands-on/../path/08-fs.html">1.3 ramfs</a></li>
 <li>建议先看一眼现成的 <code>user/hello/</code>（最小模板）</li>
 </ul>
 <h2 id="1-复制-hello-当模板"><a class="header" href="#1-复制-hello-当模板">1. 复制 hello 当模板</a></h2>
@@ -3217,11 +2991,11 @@ deeproot-user = { path = "../../libs/deeproot-user" }
 </code></pre>
 <h3 id="12-userechosrcmainrs"><a class="header" href="#12-userechosrcmainrs">1.2 <code>user/echo/src/main.rs</code></a></h3>
 <p>保留 <code>_start</code> 汇编骨架，改 <code>main</code>：</p>
-<pre class="playground"><code class="language-rust">#[no_mangle]
+<pre><pre class="playground"><code class="language-rust">#[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write("echo: hello from my program\n");
     sys::exit(0);
-}</code></pre>
+}</code></pre></pre>
 <h3 id="13-链接脚本基址重要"><a class="header" href="#13-链接脚本基址重要">1.3 链接脚本基址（重要）</a></h3>
 <p>打开 <code>user/echo/linker.ld</code>。<code>hello</code> 使用：</p>
 <pre><code class="language-text">. = 0x14000000;
@@ -3229,14 +3003,14 @@ pub extern "C" fn main() {
 <p>其它用户程序（init / shell / …）各有自己的基址。1.1 起每任务自有页表后，<strong>撞基址不像早期那么致命</strong>，但仍建议给 echo 换一个清晰地址（例如 <code>0x15000000</code>），避免和 hello 混淆、方便用 objdump 对照。</p>
 <h2 id="2-让内核构建系统编进它"><a class="header" href="#2-让内核构建系统编进它">2. 让内核构建系统编进它</a></h2>
 <p>编辑 <code>kernel/build.rs</code>，在 <code>for (pkg, bin, src_dir) in [</code> 列表中增加一行：</p>
-<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>("deeproot-echo", "deeproot-echo", "user/echo"),
-<span class="boring">}</span></code></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>并在仓库根目录 <code>Cargo.toml</code> 的 <code>members</code> 列表中加入 <code>"user/echo"</code>（与 <code>"user/hello"</code> 并列）。</p>
 <h2 id="3-挂进-ramfs"><a class="header" href="#3-挂进-ramfs">3. 挂进 ramfs</a></h2>
 <p>编辑 <code>kernel/src/fs.rs</code>：</p>
-<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>static ECHO_ELF: &amp;[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-echo"));
 
@@ -3245,7 +3019,7 @@ File {
     name: "echo",
     data: ECHO_ELF,
 },
-<span class="boring">}</span></code></pre>
+<span class="boring">}</span></code></pre></pre>
 <h2 id="4可选给-shell-加捷径"><a class="header" href="#4可选给-shell-加捷径">4.（可选）给 shell 加捷径</a></h2>
 <p>在 <code>user/shell/src/main.rs</code> 的 <code>help</code> 和分支里加：</p>
 <pre><code class="language-text">echo  →  run_path(b"echo")
@@ -3260,19 +3034,13 @@ deeproot&gt; run echo
 </code></pre>
 <p>期望看到你的那行 <code>echo: …</code>，然后提示符回来。</p>
 <h2 id="6-调试清单"><a class="header" href="#6-调试清单">6. 调试清单</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>失败</th><th>检查</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>失败</th><th>检查</th></tr></thead><tbody>
 <tr><td><code>build.rs</code> panic missing elf</td><td>package/bin 名是否与 <code>Cargo.toml</code>、<code>[[bin]]</code> 一致</td></tr>
 <tr><td><code>include_bytes!</code> 编译失败</td><td>OUT_DIR 里有没有 <code>deeproot-echo</code>；build.rs 是否编了它</td></tr>
 <tr><td><code>exec failed</code></td><td><code>FILES</code> 名字是否叫 <code>echo</code>；是否真是 ELF；<code>MAX_PAGES</code> 是否够</td></tr>
 <tr><td>能 run 无输出</td><td>是否真的 <code>debug_write</code>；是否提前 panic/exit</td></tr>
 <tr><td>改代码无效果</td><td>是否触发重编；试 <code>cargo clean -p deeproot-kernel</code> 后再跑脚本</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <h2 id="7-进阶练习选做"><a class="header" href="#7-进阶练习选做">7. 进阶练习（选做）</a></h2>
 <ol>
@@ -3291,8 +3059,7 @@ deeproot&gt; run echo
 <li>它用 syscall 说话，用 <code>exit</code> 谢幕</li>
 </ol>
 <p>把这六步串起来，比背名词有用得多。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="步骤-1复制-hello-模板"><a class="header" href="#步骤-1复制-hello-模板">步骤 1：复制 hello 模板</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="步骤-1复制-hello-模板"><a class="header" href="#步骤-1复制-hello-模板">步骤 1：复制 hello 模板</a></h1>
 <p>这一页只讲：<strong>为什么写一个新用户程序时，最稳的起点是复制 <code>user/hello/</code>。</strong></p>
 <h2 id="1-你会一起拿到什么"><a class="header" href="#1-你会一起拿到什么">1. 你会一起拿到什么</a></h2>
 <ul>
@@ -3311,10 +3078,10 @@ deeproot&gt; run echo
 <li><code>linker.ld</code></li>
 </ul>
 <h2 id="3-为什么链接脚本也要看"><a class="header" href="#3-为什么链接脚本也要看">3. 为什么链接脚本也要看</a></h2>
-<p>因为这不是普通 Linux 用户程序。<br>它最终会被内核加载到指定虚址，所以基址不是可忽略细节。</p>
-<p>下一页：<a href="#步骤-2注册到-workspace-与-build">步骤 2：注册到 workspace 与 build</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="步骤-2注册到-workspace-与-build"><a class="header" href="#步骤-2注册到-workspace-与-build">步骤 2：注册到 workspace 与 build</a></h1>
+<p>因为这不是普通 Linux 用户程序。<br />
+它最终会被内核加载到指定虚址，所以基址不是可忽略细节。</p>
+<p>下一页：<a href="hands-on/write-user-prog/02-register-build.html">步骤 2：注册到 workspace 与 build</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="步骤-2注册到-workspace-与-build"><a class="header" href="#步骤-2注册到-workspace-与-build">步骤 2：注册到 workspace 与 build</a></h1>
 <p>这一页只讲：<strong>为什么新用户程序不只是“多一个目录”，还要接入构建链。</strong></p>
 <h2 id="1-两个必须改的地方"><a class="header" href="#1-两个必须改的地方">1. 两个必须改的地方</a></h2>
 <ul>
@@ -3332,9 +3099,8 @@ deeproot&gt; run echo
 <li>包名和 <code>[[bin]]</code> 名字是不是一致？</li>
 <li><code>build.rs</code> 要找的产物名是不是对的？</li>
 </ol>
-<p>下一页：<a href="#步骤-3挂进-ramfs-与-shell">步骤 3：挂进 ramfs 与 shell</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="步骤-3挂进-ramfs-与-shell"><a class="header" href="#步骤-3挂进-ramfs-与-shell">步骤 3：挂进 ramfs 与 shell</a></h1>
+<p>下一页：<a href="hands-on/write-user-prog/03-ramfs-shell.html">步骤 3：挂进 ramfs 与 shell</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="步骤-3挂进-ramfs-与-shell"><a class="header" href="#步骤-3挂进-ramfs-与-shell">步骤 3：挂进 ramfs 与 shell</a></h1>
 <p>这一页只讲：<strong>为什么“程序编出来了”还不等于 shell 能 <code>run</code> 它。</strong></p>
 <h2 id="1-挂进-ramfs"><a class="header" href="#1-挂进-ramfs">1. 挂进 ramfs</a></h2>
 <p>你要在 <code>kernel/src/fs.rs</code> 里：</p>
@@ -3357,9 +3123,8 @@ deeproot&gt; run echo
 !=
 shell 能通过名字执行它
 </code></pre>
-<p>下一页：<a href="#步骤-4构建运行调试">步骤 4：构建、运行、调试</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="步骤-4构建运行调试"><a class="header" href="#步骤-4构建运行调试">步骤 4：构建、运行、调试</a></h1>
+<p>下一页：<a href="hands-on/write-user-prog/04-build-debug.html">步骤 4：构建、运行、调试</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="步骤-4构建运行调试"><a class="header" href="#步骤-4构建运行调试">步骤 4：构建、运行、调试</a></h1>
 <p>这一页只讲：<strong>从“我已经写完程序了”到“我真的在 QEMU 里运行到了它”之间，还要确认什么。</strong></p>
 <h2 id="1-基本验证顺序"><a class="header" href="#1-基本验证顺序">1. 基本验证顺序</a></h2>
 <pre><code class="language-text">./scripts/run-qemu.sh
@@ -3383,21 +3148,14 @@ deeproot&gt; run echo
 <li><code>main</code> 是否真的打印并 exit</li>
 </ul>
 <h2 id="3-最值得保留的最小调试表"><a class="header" href="#3-最值得保留的最小调试表">3. 最值得保留的最小调试表</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>现象</th><th>先查</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>现象</th><th>先查</th></tr></thead><tbody>
 <tr><td>找不到 ELF</td><td><code>build.rs</code>、workspace、产物名</td></tr>
 <tr><td><code>exec failed</code></td><td>ramfs 名字、ELF header、页数上限</td></tr>
 <tr><td>能 run 无输出</td><td><code>debug_write</code>、panic、是否忘记 <code>exit</code></td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
-<p>回到主教程：<a href="#自己写一个用户程序逐步教程">自己写一个用户程序</a></p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="常见问题faq"><a class="header" href="#常见问题faq">常见问题（FAQ）</a></h1>
+<p>回到主教程：<a href="hands-on/write-user-prog/../write-user-prog.html">自己写一个用户程序</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="常见问题faq"><a class="header" href="#常见问题faq">常见问题（FAQ）</a></h1>
 <p>按症状找。仍不解时：把<strong>完整启动日志</strong>和你敲的命令贴出来。</p>
 <h2 id="构建与环境"><a class="header" href="#构建与环境">构建与环境</a></h2>
 <h3 id="q-error-target--may-not-be-installed"><a class="header" href="#q-error-target--may-not-be-installed">Q: <code>error: target … may not be installed</code></a></h3>
@@ -3421,9 +3179,11 @@ deeproot&gt; run echo
 <h3 id="q-只有-opensbi-横幅没有-deeproot"><a class="header" href="#q-只有-opensbi-横幅没有-deeproot">Q: 只有 OpenSBI 横幅，没有 DeepRoot</a></h3>
 <p>内核可能没加载成功：检查脚本里 <code>-kernel</code> 路径、链接地址、是否编的是 release 目标产物。</p>
 <h3 id="q-有内核横幅没有-deeproot"><a class="header" href="#q-有内核横幅没有-deeproot">Q: 有内核横幅，没有 <code>deeproot&gt;</code></a></h3>
-<p>往上翻找 <code>KERNEL PANIC</code>、<code>page fault</code>、<code>trap</code>。<br>常见：某个用户 ELF 损坏、页表问题、任务立刻 fault。</p>
+<p>往上翻找 <code>KERNEL PANIC</code>、<code>page fault</code>、<code>trap</code>。<br />
+常见：某个用户 ELF 损坏、页表问题、任务立刻 fault。</p>
 <h3 id="q-怎么退出-qemu"><a class="header" href="#q-怎么退出-qemu">Q: 怎么退出 QEMU？</a></h3>
-<p><code>Ctrl-A</code>，松开，再按 <code>X</code>。<br>无效时另开终端：</p>
+<p><code>Ctrl-A</code>，松开，再按 <code>X</code>。<br />
+无效时另开终端：</p>
 <pre><code class="language-bash">pkill -f qemu-system-riscv64
 </code></pre>
 <p>注意要带 <code>-f</code>，且模式匹配完整命令行。</p>
@@ -3437,7 +3197,8 @@ deeproot&gt; run echo
 <li>是否有大量日志刷屏（仍应能输入，只是难看见）</li>
 </ul>
 <h3 id="q-一按回车就-unknown或命令全错"><a class="header" href="#q-一按回车就-unknown或命令全错">Q: 一按回车就 <code>unknown</code>，或命令全错</a></h3>
-<p>经典内核 bug：<code>console_getchar</code> 用了错误的 SBI EID（putchar 的 <code>0x01</code> 而不是 getchar 的 <code>0x02</code>），或把 legacy 返回值当 modern <code>{error,value}</code> 解析。<br>对照 <code>kernel/src/sbi.rs</code> 与文档 <a href="#01-启动与串口详细跟读">0.1</a> / <a href="#12-shell详细跟读">1.2</a>。</p>
+<p>经典内核 bug：<code>console_getchar</code> 用了错误的 SBI EID（putchar 的 <code>0x01</code> 而不是 getchar 的 <code>0x02</code>），或把 legacy 返回值当 modern <code>{error,value}</code> 解析。<br />
+对照 <code>kernel/src/sbi.rs</code> 与文档 <a href="hands-on/../path/01-boot.html">0.1</a> / <a href="hands-on/../path/07-shell.html">1.2</a>。</p>
 <h3 id="q-run-hello-后提示符再也不回来"><a class="header" href="#q-run-hello-后提示符再也不回来">Q: <code>run hello</code> 后提示符再也不回来</a></h3>
 <p>hello 若死循环且不 exit，shell 的 <code>wait</code> 会一直 <code>ERR_AGAIN</code>。重启 QEMU；检查用户程序是否调用了 <code>sys::exit</code>。</p>
 <h3 id="q-exec-failed"><a class="header" href="#q-exec-failed">Q: <code>exec failed</code></a></h3>
@@ -3450,7 +3211,7 @@ deeproot&gt; run echo
 <h3 id="q-这能跑-linux-程序吗"><a class="header" href="#q-这能跑-linux-程序吗">Q: 这能跑 Linux 程序吗？</a></h3>
 <p>不能。ABI 是 DeepRoot-native，不是 Linux syscall。</p>
 <h3 id="q-ramfs-的文件在磁盘上吗"><a class="header" href="#q-ramfs-的文件在磁盘上吗">Q: ramfs 的文件在磁盘上吗？</a></h3>
-<p>不在。它们是构建期 <code>include_bytes!</code> 嵌进内核的。块层 <code>DISK</code> 是另一回事，见 <a href="#14-块设备教学替身详细说明">1.4</a>。</p>
+<p>不在。它们是构建期 <code>include_bytes!</code> 嵌进内核的。块层 <code>DISK</code> 是另一回事，见 <a href="hands-on/../path/09-block.html">1.4</a>。</p>
 <h3 id="q-bad-apple-算教学内容吗"><a class="header" href="#q-bad-apple-算教学内容吗">Q: Bad Apple 算教学内容吗？</a></h3>
 <p>不算主线。最多当「大 ELF + 实时 syscall」压力测试。</p>
 <h2 id="文档站点"><a class="header" href="#文档站点">文档站点</a></h2>
@@ -3460,15 +3221,9 @@ cd book
 mdbook serve --open
 </code></pre>
 <p>在线：https://wuyijing-dev.github.io/DeepRoot/</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="名词表"><a class="header" href="#名词表">名词表</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="名词表"><a class="header" href="#名词表">名词表</a></h1>
 <p>按字母 / 拼音混排不重要；用搜索（站点自带 search）更快。</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>词</th><th>一句话</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>词</th><th>一句话</th></tr></thead><tbody>
 <tr><td><strong>ABI</strong></td><td>用户程序与内核之间的二进制约定（syscall 号、结构体布局）。见 <code>deeproot-abi</code>。</td></tr>
 <tr><td><strong>AddrSpace</strong></td><td>一个任务的虚拟地址空间（自己的页表根）。</td></tr>
 <tr><td><strong>badge</strong></td><td>能力或端点上的标记，用来区分「同一类服务的不同身份」。</td></tr>
@@ -3507,13 +3262,11 @@ mdbook serve --open
 <tr><td><strong>virtio-blk</strong></td><td>虚拟化块设备标准；1.4 用 ramdisk 替身占位。</td></tr>
 <tr><td><strong>wfi</strong></td><td>Wait For Interrupt，闲时省电/等待。</td></tr>
 <tr><td><strong>Zombie</strong></td><td>已退出、等待被 <code>wait</code> 回收的任务状态。</td></tr>
-</tbody>
-</table>
-</div>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="版本与标签"><a class="header" href="#版本与标签">版本与标签</a></h1>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="版本与标签"><a class="header" href="#版本与标签">版本与标签</a></h1>
 <h2 id="文档基线"><a class="header" href="#文档基线">文档基线</a></h2>
-<p>本学习笔记默认对齐 <strong><code>v1.4.1</code></strong>（DRFS：shell 可读块上文本）。<br>页首选择器还可打开冻结快照 <strong><code>v1.4.0</code></strong>（块层替身初版）。</p>
+<p>本学习笔记默认对齐 <strong><code>v1.4.1</code></strong>（DRFS：shell 可读块上文本）。<br />
+页首选择器还可打开冻结快照 <strong><code>v1.4.0</code></strong>（块层替身初版）。</p>
 <p>核对三处是否一致：</p>
 <ol>
 <li>仓库根目录 <code>VERSION</code> <strong>第一行</strong></li>
@@ -3564,29 +3317,22 @@ git checkout main
 <li><code>v1.4.1</code> … DRFS 镜像；<code>ls</code>/<code>cat</code> 可读块上文本</li>
 </ul>
 <p>想对比某一系列引入了什么：<code>git log v1.4.0..v1.4.1 --oneline</code>。</p>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="下一步可以看什么"><a class="header" href="#下一步可以看什么">下一步可以看什么</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="下一步可以看什么"><a class="header" href="#下一步可以看什么">下一步可以看什么</a></h1>
 <p>你已经走完 DeepRoot <strong>1.4</strong> 教学主线（当前推荐标签 <strong><code>v1.4.1</code></strong>）。下面按「投入产出比」排序，任选。</p>
 <h2 id="1-巩固强烈建议"><a class="header" href="#1-巩固强烈建议">1. 巩固（强烈建议）</a></h2>
 <ul>
 <li>不看文档，独立画出：<code>ecall</code> → <code>trap</code> → <code>handle_syscall</code> → <code>sret</code></li>
-<li>按 <a href="#自己写一个用户程序逐步教程">自己写用户程序</a> 做一个新 ELF</li>
+<li>按 <a href="appendix/../hands-on/write-user-prog.html">自己写用户程序</a> 做一个新 ELF</li>
 <li>对照 <code>ls</code>：分清哪些文件来自 embed、哪些来自 DRFS</li>
-<li>把 <a href="#名词表">名词表</a> 里仍模糊的词对照源码再读一遍</li>
+<li>把 <a href="appendix/glossary.html">名词表</a> 里仍模糊的词对照源码再读一遍</li>
 </ul>
 <h2 id="2-在仓库里继续挖仍属-deeproot"><a class="header" href="#2-在仓库里继续挖仍属-deeproot">2. 在仓库里继续挖（仍属 DeepRoot）</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>方向</th><th>从哪开始</th></tr>
-</thead>
-<tbody>
+<div class="table-wrapper"><table><thead><tr><th>方向</th><th>从哪开始</th></tr></thead><tbody>
 <tr><td>真·virtio-blk</td><td>换掉 <code>DISK[]</code> 后端；保留 DRFS / <code>fs</code> 路径 API</td></tr>
 <tr><td>块上 ELF</td><td>让 <code>SYS_EXEC</code> 也能从 DRFS 读 ELF（今天只 embed）</td></tr>
 <tr><td>更丰富的 IPC</td><td><code>ipc.rs</code>、cap grant、多客户共享服务</td></tr>
 <tr><td>多核</td><td><code>VERSION</code> 里 multi-hart 相关条目；今天仍以单 hart 为主</td></tr>
-</tbody>
-</table>
+</tbody></table>
 </div>
 <p>改之前先读 <code>VERSION</code>：哪些是已承诺范围，哪些是你自己的实验分支。</p>
 <h2 id="3-对照其它教材换口味"><a class="header" href="#3-对照其它教材换口味">3. 对照其它教材（换口味）</a></h2>
@@ -3627,11 +3373,6 @@ git checkout main
 
         </div>
 
-        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
-        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
-        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
-        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
-        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
 
 
@@ -3640,13 +3381,13 @@ git checkout main
         </script>
 
 
-        <script src="elasticlunr-ef4e11c1.min.js"></script>
-        <script src="mark-09e88c2c.min.js"></script>
-        <script src="searcher-09f2665d.js"></script>
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
 
-        <script src="clipboard-1626706a.min.js"></script>
-        <script src="highlight-abc7f01d.js"></script>
-        <script src="book-609e4cb8.js"></script>
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
 
@@ -3655,7 +3396,6 @@ git checkout main
             window.setTimeout(window.print, 100);
         });
         </script>
-
 
     </div>
     </body>
