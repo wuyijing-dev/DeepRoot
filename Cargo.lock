@@ -7,6 +7,13 @@ name = "deeproot-abi"
 version = "1.4.0"
 
 [[package]]
+name = "deeproot-badapple"
+version = "1.4.0"
+dependencies = [
+ "deeproot-user",
+]
+
+[[package]]
 name = "deeproot-console"
 version = "1.4.0"
 dependencies = [

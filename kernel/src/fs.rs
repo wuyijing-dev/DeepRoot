@@ -15,11 +15,12 @@ struct File {
  * HELLO_ELF - RISC-V ET_EXEC built from user/hello (same image SYS_SPAWN 0 uses)
  */
 static HELLO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-hello"));
+static BADAPPLE_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-badapple"));
 
 static FILES: &[File] = &[
     File {
         name: "readme.txt",
-        data: b"DeepRoot ramfs - text + ELF. Try: run hello\n",
+        data: b"DeepRoot ramfs - text + ELF. Try: run hello / run badapple\n",
     },
     File {
         name: "hello.txt",
@@ -32,6 +33,10 @@ static FILES: &[File] = &[
     File {
         name: "hello",
         data: HELLO_ELF,
+    },
+    File {
+        name: "badapple",
+        data: BADAPPLE_ELF,
     },
 ];
 

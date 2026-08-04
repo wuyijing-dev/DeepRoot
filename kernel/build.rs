@@ -20,10 +20,14 @@ fn main() {
         ("deeproot-ping", "deeproot-ping", "user/ping"),
         ("deeproot-hello", "deeproot-hello", "user/hello"),
         ("deeproot-shell", "deeproot-shell", "user/shell"),
+        ("deeproot-badapple", "deeproot-badapple", "user/badapple"),
     ] {
         println!("cargo:rerun-if-changed=../{}/src/main.rs", src_dir);
         println!("cargo:rerun-if-changed=../{}/linker.ld", src_dir);
         println!("cargo:rerun-if-changed=../{}/build.rs", src_dir);
+        if src_dir == "user/badapple" {
+            println!("cargo:rerun-if-changed=../user/badapple/frames.ba01");
+        }
 
         let status = Command::new(env::var("CARGO").unwrap_or_else(|_| "cargo".into()))
             .current_dir(&workspace)

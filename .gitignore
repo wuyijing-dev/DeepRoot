@@ -25,3 +25,6 @@
 *.qcow2
 gdb.txt
 serial.log
+
+# Large local media (generate frames.ba01 via user/badapple/gen_frames.py)
+user/badapple/badapple.mp4

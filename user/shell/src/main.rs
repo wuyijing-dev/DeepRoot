@@ -80,10 +80,14 @@ fn run_path(path: &[u8]) {
         let _ = sys::debug_write("shell: exec failed\n");
         return;
     }
-    /* Let the child run a few slices. */
-    let _ = sys::yield_now();
-    let _ = sys::yield_now();
-    let _ = sys::yield_now();
+    /* Wait until the child exits so long players (badapple) own the console. */
+    loop {
+        let st = sys::wait(id as usize);
+        if st != -11 {
+            break;
+        }
+        let _ = sys::yield_now();
+    }
 }
 
 #[no_mangle]
@@ -101,8 +105,9 @@ pub extern "C" fn main() {
             let _ = sys::debug_write("  help      - this text\n");
             let _ = sys::debug_write("  ls        - list ramfs\n");
             let _ = sys::debug_write("  cat X     - read text file X\n");
-            let _ = sys::debug_write("  run X     - SYS_EXEC ELF from ramfs (e.g. run hello)\n");
+            let _ = sys::debug_write("  run X     - SYS_EXEC ELF from ramfs (hello, badapple)\n");
             let _ = sys::debug_write("  hello     - same as: run hello\n");
+            let _ = sys::debug_write("  badapple  - realtime ASCII Bad Apple (q quits)\n");
             let _ = sys::debug_write("  exit      - leave shell\n");
         } else if cmd_eq(line, b"ls") {
             let _ = sys::fs_list();
@@ -118,6 +123,8 @@ pub extern "C" fn main() {
             }
         } else if cmd_eq(line, b"hello") {
             run_path(b"hello");
+        } else if cmd_eq(line, b"badapple") {
+            run_path(b"badapple");
         } else if cmd_eq(line, b"exit") {
             let _ = sys::debug_write("shell: bye\n");
             sys::exit(0);

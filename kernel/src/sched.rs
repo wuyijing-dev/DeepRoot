@@ -760,6 +760,25 @@ pub fn handle_syscall(
                 None => ERR_GENERIC,
             }
         }
+        SYS_TIME => {
+            /* QEMU virt mtime ≈ 10 MHz → ms = cycles / 10000. */
+            (crate::timer::time_now() / 10_000) as isize
+        }
+        SYS_WAIT => {
+            let child = a0 as usize;
+            let s = inner();
+            if child >= MAX_UTASKS {
+                return ERR_GENERIC;
+            }
+            match s.tasks[child].state {
+                TaskState::Zombie => {
+                    s.tasks[child] = UserTask::empty();
+                    0
+                }
+                TaskState::Empty => ERR_GENERIC,
+                _ => ERR_AGAIN,
+            }
+        }
         _ => ERR_NOSYS,
     }
 }

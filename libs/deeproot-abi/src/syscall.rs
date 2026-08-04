@@ -27,3 +27,10 @@ pub const SYS_FS_LIST: usize = 12;
 pub const SYS_FS_CAT: usize = 13;
 /// `a0`=path ptr, `a1`=len — load ELF from ramfs and spawn
 pub const SYS_EXEC: usize = 14;
+/// Monotonic milliseconds since boot (SBI `time` / timer Hz)
+pub const SYS_TIME: usize = 15;
+/// `a0` = sched id from spawn/exec; 0 if exited+reaped, `-11` if still running
+pub const SYS_WAIT: usize = 16;
+
+/// QEMU virt / ACLINT mtime frequency used by `SYS_TIME`
+pub const TIME_HZ: u64 = 10_000_000;

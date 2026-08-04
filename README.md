@@ -18,7 +18,7 @@ Requirements: Rust stable, `qemu-system-riscv64`.
 ABI: native capability microkernel (not Linux). Teaching path through **1.4**:
 per-task AS + `SYS_SPAWN` / `SYS_EXEC`, serial shell, ramfs (text + ELF), ramdisk stand-in.
 
-Shell: `ls`, `cat readme.txt`, `run hello` (ELF from ramfs).
+Shell: `ls`, `cat readme.txt`, `run hello`, `run badapple` (realtime ASCII).
 
 ## Layout
 

@@ -1,0 +1,12 @@
+[package]
+name = "deeproot-badapple"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "deeproot-badapple"
+path = "src/main.rs"
+
+[dependencies]
+deeproot-user = { path = "../../libs/deeproot-user" }

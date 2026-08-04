@@ -50,6 +50,21 @@ pub mod sys {
         unsafe { ecall(SYS_EXEC, path.as_ptr() as usize, path.len(), 0, 0) }
     }
 
+    /// Monotonic milliseconds since boot.
+    pub fn time_ms() -> u64 {
+        let v = unsafe { ecall(SYS_TIME, 0, 0, 0, 0) };
+        if v < 0 {
+            0
+        } else {
+            v as u64
+        }
+    }
+
+    /// Poll whether sched task `id` has exited. Returns 0 (reaped), -11 (running), or error.
+    pub fn wait(id: usize) -> isize {
+        unsafe { ecall(SYS_WAIT, id, 0, 0, 0) }
+    }
+
     pub fn ipc_call(ep_slot: usize, label: u64, word0: u64) -> isize {
         unsafe { ecall(SYS_IPC_CALL, ep_slot, label as usize, word0 as usize, 0) }
     }

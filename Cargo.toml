@@ -9,6 +9,7 @@ members = [
     "user/ping",
     "user/hello",
     "user/shell",
+    "user/badapple",
 ]
 default-members = ["kernel"]
 
