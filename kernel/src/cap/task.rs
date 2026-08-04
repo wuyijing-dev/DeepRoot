@@ -2,7 +2,7 @@
 
 use super::space::CapSpace;
 
-pub const MAX_TASKS: usize = 8;
+pub const MAX_TASKS: usize = 16;
 pub const NAME_LEN: usize = 12;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -1,10 +1,13 @@
-//! Trap vectors: early kernel path + U-mode TrapFrame path (0.5.x).
+//! Trap vectors: early kernel path + U-mode TrapFrame path (0.5.x / 1.7 SMP).
 
 use crate::cap::TaskTable;
 use crate::ipc::EndpointTable;
 use crate::ledger::LEDGER;
 use crate::println;
+use crate::sbi;
 use crate::sched::{self, TrapFrame};
+use crate::smp;
+use crate::sync::SpinLock;
 use deeproot_abi::LedgerKind;
 
 const EXC_ECALL_U: usize = 8;
@@ -13,11 +16,18 @@ const EXC_INSTRUCTION_PAGE_FAULT: usize = 12;
 const EXC_LOAD_PAGE_FAULT: usize = 13;
 const EXC_STORE_PAGE_FAULT: usize = 15;
 
+/// Serializes TrapCtx (cap/IPC) across harts.
+static CTX_LOCK: SpinLock = SpinLock::new();
+
 #[unsafe(naked)]
 #[no_mangle]
 pub unsafe extern "C" fn early_trap_vector() {
     core::arch::naked_asm!(
-        "la sp, __boot_stack_top",
+        /* Per-hart stack: base + (tp+1)<<16 */
+        "la t0, __deeproot_hart_stacks",
+        "addi t1, tp, 1",
+        "slli t1, t1, 16",
+        "add sp, t0, t1",
         "csrr a0, scause",
         "csrr a1, sepc",
         "csrr a2, stval",
@@ -72,7 +82,11 @@ pub unsafe extern "C" fn trap_vector() {
          * S-mode: this vector assumes sscratch → U TrapFrame. */
         "li t0, 2",
         "csrc sstatus, t0",
-        "la sp, __boot_stack_top",
+        /* Switch to this hart's kernel stack: base + (tp+1)<<16 */
+        "la t0, __deeproot_hart_stacks",
+        "addi t1, tp, 1",
+        "slli t1, t1, 16",
+        "add sp, t0, t1",
         "call trap_handler",
         "j trap_idle",
     );
@@ -131,10 +145,22 @@ pub extern "C" fn trap_handler() {
         let a3 = tf.x[13] as u64;
         tf.sepc = tf.sepc.wrapping_add(4);
         let issuer = sched::current_id();
-        let ctx = ctx_mut();
-        let ret = sched::handle_syscall(&mut ctx.tasks, &mut ctx.eps, nr, a0, a1, a2, a3);
-        /* Return value belongs to the task that issued the syscall (may have yielded). */
+        /* Never hold CTX_LOCK across WFI (idle yield) — that deadlocks SMP. */
+        let ret = if nr == deeproot_abi::syscall::SYS_YIELD {
+            sched::syscall_yield()
+        } else {
+            let _g = CTX_LOCK.lock();
+            let ctx = ctx_mut();
+            sched::handle_syscall(&mut ctx.tasks, &mut ctx.eps, nr, a0, a1, a2, a3)
+        };
         sched::set_syscall_return(issuer, ret);
+        sched::restore_user();
+    }
+
+    /* Supervisor software interrupt (IPI) — clear SSIP and reschedule. */
+    if is_interrupt && code == 1 {
+        sbi::clear_ssip();
+        let _ = sched::yield_now();
         sched::restore_user();
     }
 
@@ -159,12 +185,13 @@ pub extern "C" fn trap_handler() {
     {
         let id = sched::current_id();
         println!(
-            "trap: page fault scause={:#x} sepc={:#x} stval={:#x} ({}) task={} ra={:#x} sp={:#x}",
+            "trap: page fault scause={:#x} sepc={:#x} stval={:#x} ({}) task={} hart={} ra={:#x} sp={:#x}",
             scause,
             tf.sepc,
             stval,
             crate::mm::sv39::page_fault_hint(stval),
             id,
+            smp::hart_id(),
             tf.x[1],
             tf.x[2],
         );
@@ -219,10 +246,18 @@ pub fn init() {
 }
 
 /*
+ * init_secondary - install user trap vector on a secondary hart
+ */
+pub fn init_secondary() {
+    let addr = trap_vector as *const () as usize;
+    set_stvec(addr);
+}
+
+/*
  * enable_user - switch to TrapFrame-aware vector before first sret
  */
 pub fn enable_user() {
     let addr = trap_vector as *const () as usize;
     set_stvec(addr);
-    println!("trap: user stvec={:#x} (timer+ecall)", addr);
+    println!("trap: user stvec={:#x} (timer+ecall+ipi)", addr);
 }

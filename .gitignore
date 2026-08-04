@@ -4,6 +4,7 @@ book/book/
 # Build artifacts
 /target/
 **/target/
+/build/
 *.o
 *.elf
 *.bin

@@ -1,7 +1,8 @@
 //! Synchronous IPC — call / recv / reply on endpoints (0.4.x).
 //!
-//! Single-hart rendezvous: one pending call and one reply per endpoint.
-//! Blocking recv/wakeup is handled by the scheduler (0.6.x).
+//! Multi-hart (1.7): TrapCtx + EndpointTable are taken under a spinlock in
+//! the trap path. Blocking recv/wakeup still goes through the scheduler,
+//! which IPI-wakes the waiter's home hart.
 
 use crate::cap::{CapError, CapSpace, TaskId, TaskTable};
 use crate::ledger::LEDGER;

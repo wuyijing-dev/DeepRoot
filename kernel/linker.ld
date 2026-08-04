@@ -36,14 +36,22 @@ SECTIONS
         __bss_end = .;
     }
 
-    /* Boot stack: grows down toward __boot_stack_bottom. */
+    /*
+     * Per-hart kernel stacks (1.7 SMP). Must sit *after* BSS so the boot
+     * hart can clear BSS while using hart0's stack. Matches smp::MAX_HARTS
+     * (4) * HART_STACK_SIZE (64 KiB).
+     */
     . = ALIGN(4096);
-    __boot_stack_bottom = .;
-    . += 64 * 1024;
-    __boot_stack_top = .;
+    __deeproot_hart_stacks = .;
+    . += 4 * 64 * 1024;
+    __deeproot_hart_stacks_end = .;
+
+    /* Legacy alias: hart 0 stack top (early trap / single-hart paths). */
+    __boot_stack_bottom = __deeproot_hart_stacks;
+    __boot_stack_top = __deeproot_hart_stacks + 64 * 1024;
 
     /*
-     * First free physical byte after the loaded image + boot stack.
+     * First free physical byte after the loaded image + hart stacks.
      * Frame allocator hands out pages from here upward.
      */
     . = ALIGN(4096);

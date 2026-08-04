@@ -53,6 +53,8 @@ pub struct Platform {
     pub virtio: [VirtioMmio; MAX_VIRTIO],
     pub virtio_count: usize,
     pub framebuffer: Option<FramebufferHint>,
+    /// Count of `device_type = "cpu"` nodes (1.7 SMP).
+    pub cpu_count: usize,
 }
 
 static READY: AtomicBool = AtomicBool::new(false);
@@ -71,6 +73,7 @@ static mut PLATFORM: Platform = Platform {
     }; MAX_VIRTIO],
     virtio_count: 0,
     framebuffer: None,
+    cpu_count: 0,
 };
 
 /*
@@ -95,6 +98,7 @@ pub fn probe(dtb_pa: usize) {
         }; MAX_VIRTIO],
         virtio_count: 0,
         framebuffer: None,
+        cpu_count: 0,
     };
 
     if dtb_pa == 0 {
@@ -149,6 +153,13 @@ pub fn memory_reg() -> Option<(PhysAddr, PhysAddr)> {
     Some((PhysAddr::new(r.base), PhysAddr::new(r.base + r.size)))
 }
 
+/*
+ * cpu_count - number of CPU nodes in the DTB (at least 1)
+ */
+pub fn cpu_count() -> usize {
+    get().map(|p| p.cpu_count.max(1)).unwrap_or(1)
+}
+
 fn log_summary(p: &Platform) {
     if p.model_len > 0 {
         let m = core::str::from_utf8(&p.model[..p.model_len]).unwrap_or("?");
@@ -182,6 +193,7 @@ fn log_summary(p: &Platform) {
     } else {
         println!("fdt: uart not found (console stays on SBI)");
     }
+    println!("fdt: cpu count={}", p.cpu_count);
     println!("fdt: virtio-mmio count={}", p.virtio_count);
     for i in 0..p.virtio_count {
         let v = p.virtio[i];
@@ -224,13 +236,16 @@ fn walk(dtb_pa: usize, hdr: &Header, plat: &mut Platform) {
     let struct_end = struct_off + hdr.size_dt_struct as usize;
 
     let mut cells: [(u32, u32); 16] = [(2, 1); 16];
+    /* Per-depth node state — child BEGIN must not erase the parent's name. */
+    let mut names: [[u8; MAX_NAME]; 16] = [[0; MAX_NAME]; 16];
+    let mut name_lens = [0usize; 16];
+    let mut compats: [[u8; 64]; 16] = [[0; 64]; 16];
+    let mut compat_lens = [0usize; 16];
+    let mut dtypes: [[u8; 32]; 16] = [[0; 32]; 16];
+    let mut dtype_lens = [0usize; 16];
+    let mut regs: [Option<Reg>; 16] = [None; 16];
+    let mut irqs = [0u32; 16];
     let mut depth: usize = 0;
-    let mut node_name = [0u8; MAX_NAME];
-    let mut node_name_len = 0usize;
-    let mut compat = [0u8; 64];
-    let mut compat_len = 0usize;
-    let mut reg: Option<Reg> = None;
-    let mut irq: u32 = 0;
     let mut p = struct_off;
 
     while p + 4 <= struct_end {
@@ -245,12 +260,14 @@ fn walk(dtb_pa: usize, hdr: &Header, plat: &mut Platform) {
                 }
                 cells[depth + 1] = cells[depth];
                 depth += 1;
-                node_name_len = name.len().min(MAX_NAME - 1);
-                node_name[..node_name_len].copy_from_slice(&name.as_bytes()[..node_name_len]);
-                node_name[node_name_len] = 0;
-                compat_len = 0;
-                reg = None;
-                irq = 0;
+                let nlen = name.len().min(MAX_NAME - 1);
+                names[depth][..nlen].copy_from_slice(&name.as_bytes()[..nlen]);
+                names[depth][nlen] = 0;
+                name_lens[depth] = nlen;
+                compat_lens[depth] = 0;
+                dtype_lens[depth] = 0;
+                regs[depth] = None;
+                irqs[depth] = 0;
             }
             FDT_END_NODE => {
                 if depth == 0 {
@@ -258,16 +275,13 @@ fn walk(dtb_pa: usize, hdr: &Header, plat: &mut Platform) {
                 }
                 finish_node(
                     plat,
-                    &node_name[..node_name_len],
-                    &compat[..compat_len],
-                    reg,
-                    irq,
+                    &names[depth][..name_lens[depth]],
+                    &compats[depth][..compat_lens[depth]],
+                    &dtypes[depth][..dtype_lens[depth]],
+                    regs[depth],
+                    irqs[depth],
                 );
                 depth -= 1;
-                node_name_len = 0;
-                compat_len = 0;
-                reg = None;
-                irq = 0;
             }
             FDT_PROP => {
                 let len = unsafe { read_u32_be(p) } as usize;
@@ -279,10 +293,10 @@ fn walk(dtb_pa: usize, hdr: &Header, plat: &mut Platform) {
                     cells[depth].0 = unsafe { read_u32_be(p) };
                 } else if pname == "#size-cells" && len == 4 {
                     cells[depth].1 = unsafe { read_u32_be(p) };
-                } else if pname == "reg" && reg.is_none() {
+                } else if pname == "reg" && regs[depth].is_none() {
                     if let Some((base, size)) = unsafe { read_reg(p, ac, sc) } {
                         if size > 0 {
-                            reg = Some(Reg { base, size });
+                            regs[depth] = Some(Reg { base, size });
                         }
                     }
                 } else if pname == "model" && depth == 1 && len > 0 && plat.model_len == 0 {
@@ -300,22 +314,35 @@ fn walk(dtb_pa: usize, hdr: &Header, plat: &mut Platform) {
                     unsafe {
                         core::ptr::copy_nonoverlapping(
                             p as *const u8,
-                            compat.as_mut_ptr(),
+                            compats[depth].as_mut_ptr(),
                             n,
                         );
                     }
-                    /* NUL-separated list; keep whole blob for contains checks. */
-                    compat_len = n;
-                    while compat_len > 0 && compat[compat_len - 1] == 0 {
-                        compat_len -= 1;
+                    let mut cl = n;
+                    while cl > 0 && compats[depth][cl - 1] == 0 {
+                        cl -= 1;
                     }
-                    /* Root board compatible (empty node name, depth 1). */
-                    if depth == 1 && node_name_len == 0 && plat.board_compat_len == 0 {
-                        plat.board_compat[..n].copy_from_slice(&compat[..n]);
+                    compat_lens[depth] = cl;
+                    if depth == 1 && name_lens[depth] == 0 && plat.board_compat_len == 0 {
+                        plat.board_compat[..n].copy_from_slice(&compats[depth][..n]);
                         plat.board_compat_len = n;
                     }
+                } else if pname == "device_type" && len > 0 {
+                    let n = len.min(31);
+                    unsafe {
+                        core::ptr::copy_nonoverlapping(
+                            p as *const u8,
+                            dtypes[depth].as_mut_ptr(),
+                            n,
+                        );
+                    }
+                    let mut dl = n;
+                    while dl > 0 && dtypes[depth][dl - 1] == 0 {
+                        dl -= 1;
+                    }
+                    dtype_lens[depth] = dl;
                 } else if pname == "interrupts" && len >= 4 {
-                    irq = unsafe { read_u32_be(p) };
+                    irqs[depth] = unsafe { read_u32_be(p) };
                 }
                 p = align_up(p + len, 4);
             }
@@ -330,11 +357,26 @@ fn finish_node(
     plat: &mut Platform,
     name: &[u8],
     compat: &[u8],
+    device_type: &[u8],
     reg: Option<Reg>,
     irq: u32,
 ) {
     let name_str = core::str::from_utf8(name).unwrap_or("");
     let _ = core::str::from_utf8(compat);
+
+    /*
+     * Count CPU nodes by name (`cpu@N`). Nested `cpuN_intc` END_NODE would
+     * otherwise clear a stacked device_type if we only key off that prop.
+     */
+    if name_str.starts_with("cpu@") || name_str == "cpu" {
+        plat.cpu_count = plat.cpu_count.saturating_add(1);
+        return;
+    }
+
+    if device_type == b"cpu" {
+        plat.cpu_count = plat.cpu_count.saturating_add(1);
+        return;
+    }
 
     if name_str.starts_with("memory") {
         if plat.memory.is_none() {

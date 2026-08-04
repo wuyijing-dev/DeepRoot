@@ -6,7 +6,11 @@
 use core::cell::UnsafeCell;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
+use crate::sync::SpinLock;
+
 use super::layout::{PhysAddr, PAGE_SHIFT, PAGE_SIZE};
+
+static FRAME_LOCK: SpinLock = SpinLock::new();
 
 /* 256 MiB / 4 KiB = 65536 frames; bitmap = 65536 bits = 8192 bytes. */
 const MAX_FRAMES: usize = 65536;
@@ -20,7 +24,7 @@ struct Allocator {
 }
 
 /*
- * Safety: Address Sapling is single-hart; no IRQ nesting around alloc yet.
+ * Safety: bitmap mutated only under FRAME_LOCK (1.7 SMP).
  */
 unsafe impl Sync for Allocator {}
 
@@ -60,6 +64,7 @@ pub fn init(start: PhysAddr, end: PhysAddr) {
  * alloc - take one free frame; returns physical address of page or None
  */
 pub fn alloc() -> Option<PhysAddr> {
+    let _g = FRAME_LOCK.lock();
     let n = ALLOC.nframes.load(Ordering::Relaxed);
     let words = unsafe { &mut *ALLOC.words.get() };
     for i in 0..n {
@@ -82,6 +87,7 @@ pub fn alloc() -> Option<PhysAddr> {
  * free - return a frame previously obtained from alloc()
  */
 pub fn free(pa: PhysAddr) {
+    let _g = FRAME_LOCK.lock();
     let ppn = pa.page_index();
     let base = ALLOC.base_ppn.load(Ordering::Relaxed);
     let n = ALLOC.nframes.load(Ordering::Relaxed);

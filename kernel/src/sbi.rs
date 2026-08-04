@@ -12,10 +12,18 @@ const SBI_EXT_DBCN: usize = 0x4442434E; /* "DBCN" */
 const SBI_EXT_0_1_CONSOLE_PUTCHAR: usize = 0x01;
 const SBI_EXT_0_1_CONSOLE_GETCHAR: usize = 0x02;
 const SBI_EXT_HSM: usize = 0x48534D; /* "HSM" */
+const SBI_EXT_IPI: usize = 0x735049; /* "sPI" */
 
 const SBI_DBCN_CONSOLE_WRITE: usize = 0;
 const SBI_DBCN_CONSOLE_WRITE_BYTE: usize = 2;
+const SBI_HSM_HART_START: usize = 0;
 const SBI_HSM_HART_STOP: usize = 1;
+const SBI_HSM_HART_GET_STATUS: usize = 2;
+const SBI_IPI_SEND_IPI: usize = 0;
+
+/// Supervisor software interrupt enable / pending (sip/sie bit 1).
+pub const SIE_SSIE: usize = 1 << 1;
+pub const SIP_SSIP: usize = 1 << 1;
 
 #[repr(C)]
 struct Sbiret {
@@ -114,4 +122,65 @@ pub fn hart_suspend_idle() {
         core::arch::asm!("wfi", options(nomem, nostack));
     }
     let _ = (SBI_EXT_BASE, SBI_EXT_HSM, SBI_HSM_HART_STOP);
+}
+
+/*
+ * hart_start - SBI HSM start (FID 0): bring a stopped hart to @start_addr
+ *
+ * On entry the target sees a0=hartid, a1=opaque, satp=0, SIE=0.
+ */
+pub fn hart_start(hartid: usize, start_addr: usize, opaque: usize) -> Result<(), isize> {
+    let r = sbi_call(SBI_EXT_HSM, SBI_HSM_HART_START, hartid, start_addr, opaque);
+    if r.error == 0 {
+        Ok(())
+    } else {
+        Err(r.error)
+    }
+}
+
+/*
+ * hart_status - SBI HSM get_status (FID 2)
+ *
+ * 0=stopped, 1=started, 2=suspended, …
+ */
+pub fn hart_status(hartid: usize) -> Result<usize, isize> {
+    let r = sbi_call(SBI_EXT_HSM, SBI_HSM_HART_GET_STATUS, hartid, 0, 0);
+    if r.error == 0 {
+        Ok(r.value as usize)
+    } else {
+        Err(r.error)
+    }
+}
+
+/*
+ * send_ipi_hart - set SSIP on one hart via SBI IPI
+ */
+pub fn send_ipi_hart(hartid: usize) -> Result<(), isize> {
+    /* hart_mask with base = hartid selects that single hart. */
+    let r = sbi_call(SBI_EXT_IPI, SBI_IPI_SEND_IPI, 1, hartid, 0);
+    if r.error == 0 {
+        Ok(())
+    } else {
+        Err(r.error)
+    }
+}
+
+pub fn enable_supervisor_soft_irq() {
+    unsafe {
+        core::arch::asm!(
+            "csrs sie, {}",
+            in(reg) SIE_SSIE,
+            options(nomem, nostack),
+        );
+    }
+}
+
+pub fn clear_ssip() {
+    unsafe {
+        core::arch::asm!(
+            "csrc sip, {}",
+            in(reg) SIP_SSIP,
+            options(nomem, nostack),
+        );
+    }
 }

@@ -1,4 +1,4 @@
-//! Server bring-up — per-task AS, shell, embedded spawn blobs (1.1–1.6).
+//! Server bring-up — per-task AS, shell, embedded spawn blobs (1.1–1.7).
 
 use crate::cap::{CapSpace, TaskId, TaskTable};
 use crate::elf;
@@ -6,6 +6,7 @@ use crate::ipc::EndpointTable;
 use crate::mm::aspace::AddrSpace;
 use crate::println;
 use crate::sched;
+use crate::smp;
 use crate::trap;
 use deeproot_abi::{rights, CapReason, CapType};
 
@@ -39,7 +40,6 @@ pub fn bring_up() -> ! {
     let t_console = tasks.spawn("console").expect("console task");
     let t_ping = tasks.spawn("ping").expect("ping task");
     let t_shell = tasks.spawn("shell").expect("shell task");
-    let t_idle = tasks.spawn("idle").expect("idle task");
 
     eps.create(t_ping, PING_BADGE).expect("ping ep");
     eps.create(t_console, CONSOLE_BADGE).expect("console ep");
@@ -47,6 +47,9 @@ pub fn bring_up() -> ! {
     {
         let cs = tasks.cspace_mut(t_init).unwrap();
         *cs = CapSpace::new();
+    }
+    {
+        let cs = tasks.cspace_mut(t_init).unwrap();
         cs.install_copy(CapType::Endpoint, rights::IPC, PING_BADGE, CapReason::Mint)
             .unwrap();
         cs.install_copy(
@@ -86,15 +89,36 @@ pub fn bring_up() -> ! {
         t_shell,
     )
     .expect("spawn shell");
-    let id_idle = sched::spawn_idle(t_idle).expect("spawn idle");
+
+    /* Pin a couple of tasks onto hart 1 when SMP is up (exercise RQ + IPI). */
+    if smp::hart_count() > 1 {
+        sched::set_task_home(id_init, 1);
+        sched::set_task_home(id_shell, 1);
+        sched::set_task_home(id_ping, 0);
+        sched::set_task_home(id_console, 0);
+    }
+
+    let n_harts = smp::hart_count().max(1);
+    for h in 0..n_harts {
+        let t_idle = tasks.spawn("idle").expect("idle task");
+        let id = sched::spawn_idle_on(t_idle, h).expect("spawn idle");
+        println!("servers: idle hart={} sched_id={}", h, id);
+    }
 
     println!(
-        "servers: canopy ready (ping={} console={} init={} shell={} idle={})",
-        id_ping, id_console, id_init, id_shell, id_idle
+        "servers: canopy ready (ping={} console={} init={} shell={}) harts={}",
+        id_ping,
+        id_console,
+        id_init,
+        id_shell,
+        n_harts
     );
-    println!("servers: teaching path 1.1–1.6 (AS/spawn/shell/ramfs/FDT/virtio-blk)");
+    println!("servers: teaching path 1.1–1.7 (AS/spawn/shell/ramfs/FDT/virtio/SMP)");
 
     trap::install_ctx(tasks, eps);
     trap::enable_user();
+    smp::mark_sched_ready();
+    /* Wake secondaries parked on SCHED_READY; they enter their idle. */
+    smp::ipi_wake_others();
     sched::enter_first(id_ping);
 }

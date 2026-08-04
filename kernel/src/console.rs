@@ -3,6 +3,9 @@
 use core::fmt::{self, Write};
 
 use crate::sbi;
+use crate::sync::SpinLock;
+
+static CONSOLE_LOCK: SpinLock = SpinLock::new();
 
 struct Uart;
 
@@ -40,6 +43,7 @@ impl Write for Uart {
  * Copies through a kernel scratch so SBI DBCN sees a physical address.
  */
 pub fn write_bytes(data: &[u8]) {
+    let _g = CONSOLE_LOCK.lock();
     let mut buf = [0u8; 512];
     let mut n = 0usize;
     for &b in data {
@@ -64,11 +68,10 @@ pub fn write_bytes(data: &[u8]) {
 }
 
 /*
- * _print - format to the early SBI console
- *
- * Analogous to Linux early printk plumbing: single-hart, no lock yet.
+ * _print - format to the early SBI console (SMP-safe)
  */
 pub fn _print(args: fmt::Arguments) {
+    let _g = CONSOLE_LOCK.lock();
     let _ = Uart.write_fmt(args);
 }
 

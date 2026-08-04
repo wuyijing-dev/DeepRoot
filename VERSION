@@ -1,4 +1,4 @@
-1.6.1
+1.7.0
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -212,7 +212,7 @@
 #
 # Releases:
 # 1.6.0   Device-backed block path usable for teaching FS
-# 1.6.1   In-tree DTS (platform/qemu-virt) passed via -dtb ← current
+# 1.6.1   In-tree DTS (platform/qemu-virt) passed via -dtb
 # 1.6.y   Driver / DT polish only
 #
 # Out of scope for 1.6: networked block, full VFS, many FS types.
@@ -229,7 +229,7 @@
 #   W4  Smoke: qemu -smp 2 shows both harts active; single-hart regression still passes
 #
 # Releases:
-# 1.7.0   Multi-hart scheduling usable on QEMU virt
+# 1.7.0   Multi-hart scheduling usable on QEMU virt ← current
 # 1.7.y   Locking / IPI / bring-up fixes only
 #
 # Out of scope for 1.7: production NUMA, hotplug, big.LITTLE affinity policies.

@@ -18,6 +18,8 @@ mod mm;
 mod sbi;
 mod sched;
 mod servers;
+mod smp;
+mod sync;
 mod syscall;
 mod timer;
 mod trap;
@@ -29,6 +31,7 @@ use ledger::LEDGER;
 
 #[no_mangle]
 pub extern "C" fn kernel_main(hartid: usize, dtb_pa: usize) -> ! {
+    smp::init_boot_hart(hartid);
     ledger::init();
     LEDGER.record(LedgerKind::Boot, 0, 0, 0);
 
@@ -59,8 +62,14 @@ pub extern "C" fn kernel_main(hartid: usize, dtb_pa: usize) -> ! {
         }
     }
 
+    /* Secondaries may now activate the shared kernel page tables. */
+    smp::mark_mm_ready();
+    /* DTS lists CPU nodes; HSM start fails cleanly if a hart is absent. */
+    smp::boot_secondaries(fdt::cpu_count().max(2));
+
     block::init();
     timer::init(hartid);
+    sbi::enable_supervisor_soft_irq();
     servers::bring_up();
 }
 

@@ -36,7 +36,7 @@ QEMU_ACCEL=(-accel tcg,thread=multi)
 QEMU_COMMON=(
   -machine virt
   -cpu rv64
-  -smp 1
+  -smp 2
   -m 256M
   -nographic
   -bios default
@@ -58,10 +58,13 @@ if [[ "${MODE}" == "--smoke" ]]; then
     >"${LOG}" 2>&1
   set -e
   ok=1
-  for needle in \
-    "DeepRoot microkernel 1.6.1" \
+    for needle in \
+    "DeepRoot microkernel 1.7.0" \
     "fdt: model \"DeepRoot QEMU virt\"" \
     "fdt: board deeproot,qemu-virt" \
+    "fdt: cpu count=2" \
+    "smp: 2 hart(s) online" \
+    "smp: secondary hart=" \
     "fdt: virtio-mmio count=" \
     "virtio-blk: ready" \
     "block: virtio-blk ready" \
@@ -79,7 +82,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
   done
   if [[ "${ok}" -ne 1 ]]; then
     echo "---- qemu log (tail) ----"
-    tail -n 120 "${LOG}"
+    tail -n 160 "${LOG}"
     exit 1
   fi
   echo "smoke: OK"

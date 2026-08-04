@@ -1,4 +1,4 @@
-//! Schedule Canopy (0.6.x) — TCB, RR, timer preemption, block/wakeup, idle.
+//! Schedule Canopy (0.6.x) + SMP (1.7) — per-hart RQ, locks, IPI wake.
 
 use core::cell::UnsafeCell;
 use core::sync::atomic::{AtomicUsize, Ordering};
@@ -10,11 +10,16 @@ use crate::mm::frame;
 use crate::mm::layout::{PhysAddr, PAGE_SIZE};
 use crate::mm::sv39;
 use crate::println;
+use crate::smp::{self, MAX_HARTS};
+use crate::sync::SpinLock;
 use crate::timer;
 
-pub const MAX_UTASKS: usize = 8;
+pub const MAX_UTASKS: usize = 12;
 pub const USER_STACK_PAGES: usize = 4;
 pub const KSTACK_PAGES: usize = 2;
+
+static SCHED_LOCK: SpinLock = SpinLock::new();
+static NEXT_HOME: AtomicUsize = AtomicUsize::new(0);
 
 const IDLE_VA: usize = 0x1300_0000;
 const IDLE_STACK: usize = 0x1310_0000;
@@ -70,6 +75,8 @@ pub struct UserTask {
     pub root_pa: usize,
     pub block: BlockReason,
     pub is_idle: bool,
+    /// Home runqueue hart (1.7 per-hart RQ).
+    pub home_hart: usize,
 }
 
 impl UserTask {
@@ -84,6 +91,7 @@ impl UserTask {
             root_pa: 0,
             block: BlockReason::None,
             is_idle: false,
+            home_hart: 0,
         }
     }
 
@@ -96,8 +104,10 @@ impl UserTask {
 
 struct SchedInner {
     tasks: [UserTask; MAX_UTASKS],
-    current: usize,
-    idle_id: Option<usize>,
+    /// Per-hart current task index.
+    current: [usize; MAX_HARTS],
+    /// Per-hart idle task index.
+    idle_id: [Option<usize>; MAX_HARTS],
     preempt_count: u64,
 }
 
@@ -106,23 +116,30 @@ unsafe impl Sync for Sched {}
 
 static SCHED: Sched = Sched(UnsafeCell::new(SchedInner {
     tasks: [const { UserTask::empty() }; MAX_UTASKS],
-    current: 0,
-    idle_id: None,
+    current: [0; MAX_HARTS],
+    idle_id: [None; MAX_HARTS],
     preempt_count: 0,
 }));
 
-static CURRENT_TF: AtomicUsize = AtomicUsize::new(0);
+static CURRENT_TF: [AtomicUsize; MAX_HARTS] = [const { AtomicUsize::new(0) }; MAX_HARTS];
 
 fn inner() -> &'static mut SchedInner {
     unsafe { &mut *SCHED.0.get() }
 }
 
+fn alloc_home_hart() -> usize {
+    let n = smp::hart_count().max(1);
+    NEXT_HOME.fetch_add(1, Ordering::Relaxed) % n
+}
+
 pub fn current_tf_ptr() -> usize {
-    CURRENT_TF.load(Ordering::Relaxed)
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    CURRENT_TF[h].load(Ordering::Relaxed)
 }
 
 pub fn set_current_tf(tf: *mut TrapFrame) {
-    CURRENT_TF.store(tf as usize, Ordering::Relaxed);
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    CURRENT_TF[h].store(tf as usize, Ordering::Relaxed);
 }
 
 /*
@@ -131,6 +148,7 @@ pub fn set_current_tf(tf: *mut TrapFrame) {
  * Parked IPC callers (IpcCall) keep a0 until complete_call delivers the reply.
  */
 pub fn set_syscall_return(task_id: usize, ret: isize) {
+    let _g = SCHED_LOCK.lock();
     let s = inner();
     if task_id < MAX_UTASKS && s.tasks[task_id].state != TaskState::Empty {
         if matches!(s.tasks[task_id].block, BlockReason::IpcCall { .. }) {
@@ -151,14 +169,22 @@ pub fn find_sched_id(cap: TaskId) -> Option<usize> {
  * complete_call - deliver reply label to a blocked IPC caller and Ready it
  */
 pub fn complete_call(sched_id: usize, ret: isize) {
-    let s = inner();
-    if sched_id >= MAX_UTASKS {
-        return;
+    let mut wake_hart = None;
+    {
+        let _g = SCHED_LOCK.lock();
+        let s = inner();
+        if sched_id >= MAX_UTASKS {
+            return;
+        }
+        s.tasks[sched_id].tf.x[10] = ret as usize;
+        if s.tasks[sched_id].state == TaskState::Blocked {
+            s.tasks[sched_id].state = TaskState::Ready;
+            s.tasks[sched_id].block = BlockReason::None;
+            wake_hart = Some(s.tasks[sched_id].home_hart);
+        }
     }
-    s.tasks[sched_id].tf.x[10] = ret as usize;
-    if s.tasks[sched_id].state == TaskState::Blocked {
-        s.tasks[sched_id].state = TaskState::Ready;
-        s.tasks[sched_id].block = BlockReason::None;
+    if let Some(h) = wake_hart {
+        smp::ipi_wake(h);
     }
 }
 
@@ -166,30 +192,59 @@ pub fn complete_call(sched_id: usize, ret: isize) {
  * abort_ipc_waiters - wake recv/call waiters on @badge with an error in a0
  */
 pub fn abort_ipc_waiters(badge: u64, err: isize) {
-    let s = inner();
-    for t in s.tasks.iter_mut() {
-        if t.state != TaskState::Blocked {
-            continue;
+    let mut wake = [false; MAX_HARTS];
+    {
+        let _g = SCHED_LOCK.lock();
+        let s = inner();
+        for t in s.tasks.iter_mut() {
+            if t.state != TaskState::Blocked {
+                continue;
+            }
+            let match_b = match t.block {
+                BlockReason::IpcRecv { badge: b } | BlockReason::IpcCall { badge: b } => b == badge,
+                BlockReason::None => false,
+            };
+            if match_b {
+                t.tf.x[10] = err as usize;
+                t.state = TaskState::Ready;
+                t.block = BlockReason::None;
+                if t.home_hart < MAX_HARTS {
+                    wake[t.home_hart] = true;
+                }
+            }
         }
-        let match_b = match t.block {
-            BlockReason::IpcRecv { badge: b } | BlockReason::IpcCall { badge: b } => b == badge,
-            BlockReason::None => false,
-        };
-        if match_b {
-            t.tf.x[10] = err as usize;
-            t.state = TaskState::Ready;
-            t.block = BlockReason::None;
+    }
+    for h in 0..MAX_HARTS {
+        if wake[h] {
+            smp::ipi_wake(h);
         }
     }
 }
 
 pub fn current_id() -> usize {
-    inner().current
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    inner().current[h]
 }
 
 pub fn current_cap_task() -> TaskId {
     let s = inner();
-    s.tasks[s.current].cap_task
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    s.tasks[s.current[h]].cap_task
+}
+
+pub fn idle_id_for(hart: usize) -> Option<usize> {
+    if hart >= MAX_HARTS {
+        return None;
+    }
+    inner().idle_id[hart]
+}
+
+pub fn set_task_home(id: usize, hart: usize) {
+    let _g = SCHED_LOCK.lock();
+    let s = inner();
+    if id < MAX_UTASKS && s.tasks[id].state != TaskState::Empty {
+        s.tasks[id].home_hart = hart.min(MAX_HARTS - 1);
+    }
 }
 
 fn alloc_kstack() -> Option<usize> {
@@ -246,6 +301,12 @@ fn spawn_inner(
     tf.sstatus = SSTATUS_SPIE | SSTATUS_SUM;
     tf.x[2] = stack_top;
 
+    let home = if is_idle {
+        /* Caller must set home via spawn_idle_on before use; default 0. */
+        0
+    } else {
+        alloc_home_hart()
+    };
     s.tasks[idx] = UserTask {
         state: TaskState::Ready,
         name,
@@ -256,18 +317,17 @@ fn spawn_inner(
         root_pa,
         block: BlockReason::None,
         is_idle,
+        home_hart: home,
     };
-    if is_idle {
-        s.idle_id = Some(idx);
-    }
     /* Stay quiet on success — shell/fs exec should not flood the serial. */
     Some(idx)
 }
 
 /*
- * spawn_idle - map a tiny U-mode yield loop into its own AS
+ * spawn_idle_on - per-hart U-mode yield loop (unique stack VA per hart)
  */
-pub fn spawn_idle(cap_task: TaskId) -> Option<usize> {
+pub fn spawn_idle_on(cap_task: TaskId, hart: usize) -> Option<usize> {
+    let hart = hart.min(MAX_HARTS - 1);
     let aspace = AddrSpace::create()?;
     let page = frame::alloc()?;
     let code: [u32; 3] = [
@@ -281,8 +341,23 @@ pub fn spawn_idle(cap_task: TaskId) -> Option<usize> {
             dst.add(i).write(*w);
         }
     }
-    aspace.map_user(IDLE_VA, page, true, false);
-    spawn_inner("idle", IDLE_VA, IDLE_STACK, cap_task, true, aspace)
+    /* Distinct code/stack VAs so each idle has its own pages. */
+    let code_va = IDLE_VA + hart * 0x0010_0000;
+    let stack_va = IDLE_STACK + hart * 0x0010_0000;
+    aspace.map_user(code_va, page, true, false);
+    let id = spawn_inner("idle", code_va, stack_va, cap_task, true, aspace)?;
+    let _g = SCHED_LOCK.lock();
+    let s = inner();
+    s.tasks[id].home_hart = hart;
+    s.idle_id[hart] = Some(id);
+    Some(id)
+}
+
+/*
+ * spawn_idle - boot-hart idle (compat wrapper)
+ */
+pub fn spawn_idle(cap_task: TaskId) -> Option<usize> {
+    spawn_idle_on(cap_task, 0)
 }
 
 /*
@@ -304,8 +379,10 @@ pub fn next_spawn_stack_base(sched_id: usize) -> usize {
 }
 
 pub fn mark_zombie(_code: usize) {
+    let _g = SCHED_LOCK.lock();
     let s = inner();
-    let id = s.current;
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    let id = s.current[h];
     if s.tasks[id].is_idle {
         return;
     }
@@ -317,22 +394,30 @@ pub fn mark_zombie(_code: usize) {
  * kill_current - mark current U-task Zombie after a fatal trap
  */
 pub fn kill_current(reason: &'static str) {
-    let s = inner();
-    let id = s.current;
-    if s.tasks[id].is_idle {
-        return;
+    let name;
+    {
+        let _g = SCHED_LOCK.lock();
+        let s = inner();
+        let h = smp::hart_id().min(MAX_HARTS - 1);
+        let id = s.current[h];
+        if s.tasks[id].is_idle {
+            return;
+        }
+        name = s.tasks[id].name;
+        s.tasks[id].state = TaskState::Zombie;
+        s.tasks[id].block = BlockReason::None;
     }
-    println!("sched: {} killed ({})", s.tasks[id].name, reason);
-    s.tasks[id].state = TaskState::Zombie;
-    s.tasks[id].block = BlockReason::None;
+    println!("sched: {} killed ({})", name, reason);
 }
 
 /*
  * block_current_ipc - mark current task Blocked waiting to recv on @badge
  */
 pub fn block_current_ipc(badge: u64) {
+    let _g = SCHED_LOCK.lock();
     let s = inner();
-    let id = s.current;
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    let id = s.current[h];
     if s.tasks[id].is_idle {
         return;
     }
@@ -344,8 +429,10 @@ pub fn block_current_ipc(badge: u64) {
  * block_current_call - mark current task Blocked waiting for a reply on @badge
  */
 pub fn block_current_call(badge: u64) {
+    let _g = SCHED_LOCK.lock();
     let s = inner();
-    let id = s.current;
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    let id = s.current[h];
     if s.tasks[id].is_idle {
         return;
     }
@@ -357,29 +444,42 @@ pub fn block_current_call(badge: u64) {
  * wakeup_ipc - Ready any task blocked in recv on @badge
  */
 pub fn wakeup_ipc(badge: u64) {
-    let s = inner();
-    for t in s.tasks.iter_mut() {
-        if t.state == TaskState::Blocked {
-            if let BlockReason::IpcRecv { badge: b } = t.block {
-                if b == badge {
-                    t.state = TaskState::Ready;
-                    t.block = BlockReason::None;
+    let mut wake = [false; MAX_HARTS];
+    {
+        let _g = SCHED_LOCK.lock();
+        let s = inner();
+        for t in s.tasks.iter_mut() {
+            if t.state == TaskState::Blocked {
+                if let BlockReason::IpcRecv { badge: b } = t.block {
+                    if b == badge {
+                        t.state = TaskState::Ready;
+                        t.block = BlockReason::None;
+                        if t.home_hart < MAX_HARTS {
+                            wake[t.home_hart] = true;
+                        }
+                    }
                 }
             }
         }
     }
+    for h in 0..MAX_HARTS {
+        if wake[h] {
+            smp::ipi_wake(h);
+        }
+    }
 }
 
-fn pick_next(from: usize) -> Option<usize> {
+fn pick_next(from: usize, hart: usize) -> Option<usize> {
     let s = inner();
     for off in 1..=MAX_UTASKS {
         let i = (from + off) % MAX_UTASKS;
-        if s.tasks[i].state == TaskState::Ready && !s.tasks[i].is_idle {
+        let t = &s.tasks[i];
+        if t.state == TaskState::Ready && !t.is_idle && t.home_hart == hart {
             return Some(i);
         }
     }
-    /* Idle only when nothing else is runnable. */
-    if let Some(idle) = s.idle_id {
+    /* Idle only when nothing else is runnable on this hart. */
+    if let Some(idle) = s.idle_id[hart] {
         s.tasks[idle].state = TaskState::Ready;
         s.tasks[idle].block = BlockReason::None;
         return Some(idle);
@@ -388,16 +488,18 @@ fn pick_next(from: usize) -> Option<usize> {
 }
 
 /*
- * yield_now - round-robin to next Ready task (0.6.1)
+ * yield_now - round-robin to next Ready task on this hart (0.6.1 / 1.7)
  */
 pub fn yield_now() -> bool {
+    let _g = SCHED_LOCK.lock();
     let s = inner();
-    let cur = s.current;
-    if let Some(next) = pick_next(cur) {
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    let cur = s.current[h];
+    if let Some(next) = pick_next(cur, h) {
         if s.tasks[cur].state == TaskState::Running {
             s.tasks[cur].state = TaskState::Ready;
         }
-        s.current = next;
+        s.current[h] = next;
         s.tasks[next].state = TaskState::Running;
         set_current_tf(&mut s.tasks[next].tf as *mut TrapFrame);
         s.tasks[next].activate_as();
@@ -413,24 +515,35 @@ pub fn yield_now() -> bool {
  * serial input/echo. Count is kept for later ledger / debug dumps.
  */
 pub fn preempt() {
-    let s = inner();
-    s.preempt_count = s.preempt_count.wrapping_add(1);
+    {
+        let _g = SCHED_LOCK.lock();
+        let s = inner();
+        s.preempt_count = s.preempt_count.wrapping_add(1);
+    }
     let _ = yield_now();
 }
 
 pub fn enter_first(id: usize) -> ! {
-    let s = inner();
-    s.current = id;
-    s.tasks[id].state = TaskState::Running;
-    set_current_tf(&mut s.tasks[id].tf as *mut TrapFrame);
-    s.tasks[id].activate_as();
-    timer::note_preempt_ready();
+    {
+        let _g = SCHED_LOCK.lock();
+        let s = inner();
+        let h = smp::hart_id().min(MAX_HARTS - 1);
+        s.current[h] = id;
+        s.tasks[id].home_hart = h;
+        s.tasks[id].state = TaskState::Running;
+        set_current_tf(&mut s.tasks[id].tf as *mut TrapFrame);
+        s.tasks[id].activate_as();
+    }
+    if smp::hart_id() == smp::boot_hart() {
+        timer::note_preempt_ready();
+    }
     restore_user();
 }
 
 pub fn restore_user() -> ! {
     let s = inner();
-    let id = s.current;
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    let id = s.current[h];
     let sepc = s.tasks[id].tf.sepc;
     let ra = s.tasks[id].tf.x[1];
     let sp = s.tasks[id].tf.x[2];
@@ -457,7 +570,8 @@ pub fn restore_user() -> ! {
             "ld ra, 1*8(t6)",
             "ld sp, 2*8(t6)",
             "ld gp, 3*8(t6)",
-            "ld tp, 4*8(t6)",
+            /* Keep kernel hart id in `tp` (x4). Userspace TLS is not used yet;
+             * restoring TF.tp would zero it and break per-hart trap stacks. */
             "ld t0, 5*8(t6)",
             "ld t1, 6*8(t6)",
             "ld t2, 7*8(t6)",
@@ -492,7 +606,46 @@ pub fn restore_user() -> ! {
     }
 }
 
+/*
+ * syscall_yield - SYS_YIELD without TrapCtx lock (safe to WFI on SMP)
+ */
+pub fn syscall_yield() -> isize {
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    let idle_wait = {
+        let _g = SCHED_LOCK.lock();
+        let s = inner();
+        let cur = s.current[h];
+        if s.tasks[cur].is_idle {
+            let any_ready = s.tasks.iter().enumerate().any(|(i, t)| {
+                i != cur
+                    && t.state == TaskState::Ready
+                    && !t.is_idle
+                    && t.home_hart == h
+            });
+            !any_ready
+        } else {
+            false
+        }
+    };
+    if idle_wait {
+        unsafe {
+            core::arch::asm!("wfi", options(nomem, nostack));
+        }
+        crate::sbi::clear_ssip();
+        let mut sip: usize;
+        unsafe {
+            core::arch::asm!("csrr {}, sip", out(reg) sip, options(nostack));
+        }
+        if sip & (1 << 5) != 0 {
+            let _ = timer::on_interrupt();
+        }
+    }
+    let _ = yield_now();
+    0
+}
+
 pub fn handle_syscall(
+
     tasks: &mut TaskTable,
     eps: &mut EndpointTable,
     nr: usize,
@@ -505,23 +658,7 @@ pub fn handle_syscall(
     use deeproot_abi::{CapReason, CapType, LedgerKind};
     let current = current_cap_task();
     match nr {
-        SYS_YIELD => {
-            let s = inner();
-            let cur = s.current;
-            if s.tasks[cur].is_idle {
-                let any_ready = s.tasks.iter().enumerate().any(|(i, t)| {
-                    i != cur && t.state == TaskState::Ready
-                });
-                if !any_ready {
-                    unsafe {
-                        core::arch::asm!("wfi", options(nomem, nostack));
-                    }
-                    let _ = timer::on_interrupt();
-                }
-            }
-            let _ = yield_now();
-            0
-        }
+        SYS_YIELD => syscall_yield(),
         SYS_EXIT => {
             mark_zombie(a0 as usize);
             if !yield_now() {

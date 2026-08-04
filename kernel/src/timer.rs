@@ -5,6 +5,7 @@
 use core::sync::atomic::{AtomicU64, Ordering};
 
 use crate::println;
+use crate::smp;
 
 const SBI_EXT_TIME: usize = 0x54494D45; /* "TIME" */
 const SBI_TIME_SET_TIMER: usize = 0;
@@ -16,7 +17,6 @@ pub const SIE_STIE: usize = 1 << 5;
 pub const TICKS_PER_SLICE: u64 = 100_000;
 
 static TICKS: AtomicU64 = AtomicU64::new(0);
-static HART_ID: AtomicU64 = AtomicU64::new(0);
 
 /*
  * time_now - read the `time` CSR (shadow of mtime)
@@ -48,12 +48,10 @@ fn sbi_set_timer(abs: u64) {
 }
 
 /*
- * init - record boot hart and arm the first quantum
- * @hartid: OpenSBI a0 (multi-hart prep: one timer per hart later)
+ * init - arm this hart's supervisor timer
+ * @hartid: OpenSBI a0 / HSM start a0
  */
 pub fn init(hartid: usize) {
-    HART_ID.store(hartid as u64, Ordering::Relaxed);
-    /* Enable supervisor timer interrupts in sie. */
     unsafe {
         core::arch::asm!(
             "csrs sie, {}",
@@ -69,7 +67,7 @@ pub fn init(hartid: usize) {
 }
 
 pub fn hart_id() -> usize {
-    HART_ID.load(Ordering::Relaxed) as usize
+    smp::hart_id()
 }
 
 pub fn ticks() -> u64 {
@@ -88,7 +86,6 @@ pub fn arm_next() {
  * on_interrupt - clear/rearm timer; returns tick count
  */
 pub fn on_interrupt() -> u64 {
-    /* Clear STIP by setting timer far ahead then re-arming, per SBI. */
     sbi_set_timer(u64::MAX);
     let t = TICKS.fetch_add(1, Ordering::Relaxed) + 1;
     arm_next();
@@ -96,10 +93,7 @@ pub fn on_interrupt() -> u64 {
 }
 
 /*
- * enable_s_ie - allow S-mode to take interrupts when SPIE→SIE on sret
- *
- * We do not set sstatus.SIE while running in the kernel trap path; U-mode
- * resumes with SPIE so the next U-mode timeslice can be preempted.
+ * note_preempt_ready - boot-hart log that U-mode preemption is armed
  */
 pub fn note_preempt_ready() {
     println!("timer: preemption armed (STIE); ticks so far={}", ticks());

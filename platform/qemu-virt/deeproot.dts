@@ -7,6 +7,9 @@
  *
  * Build:  scripts/build-dtb.sh  →  build/deeproot-qemu-virt.dtb
  * Boot:   scripts/run-qemu.sh passes -dtb that blob (OpenSBI → a1).
+ *
+ * SMP: two CPU nodes for QEMU `-smp 2` (1.7). CLINT/PLIC interrupt wiring
+ * lists both harts.
  */
 
 /dts-v1/;
@@ -19,7 +22,7 @@
 
 	chosen {
 		stdout-path = "/soc/uart@10000000";
-		bootargs = "deeproot=1.6";
+		bootargs = "deeproot=1.7";
 	};
 
 	aliases {
@@ -40,6 +43,21 @@
 			mmu-type = "riscv,sv39";
 
 			cpu0_intc: interrupt-controller {
+				#interrupt-cells = <1>;
+				interrupt-controller;
+				compatible = "riscv,cpu-intc";
+			};
+		};
+
+		cpu1: cpu@1 {
+			device_type = "cpu";
+			reg = <1>;
+			status = "okay";
+			compatible = "riscv";
+			riscv,isa = "rv64imafdc";
+			mmu-type = "riscv,sv39";
+
+			cpu1_intc: interrupt-controller {
 				#interrupt-cells = <1>;
 				interrupt-controller;
 				compatible = "riscv,cpu-intc";
@@ -122,7 +140,10 @@
 		clint@2000000 {
 			compatible = "riscv,clint0";
 			reg = <0x0 0x2000000 0x0 0x10000>;
-			interrupts-extended = <&cpu0_intc 3 &cpu0_intc 7>;
+			interrupts-extended = <
+				&cpu0_intc 3 &cpu0_intc 7
+				&cpu1_intc 3 &cpu1_intc 7
+			>;
 		};
 
 		plic: interrupt-controller@c000000 {
@@ -131,7 +152,10 @@
 			#address-cells = <0>;
 			#interrupt-cells = <1>;
 			interrupt-controller;
-			interrupts-extended = <&cpu0_intc 11 &cpu0_intc 9>;
+			interrupts-extended = <
+				&cpu0_intc 11 &cpu0_intc 9
+				&cpu1_intc 11 &cpu1_intc 9
+			>;
 			riscv,ndev = <96>;
 		};
 	};
