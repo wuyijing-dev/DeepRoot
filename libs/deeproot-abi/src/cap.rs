@@ -1,7 +1,7 @@
-//! Capability ABI types shared by kernel and (future) userspace.
+//! Capability ABI types shared by kernel and userspace.
 //!
-//! Slot *storage* lives in the kernel; this module is the stable layout
-//! learners can print / serialize for worksheets (0.3.0).
+//! Slot storage lives in the kernel; this module is the stable wire/layout
+//! for CapType, rights, and CapView.
 
 /// Object type encoded in a capability slot.
 #[repr(u8)]
@@ -13,13 +13,13 @@ pub enum CapType {
     Untyped = 1,
     /// IPC endpoint (filled in 0.4.x).
     Endpoint = 2,
-    /// Capability node / CSpace reference (teaching placeholder).
+    /// Capability node / CSpace reference.
     CNode = 3,
-    /// Physical frame (teaching placeholder until pager servers).
+    /// Physical frame (pager / frame server ownership).
     Frame = 4,
 }
 
-/// Reason codes recorded in capability provenance (teaching microscope).
+/// Reason codes recorded in capability provenance.
 #[repr(u16)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CapReason {

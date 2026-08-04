@@ -1,4 +1,4 @@
-//! Page-sized helpers re-exported for worksheets.
+//! Page-sized helpers (align, PAGE_SIZE, PhysAddr / VirtAddr).
 
 #![allow(unused_imports)]
 

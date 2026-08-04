@@ -1,9 +1,9 @@
-//! IPC message / endpoint ABI (0.4.x Ledger Vein).
+//! IPC message / endpoint ABI (0.4.x).
 
-/// Max fixed words in a teaching message (keep small for UART dumps).
+/// Max fixed words in an IPC message.
 pub const IPC_WORDS: usize = 4;
 
-/// Fixed-size IPC payload shared by kernel and (future) userspace.
+/// Fixed-size IPC payload shared by kernel and userspace.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct IpcMessage {

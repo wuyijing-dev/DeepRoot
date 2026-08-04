@@ -59,15 +59,4 @@ pub fn init(hartid: usize, dtb_pa: usize) {
 
     sv39::init_identity(&map);
     println!("mm: Sv39 identity map active");
-
-    #[cfg(feature = "lesson-mm")]
-    {
-        match aspace::AddrSpace::create() {
-            Some(aspace) => {
-                println!("mm: user AddrSpace stub root_ppn={:#x}", aspace.root_ppn);
-                aspace.destroy();
-            }
-            None => println!("mm: AddrSpace stub alloc failed"),
-        }
-    }
 }

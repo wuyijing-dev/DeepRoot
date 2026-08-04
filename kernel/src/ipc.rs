@@ -1,11 +1,10 @@
-//! Synchronous IPC stubs — Ledger Vein (0.4.x).
+//! Synchronous IPC — call / recv / reply on endpoints (0.4.x).
 //!
 //! Single-hart rendezvous: one pending call and one reply per endpoint.
 //! Blocking recv/wakeup is handled by the scheduler (0.6.x).
 
 use crate::cap::{CapError, CapSpace, TaskId, TaskTable};
 use crate::ledger::LEDGER;
-use crate::println;
 use deeproot_abi::{rights, CapReason, CapType, IpcMessage, LedgerKind};
 
 pub const MAX_ENDPOINTS: usize = 16;
@@ -211,119 +210,4 @@ pub fn call_from_cap(
         return Err(IpcError::BadRights);
     }
     eps.send(caller, slot.badge, msg)
-}
-
-/*
- * boot_demo - Ledger Vein worksheet under lesson-ipc
- */
-pub fn boot_demo(tasks: &mut TaskTable, eps: &mut EndpointTable) {
-    use crate::syscall;
-
-    let init = tasks.spawn("init").expect("spawn init");
-    let ping = tasks.spawn("ping").expect("spawn ping");
-
-    const EP_BADGE: u64 = 0xE001;
-    eps.create(init, EP_BADGE).expect("create ep");
-
-    let (ep_slot_init, client_view) = {
-        let init_cs = tasks.cspace_mut(init).expect("init cs");
-        let root = init_cs
-            .mint_root(rights::ALL, CapType::Untyped, CapReason::BootRoot)
-            .expect("root");
-        let ep = init_cs
-            .mint_badged(
-                root,
-                rights::READ | rights::IPC | rights::GRANT,
-                CapType::Endpoint,
-                EP_BADGE,
-                CapReason::Badge,
-            )
-            .expect("ep cap");
-        let client = init_cs
-            .derive(ep, rights::IPC, u64::MAX, CapReason::Derive)
-            .expect("client derive");
-        let view = init_cs.view(client).expect("view");
-        (ep, view)
-    };
-
-    let ep_slot_ping = {
-        let ping_cs = tasks.cspace_mut(ping).expect("ping cs");
-        ping_cs
-            .install_copy(
-                CapType::Endpoint,
-                client_view.rights,
-                client_view.badge,
-                CapReason::Mint,
-            )
-            .expect("ping ep")
-    };
-
-    println!(
-        "ipc: endpoint badge={:#x} init_slot={} ping_slot={}",
-        EP_BADGE, ep_slot_init, ep_slot_ping
-    );
-
-    let mut req = IpcMessage::with_label(0xC0DE);
-    req.words[0] = 42;
-    req.transfer_valid = 1;
-    req.transfer_type = CapType::Frame as u8;
-    req.transfer_rights = rights::READ | rights::WRITE;
-    req.transfer_badge = 0xF00D;
-
-    call_from_cap(tasks, eps, ping, ep_slot_ping, req).expect("ipc call/send");
-
-    let got = {
-        let init_cs = tasks.cspace_mut(init).expect("init cs");
-        eps.recv(init, EP_BADGE, init_cs).expect("ipc recv")
-    };
-    println!(
-        "ipc: init recv label={:#x} word0={} granted_slot={}",
-        got.label, got.words[0], got.words[3]
-    );
-
-    let mut rep = IpcMessage::with_label(0xABCD);
-    rep.words[0] = got.words[0] + 1;
-    eps.reply(init, EP_BADGE, rep).expect("ipc reply");
-
-    let reply = eps.take_reply(ping, EP_BADGE).expect("take reply");
-    println!(
-        "ipc: ping got reply label={:#x} word0={}",
-        reply.label, reply.words[0]
-    );
-
-    let dump_rc = syscall::dispatch(
-        tasks,
-        eps,
-        init,
-        deeproot_abi::syscall::SYS_LEDGER_DUMP,
-        0,
-        0,
-        0,
-        0,
-    );
-    println!("ipc: SYS_LEDGER_DUMP => {}", dump_rc);
-
-    let call_rc = syscall::dispatch(
-        tasks,
-        eps,
-        ping,
-        deeproot_abi::syscall::SYS_IPC_CALL,
-        ep_slot_ping as u64,
-        0x1111,
-        7,
-        0,
-    );
-    println!("ipc: SYS_IPC_CALL => {}", call_rc);
-    if call_rc == 0 {
-        let init_cs = tasks.cspace_mut(init).expect("init cs");
-        let m = eps.recv(init, EP_BADGE, init_cs).expect("recv after syscall");
-        println!(
-            "ipc: post-syscall recv label={:#x} word0={}",
-            m.label, m.words[0]
-        );
-        let mut r = IpcMessage::with_label(0x2222);
-        r.words[0] = m.words[0];
-        eps.reply(init, EP_BADGE, r).expect("reply2");
-        let _ = eps.take_reply(ping, EP_BADGE).expect("reply2 take");
-    }
 }

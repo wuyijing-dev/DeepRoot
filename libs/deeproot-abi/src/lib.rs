@@ -1,8 +1,8 @@
 //! Shared ABI between DeepRoot kernel and userspace.
 //!
 //! Keep this crate `no_std` and dependency-light so both sides can link it.
-//! Numbers here are part of the teaching ABI — bump MAJOR in VERSION if you
-//! break them after 1.0.0 Teaching Stable.
+//! Numbers here are part of the public ABI — bump MAJOR in VERSION after 1.0
+//! if you break them.
 
 #![no_std]
 

@@ -1,13 +1,13 @@
-0.6.5
+0.7.0
 
 #
 # DeepRoot versioning (Linux-inspired)
 # Format: MAJOR.PATCHLEVEL.SUBLEVEL[-EXTRAVERSION]
 #
-# MAJOR      — ABI / teaching-era break (0 = pre-stable, 1 = Teaching Stable)
-# PATCHLEVEL — feature series / learning milestone
-# SUBLEVEL   — fixes and polish within a milestone
-# EXTRAVERSION — optional: -rcN, -dirty, -lesson
+# MAJOR      — ABI break (0 = pre-stable, 1 = stable)
+# PATCHLEVEL — feature series
+# SUBLEVEL   — fixes and polish within a series
+# EXTRAVERSION — optional: -rcN, -dirty
 #
 # First line above is the CURRENT release. Lines below are the full roadmap.
 #
@@ -17,7 +17,7 @@
 # 0.1.1   stvec direct-mode trap stub, scause/sepc dump
 # 0.1.2   Root Ledger ring buffer + boot/trap records
 # 0.1.3   CapSpace mint_root / derive + provenance hops (demo)
-# 0.1.4   Lesson Gates: lesson-boot / lesson-cap / lesson-ledger
+# 0.1.4   —
 # 0.1.5   QEMU virt script polish, VERSION stamp in banner
 
 # ---------- 0.2.x Address Sapling ----------
@@ -27,7 +27,7 @@
 # 0.2.3   Sv39 page-table types + identity map kernel
 # 0.2.4   satp switch, enable virtual memory
 # 0.2.5   User address-space create / destroy stubs
-# 0.2.6   lesson-mm gate; page-fault trap path sketch
+# 0.2.6   Page-fault trap path sketch
 
 # ---------- 0.3.x Cap Root ----------
 # 0.3.0   Stable CapSlot / CSpace ABI in deeproot-abi
@@ -35,7 +35,7 @@
 # 0.3.2   Rights masks: READ WRITE GRANT IPC enforcement
 # 0.3.3   Cap tables per task (replace boot demo CSpace)
 # 0.3.4   Badged capabilities (simple badge u64)
-# 0.3.5   lesson-cap gate expands; revoke subtree tests
+# 0.3.5   Revoke subtree tests
 
 # ---------- 0.4.x Ledger Vein (IPC) ----------
 # 0.4.0   Endpoint capability type
@@ -43,7 +43,7 @@
 # 0.4.2   Root Ledger: IpcSend / IpcRecv events
 # 0.4.3   SYS_IPC_CALL / SYS_LEDGER_DUMP syscall numbers live
 # 0.4.4   Transfer caps over IPC (grant path)
-# 0.4.5   lesson-ipc gate; ledger dump via syscall
+# 0.4.5   Ledger dump via syscall
 
 # ---------- 0.5.x Server Grove ----------
 # 0.5.0   Userspace loader / ELF stub for init
@@ -51,7 +51,7 @@
 # 0.5.2   console server (move UART out of kernel hot path)
 # 0.5.3   Kernel keeps only early printk for panic
 # 0.5.4   Sample ping server over IPC
-# 0.5.5   Multi-server bring-up worksheet
+# 0.5.5   Multi-server bring-up
 
 # ---------- 0.6.x Schedule Canopy ----------
 # 0.6.0   Thread TCB + kernel stacks
@@ -59,13 +59,13 @@
 # 0.6.2   Timer interrupt via SBI/OpenSBI
 # 0.6.3   Blocking IPC wait / wakeup
 # 0.6.4   Preemption points; idle thread
-# 0.6.5   Multi-hart prep (still single-hart OK) ← current
+# 0.6.5   Multi-hart prep (still single-hart OK)
 
-# ---------- 0.7.x Lesson Gates ----------
-# 0.7.0   All lesson-* features documented in Cargo.toml only
-# 0.7.1   CI matrix: build each lesson gate
-# 0.7.2   Minimal configs for chapter worksheets
-# 0.7.3   Freeze chapter boundaries for 1.0 prep
+# ---------- 0.7.x Kernel Config ----------
+# 0.7.0   Drop feature gates and boot demos; single always-on kernel ← current
+# 0.7.1   CI: release build + QEMU smoke
+# 0.7.2   run-qemu / build script polish
+# 0.7.3   Roadmap freeze for 0.8 ABI work
 
 # ---------- 0.8.x / 0.9.x Stabilization ----------
 # 0.8.0   ABI freeze candidate (-rc path begins)
@@ -75,7 +75,7 @@
 # 0.9.1   1.0.0-rc2
 # 0.9.2   1.0.0-rc3
 
-# ---------- 1.x Teaching Stable ----------
-# 1.0.0   Teaching Stable — semester-ready ABI + chapter set
+# ---------- 1.x Stable ----------
+# 1.0.0   Stable ABI + server set
 # 1.0.y   Bugfixes only (SUBLEVEL), no ABI breaks
-# 1.1.0   Next teaching series (new PATCHLEVEL), ABI additive
+# 1.1.0   Next series (new PATCHLEVEL), ABI additive

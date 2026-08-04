@@ -1,8 +1,8 @@
 //! Physical memory map discovery (0.2.0).
 //!
 //! Walks a minimal subset of the Flattened Device Tree for a `memory@…`
-//! `reg` property. Falls back to QEMU virt 128MiB defaults so worksheets
-//! still run if the DTB walk fails a sanity check.
+//! `reg` property. Falls back to QEMU virt 128MiB defaults if the DTB walk
+//! fails a sanity check.
 
 use super::layout::{
     align_down, align_up, ekernel, PhysAddr, DRAM_END_DEFAULT, DRAM_START, PAGE_SIZE,

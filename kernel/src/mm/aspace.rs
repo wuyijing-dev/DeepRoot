@@ -1,14 +1,14 @@
-//! User address-space stubs (0.2.5).
+//! User address space (0.2.5).
 //!
-//! Full user page tables arrive with Server Grove / Schedule Canopy.
-//! Here we only name the object learners will extend.
+//! Holds the root page-table PPN for a userspace AS. Full per-task tables
+//! are installed as servers map ELF / stacks.
 
 #![allow(dead_code)]
 
 use super::layout::PhysAddr;
 use super::sv39;
 
-/// Placeholder for a userspace address space (root PPN + metadata).
+/// Userspace address space (root PPN + metadata).
 pub struct AddrSpace {
     pub root_ppn: usize,
 }

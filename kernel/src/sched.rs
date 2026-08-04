@@ -52,7 +52,7 @@ pub enum BlockReason {
     IpcRecv { badge: u64 },
 }
 
-/// Thread Control Block (teaching TCB).
+/// Thread Control Block.
 pub struct UserTask {
     pub state: TaskState,
     pub name: &'static str,

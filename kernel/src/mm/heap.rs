@@ -1,7 +1,7 @@
 //! Kernel bump heap (0.2.2).
 //!
 //! Carve N frames at init and bump-allocate forever (no free). Enough for
-//! early page tables and teaching `alloc` experiments later.
+//! early page tables and `alloc` until a real slab arrives.
 
 use core::alloc::{GlobalAlloc, Layout};
 use core::ptr;
@@ -72,7 +72,7 @@ unsafe impl GlobalAlloc for LockedBump {
     }
 
     unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {
-        /* bump heap does not free — teaching trade-off */
+        /* bump heap does not free */
     }
 }
 

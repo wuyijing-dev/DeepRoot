@@ -11,16 +11,5 @@ authors.workspace = true
 name = "deeproot-kernel"
 path = "src/main.rs"
 
-[features]
-default = ["lesson-boot", "lesson-mm", "lesson-cap", "lesson-ledger", "lesson-ipc", "lesson-servers", "lesson-sched"]
-# Lesson Gates — progressive unlock for worksheets
-lesson-boot = []
-lesson-mm = []
-lesson-cap = []
-lesson-ledger = []
-lesson-ipc = []
-lesson-servers = []
-lesson-sched = []
-
 [dependencies]
 deeproot-abi = { workspace = true }

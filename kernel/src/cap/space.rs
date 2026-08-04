@@ -2,7 +2,7 @@
 
 use deeproot_abi::{rights, CapReason, CapType, CapView};
 
-/// Maximum slots in a task CSpace (small on purpose for worksheets).
+/// Maximum slots in a task CSpace (fixed table for now).
 pub const CAP_SLOTS: usize = 32;
 
 /// How many provenance hops we retain per capability.
@@ -160,7 +160,7 @@ impl CapSpace {
      * @badge: badge value stored on the child
      * @reason: CapReason::Badge / Mint
      *
-     * seL4-like teaching rule: badge may be set freely when parent has GRANT.
+     * seL4-like rule: badge may be set freely when parent has GRANT.
      */
     pub fn mint_badged(
         &mut self,

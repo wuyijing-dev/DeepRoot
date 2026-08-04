@@ -1,6 +1,4 @@
-//! DeepRoot kernel binary — educational RISC-V microkernel.
-//!
-//! Current milestone: **0.6.x Schedule Canopy**.
+//! DeepRoot kernel binary — RISC-V microkernel.
 
 #![no_std]
 #![no_main]
@@ -32,44 +30,16 @@ pub extern "C" fn kernel_main(hartid: usize, dtb_pa: usize) -> ! {
 
     println!("");
     println!("  DeepRoot microkernel {}", version::version_string());
-    println!("  RISC-V S-mode · educational capability kernel");
+    println!("  RISC-V S-mode · capability microkernel");
     println!("  remote: git@github.com:wuyijing-dev/DeepRoot.git");
     println!("");
 
     trap::init();
     LEDGER.record(LedgerKind::Trap, 0, 0, 1);
 
-    #[cfg(feature = "lesson-mm")]
-    {
-        mm::init(hartid, dtb_pa);
-    }
-
-    #[cfg(feature = "lesson-sched")]
-    {
-        timer::init(hartid);
-    }
-
-    #[cfg(feature = "lesson-servers")]
-    {
-        servers::bring_up();
-    }
-
-    #[cfg(all(feature = "lesson-cap", not(feature = "lesson-servers")))]
-    {
-        cap::boot_demo();
-    }
-
-    #[cfg(all(feature = "lesson-ipc", not(feature = "lesson-servers")))]
-    {
-        let mut tasks = cap::TaskTable::new();
-        let mut eps = ipc::EndpointTable::new();
-        ipc::boot_demo(&mut tasks, &mut eps);
-    }
-
-    println!("boot: idle (enable lesson-servers for Server Grove)");
-    loop {
-        sbi::hart_suspend_idle();
-    }
+    mm::init(hartid, dtb_pa);
+    timer::init(hartid);
+    servers::bring_up();
 }
 
 #[panic_handler]

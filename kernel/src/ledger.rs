@@ -1,6 +1,6 @@
-//! Root Ledger — DeepRoot innovation #1: a teaching microscope for causality.
+//! Root Ledger — ring buffer of IPC / syscall / trap events.
 //!
-//! Fixed ring of `LedgerEvent` records. Not durable, not secure — printable.
+//! Fixed ring of `LedgerEvent` records. Not durable; printable for debug.
 
 use core::cell::UnsafeCell;
 use core::sync::atomic::{AtomicUsize, Ordering};
@@ -8,7 +8,7 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 use crate::println;
 use deeproot_abi::{LedgerEvent, LedgerKind};
 
-/// Power-of-two capacity keeps indexing cheap for learners to reason about.
+/// Power-of-two capacity for cheap mask indexing.
 pub const LEDGER_CAP: usize = 64;
 
 pub struct RootLedger {
@@ -45,7 +45,7 @@ impl RootLedger {
      * @kind: LedgerKind discriminant
      * @a0..a2: event-specific payload (documented per call site)
      *
-     * Overwrites the oldest entry when full — learners should dump early.
+     * Overwrites the oldest entry when full.
      */
     pub fn record(&self, kind: LedgerKind, a0: u32, a1: u32, a2: u32) {
         let idx = self.head.fetch_add(1, Ordering::Relaxed) % LEDGER_CAP;
@@ -59,9 +59,9 @@ impl RootLedger {
     }
 
     /*
-     * dump_to_console - print the ledger oldest→newest for worksheets
+     * dump_to_console - print the ledger oldest→newest
      *
-     * Ordering: we reconstruct using head and count. Good enough for Boot Seed.
+     * Reconstructs order from head and count.
      */
     pub fn dump_to_console(&self) {
         let count = self.count.load(Ordering::Relaxed).min(LEDGER_CAP);

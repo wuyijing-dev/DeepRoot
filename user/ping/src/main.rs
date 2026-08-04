@@ -1,4 +1,4 @@
-//! ping — sample IPC echo server (0.5.4).
+//! ping — IPC echo server.
 
 #![no_std]
 #![no_main]
