@@ -17,6 +17,9 @@ Requirements: Rust stable, `qemu-system-riscv64`.
 
 ABI numbers live in `libs/deeproot-abi` and are frozen for 1.0 (additive only in 1.1+).
 
+Roadmap after 1.0 (slow PATCHLEVEL steps — see [`VERSION`](VERSION)):
+**1.1** spawn/load ELF → **1.2** console I/O + shell → **1.3** filesystem.
+
 ## Layout
 
 ```
