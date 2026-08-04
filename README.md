@@ -3,13 +3,14 @@
 Educational Rust microkernel for RISC-V.
 
 Repository: https://github.com/wuyijing-dev/DeepRoot  
-Version: see [`VERSION`](VERSION) — current **0.7.0**
+Version: see [`VERSION`](VERSION) — current **0.7.3**
 
 ## Quick start
 
 ```bash
 rustup target add riscv64gc-unknown-none-elf
-./scripts/run-qemu.sh
+./scripts/run-qemu.sh          # interactive
+./scripts/run-qemu.sh --smoke  # CI-style timed check
 ```
 
 Requirements: Rust stable, `qemu-system-riscv64`.

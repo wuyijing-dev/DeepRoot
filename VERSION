@@ -1,4 +1,4 @@
-0.7.0
+0.7.3
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -16,7 +16,7 @@
 # 0.1.0   SBI bring-up, UART console, BSS/stack, panic, idle WFI
 # 0.1.1   stvec direct-mode trap stub, scause/sepc dump
 # 0.1.2   Root Ledger ring buffer + boot/trap records
-# 0.1.3   CapSpace mint_root / derive + provenance hops (demo)
+# 0.1.3   CapSpace mint_root / derive + provenance hops
 # 0.1.4   —
 # 0.1.5   QEMU virt script polish, VERSION stamp in banner
 
@@ -33,24 +33,24 @@
 # 0.3.0   Stable CapSlot / CSpace ABI in deeproot-abi
 # 0.3.1   Cap mint / derive / revoke with provenance walk
 # 0.3.2   Rights masks: READ WRITE GRANT IPC enforcement
-# 0.3.3   Cap tables per task (replace boot demo CSpace)
+# 0.3.3   Cap tables per task
 # 0.3.4   Badged capabilities (simple badge u64)
-# 0.3.5   Revoke subtree tests
+# 0.3.5   Revoke subtree
 
 # ---------- 0.4.x Ledger Vein (IPC) ----------
 # 0.4.0   Endpoint capability type
-# 0.4.1   Synchronous IPC call / reply stubs
+# 0.4.1   Synchronous IPC call / reply
 # 0.4.2   Root Ledger: IpcSend / IpcRecv events
 # 0.4.3   SYS_IPC_CALL / SYS_LEDGER_DUMP syscall numbers live
 # 0.4.4   Transfer caps over IPC (grant path)
 # 0.4.5   Ledger dump via syscall
 
 # ---------- 0.5.x Server Grove ----------
-# 0.5.0   Userspace loader / ELF stub for init
+# 0.5.0   Userspace loader / ELF for init
 # 0.5.1   init server (root task)
-# 0.5.2   console server (move UART out of kernel hot path)
+# 0.5.2   console server
 # 0.5.3   Kernel keeps only early printk for panic
-# 0.5.4   Sample ping server over IPC
+# 0.5.4   ping server over IPC
 # 0.5.5   Multi-server bring-up
 
 # ---------- 0.6.x Schedule Canopy ----------
@@ -62,15 +62,15 @@
 # 0.6.5   Multi-hart prep (still single-hart OK)
 
 # ---------- 0.7.x Kernel Config ----------
-# 0.7.0   Drop feature gates and boot demos; single always-on kernel ← current
+# 0.7.0   Drop feature gates and boot demos; single always-on kernel
 # 0.7.1   CI: release build + QEMU smoke
-# 0.7.2   run-qemu / build script polish
-# 0.7.3   Roadmap freeze for 0.8 ABI work
+# 0.7.2   run-qemu --smoke
+# 0.7.3   Roadmap freeze for 0.8 ABI work ← current
 
 # ---------- 0.8.x / 0.9.x Stabilization ----------
 # 0.8.0   ABI freeze candidate (-rc path begins)
 # 0.8.1   Panic / trap coverage; ledger correctness
-# 0.8.2   Cap revoke edge cases
+# 0.8.2   Cap revoke edge cases + sync IPC call
 # 0.9.0   1.0.0-rc1
 # 0.9.1   1.0.0-rc2
 # 0.9.2   1.0.0-rc3
