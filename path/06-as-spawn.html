@@ -1,0 +1,271 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>1.1 地址空间与 spawn - DeepRoot 学习笔记</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="面向新手的 DeepRoot 微内核学习文档（基于 v1.4.0）">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">DeepRoot 学习笔记</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/wuyijing-dev/DeepRoot" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/wuyijing-dev/DeepRoot/edit/main/docs/src/path/06-as-spawn.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="11-地址空间与-spawn详细跟读"><a class="header" href="#11-地址空间与-spawn详细跟读">1.1 地址空间与 spawn（详细跟读）</a></h1>
+<h2 id="1-为什么要每任务一张页表"><a class="header" href="#1-为什么要每任务一张页表">1. 为什么要「每任务一张页表」？</a></h2>
+<p>若所有用户程序共用内核那套「大一统」映射，隔离很弱，一个程序乱写容易牵连别人。<br />
+1.1 起：</p>
+<ul>
+<li>每个任务有自己的 <strong>根页表</strong>（<code>UserTask.root_pa</code> / <code>AddrSpace</code>）</li>
+<li>调度切换时 <code>satp</code> 切到下一个任务的根</li>
+<li>ELF 加载进<strong>该任务</strong>的虚址空间</li>
+</ul>
+<p>这是现代 OS「进程」直觉的教学版（仍然没有 Linux 那套 fd/信号）。</p>
+<h2 id="2-sys_spawn-逐步发生了什么"><a class="header" href="#2-sys_spawn-逐步发生了什么">2. <code>SYS_SPAWN</code> 逐步发生了什么？</a></h2>
+<p>在 <code>sched.rs</code> 的 <code>SYS_SPAWN</code> 分支（阅读时跟符号）：</p>
+<ol>
+<li>按 <code>blob_id</code> 选择字节：<code>0 → servers::HELLO_ELF</code></li>
+<li><code>tasks.spawn</code> 分配能力系统里的任务对象</li>
+<li>找空闲调度槽，计算栈基址 <code>next_spawn_stack_base</code></li>
+<li><code>spawn_elf_bytes</code>：
+<ul>
+<li><code>AddrSpace::create</code></li>
+<li><code>elf::load_into</code> 映射 PT_LOAD</li>
+<li>填 trap frame 的 <code>sepc</code>（入口）、<code>sp</code> 等</li>
+</ul>
+</li>
+<li>返回 <strong>sched id</strong>（正数）给调用者</li>
+</ol>
+<p>init 里：</p>
+<pre><code class="language-text">sys::spawn(0)  →  期望看到 hello 输出
+</code></pre>
+<p>shell 后来更多用 <code>SYS_EXEC</code>，但底层仍走相似的 <code>spawn_elf_bytes</code>。</p>
+<h2 id="3-elf-加载器你要盯的点elfrs"><a class="header" href="#3-elf-加载器你要盯的点elfrs">3. ELF 加载器你要盯的点（<code>elf.rs</code>）</a></h2>
+<ul>
+<li>校验 magic、<code>ET_EXEC</code>、<code>EM_RISCV</code></li>
+<li>遍历 program header，处理 <code>PT_LOAD</code></li>
+<li>按页分配物理帧，把文件内容拷进页</li>
+<li>设置执行/可写等权限</li>
+<li><strong>页数上限</strong>（<code>MAX_PAGES</code>）：ELF 太大（例如巨大的帧数据）会加载失败 → shell 报 <code>exec failed</code></li>
+</ul>
+<p>历史上 badapple 变大时就碰到过上限，需要调大 <code>MAX_PAGES</code>。</p>
+<h2 id="4-僵尸与等待"><a class="header" href="#4-僵尸与等待">4. 僵尸与等待</a></h2>
+<p>任务 <code>SYS_EXIT</code> → <code>Zombie</code>。<br />
+若不回收，槽位会耗尽。shell 的 <code>run</code>：</p>
+<pre><code class="language-text">exec(path) → id
+循环: wait(id)；若 ERR_AGAIN 则 yield；否则结束
+</code></pre>
+<p><code>SYS_WAIT</code>：若是僵尸则清空槽位返回 0；若还在跑返回 <code>ERR_AGAIN</code>。</p>
+<h2 id="5-动手验证"><a class="header" href="#5-动手验证">5. 动手验证</a></h2>
+<ol>
+<li><code>run hello</code> 两次，确认都能成功（说明 wait 回收了槽位）。</li>
+<li>阅读 <code>user/hello/linker.ld</code> 的基址，在 <code>elf</code> 日志或调试里对照入口。</li>
+<li>把 <code>SYS_SPAWN</code> 换成非法 blob id，看返回值。</li>
+</ol>
+<h2 id="6-易错点"><a class="header" href="#6-易错点">6. 易错点</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>现象</th><th>原因</th></tr></thead><tbody>
+<tr><td><code>exec failed</code></td><td>找不到文件 / 非 ELF / 映射失败 / 页数不足</td></tr>
+<tr><td>hello 无输出但返回了</td><td>调度未运行到它，或输出被刷屏淹没</td></tr>
+<tr><td>第二次 spawn 失败</td><td>僵尸未回收、槽位满</td></tr>
+</tbody></table>
+</div>
+<p>下一章：<a href="07-shell.html">1.2 Shell</a>。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../path/05-abi.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../path/07-shell.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../path/05-abi.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../path/07-shell.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
