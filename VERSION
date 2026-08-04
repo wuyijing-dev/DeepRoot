@@ -5,12 +5,22 @@
 # Format: MAJOR.PATCHLEVEL.SUBLEVEL[-EXTRAVERSION]
 #
 # MAJOR      — ABI break (0 = pre-stable, 1 = stable)
-# PATCHLEVEL — feature series
-# SUBLEVEL   — fixes and polish within a series
+# PATCHLEVEL — one feature series (land slowly; one series = one user-visible capability)
+# SUBLEVEL   — fixes / small polish inside that series only
 # EXTRAVERSION — optional: -rcN, -dirty
 #
 # First line above is the CURRENT release. Lines below are the full roadmap.
 #
+# Policy (1.x):
+#   - DeepRoot-native capability ABI — NOT Linux/POSIX compatible.
+#   - Additive syscalls only within 1.x; breaking ABI waits for 2.0 (unplanned).
+#   - Do not mint a new SUBLEVEL for every commit; finish a chunk, then release.
+#   - Shell is a small DeepRoot-native ELF (learn from xv6/BusyBox; do not port bash).
+#
+
+# =====================================================================
+# 0.x — history (done)
+# =====================================================================
 
 # ---------- 0.1.x Boot Seed ----------
 # 0.1.0   SBI bring-up, UART console, BSS/stack, panic, idle WFI
@@ -77,27 +87,98 @@
 # 0.9.1   1.0.0-rc2
 # 0.9.2   1.0.0-rc3
 
-# ---------- 1.x Stable ----------
-# 1.0.0   Stable ABI + server set (init / console / ping) ← current
-# 1.0.y   Bugfixes only — no ABI breaks, no feature series
-#
-# Later series (ABI additive only; one PATCHLEVEL ≈ one capability):
-#
-# ---------- 1.1.x Process / ELF ----------
-# 1.1.0   Per-task address space + SYS_SPAWN / load ELF from memory or path
-# 1.1.y   Loader / spawn fixes
-#
-# ---------- 1.2.x Console I/O + shell ----------
-# 1.2.0   Userspace UART (or console server) read/write; interactive shell ELF
-# 1.2.y   Line editing / builtins polish
-#
-# ---------- 1.3.x Filesystem ----------
-# 1.3.0   VFS + simple FS server (e.g. ramfs or virtio-blk); open/read/write/close
-# 1.3.y   Path / mount / shell script or run-from-FS fixes
-#
-# Goal of 1.1→1.3: spawn ELF → type in a shell → files on a FS.
-# Do not burn SUBLEVEL numbers for tiny steps; land work, then one release.
-#
-# 1.4.0+  Optional: virtio devices, richer IPC, SMP (only when needed)
-# 2.0.0   Reserved for a breaking ABI — not planned soon
+# =====================================================================
+# 1.x Stable — current and forward path
+# =====================================================================
 
+# ---------- 1.0.x Baseline ----------
+# 1.0.0   Stable ABI + server set (init / console / ping) ← current
+# 1.0.y   Bugfixes only — no new feature series
+#
+# Acceptance today: QEMU smoke (banner, canopy, pong, init exit).
+
+# ---------------------------------------------------------------------
+# 1.1.x  Process model + dynamic ELF
+# Goal: start a new U-task from an ELF image at runtime (not only boot embed).
+# ABI: additive (e.g. SYS_SPAWN / task caps). No Linux execve semantics.
+# ---------------------------------------------------------------------
+#
+# Work to land before tagging 1.1.0 (track in PRs; do not bump VERSION each step):
+#   W1  Per-task page tables (or ASID-ready root); switch satp on context switch
+#   W2  Map ELF PT_LOAD + stack into the child AS; inherit/mint minimal CSpace
+#   W3  Kernel or privileged server API to create task from ELF bytes / embedded blob
+#   W4  Wait/reap or zombie harvest for children; ledger events for spawn/exit
+#   W5  Smoke: init (or a tiny launcher) spawns a hello ELF and sees it exit
+#
+# Releases:
+# 1.1.0   Series usable: spawn ELF + isolated (or strongly separated) AS
+# 1.1.y   Loader / spawn / AS bugfixes only
+#
+# Out of scope for 1.1: shell UI, filesystem paths to ELF, Linux ELF ABI quirks
+# beyond what riscv64 ET_EXEC already needs.
+
+# ---------------------------------------------------------------------
+# 1.2.x  Console I/O + interactive shell
+# Goal: type commands on the QEMU serial; shell parses and spawns programs.
+# Shell = small DeepRoot-native ELF (builtins + spawn); not bash/dash/BusyBox.
+# ---------------------------------------------------------------------
+#
+# Work to land before tagging 1.2.0:
+#   W1  Console server (or kernel) provides blocking read of UART + write
+#       via IPC or thin syscalls; line discipline enough for CR/LF + backspace
+#   W2  Cap / endpoint so only designated tasks own the console
+#   W3  user/shell: prompt, read line, split argv, builtins (help, yield, exit)
+#   W4  Shell uses 1.1 spawn to run another embedded or known ELF (e.g. ping)
+#   W5  init starts shell instead of (or after) one-shot ping/console demo flow
+#   W6  Smoke: scripted QEMU input runs `help` / spawn and greps output
+#
+# Releases:
+# 1.2.0   Interactive shell on serial + spawn from shell
+# 1.2.y   Editing / builtins / console IPC fixes only
+#
+# Out of scope for 1.2: scripts from disk, pipes/redirection (may stub), POSIX sh.
+
+# ---------------------------------------------------------------------
+# 1.3.x  Filesystem
+# Goal: path-based open/read/write; shell can run /bin/... or read files.
+# FS lives in userspace as a server; kernel only mediates caps + IPC (+ maybe
+# a Frame/page grant). Still not a Linux VFS.
+# ---------------------------------------------------------------------
+#
+# Work to land before tagging 1.3.0:
+#   W1  FS IPC protocol in deeproot-abi (open/close/read/write/readdir or minimal)
+#   W2  ramfs server first (in-memory tree); seed with hello / shell / ping blobs
+#   W3  File / Dir caps or badge+path; rights READ/WRITE enforced
+#   W4  Shell: `ls`, `cat`, run program by path (load ELF bytes via FS then spawn)
+#   W5  Optional stretch in same series only if still small: virtio-blk backend
+#       behind the same FS protocol (otherwise defer to 1.4)
+#   W6  Smoke: boot → shell → cat file → spawn ELF from ramfs
+#
+# Releases:
+# 1.3.0   ramfs + path spawn from shell
+# 1.3.y   FS protocol / ramfs / path fixes only
+#
+# Out of scope for 1.3: full Unix permissions model, many FS types, mmap files.
+
+# ---------------------------------------------------------------------
+# 1.4.x  Optional device / depth (only when 1.3 is solid)
+# ---------------------------------------------------------------------
+# 1.4.0   virtio-blk or virtio-console properly behind existing servers; or SMP prep
+# 1.4.y   Driver / block FS polish
+#
+# Still not: Linux syscall compat, networking stack, GPU, multi-user login.
+
+# ---------------------------------------------------------------------
+# 2.x  Breaking ABI (reserved — do not start without a clear need)
+# ---------------------------------------------------------------------
+# 2.0.0   Only if DeepRoot-native ABI must break; optional experiment branch for
+#         a Linux-compat *userspace layer* would live here or as a side project —
+#         it is NOT the 1.x goal.
+
+# =====================================================================
+# End-state checklist (what “ELF + shell + FS” means for DeepRoot)
+# =====================================================================
+# [1.1]  Runtime spawn of a DeepRoot ELF into its own task/AS
+# [1.2]  Human types at a prompt; shell spawns programs over serial
+# [1.3]  Programs and data come from a FS server by path
+# Native capability microkernel throughout — learn from other OS, do not clone Linux.
