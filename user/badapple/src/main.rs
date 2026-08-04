@@ -1,7 +1,9 @@
 //! badapple — realtime ASCII from BA02 4-bit frames.
 //!
-//! Decode → map 16 gray levels to an ASCII ramp → one bulk console write,
-//! paced with SYS_TIME. Press `q` to quit.
+//! Decode → map 16 gray levels to an ASCII ramp → one bulk console write.
+//! Timeline follows wall-clock (`SYS_TIME`): if serial is slow we **skip
+//! drawing** (still decode) so 1s wall ≈ 1s of source time at encoded fps.
+//! Press `q` to quit.
 
 #![no_std]
 #![no_main]
@@ -36,8 +38,7 @@ const _: [(); 1] = [(); (FRAMES.len() > 10_000) as usize];
 
 const MAX_PIXELS: usize = 128 * 48;
 const MAX_PACKED: usize = (MAX_PIXELS + 1) / 2;
-/* ANSI home + w chars + newline per row */
-const MAX_FRAME_CHARS: usize = 8 + MAX_PIXELS + 128;
+const MAX_FRAME_CHARS: usize = 8 + MAX_PIXELS + 128 + 64;
 
 /// 16-level ramp: black → white (dense → blank).
 const RAMP: &[u8; 16] = b"@&#%*+=:;~-_,.  ";
@@ -125,12 +126,63 @@ fn level_at(pack: &[u8], i: usize, bits: usize) -> u8 {
     }
 }
 
+fn push_u32(out: &mut [u8], mut n: usize, mut i: usize) -> usize {
+    if n == 0 {
+        out[i] = b'0';
+        return i + 1;
+    }
+    let mut tmp = [0u8; 20];
+    let mut t = 0usize;
+    while n > 0 {
+        tmp[t] = b'0' + (n % 10) as u8;
+        n /= 10;
+        t += 1;
+    }
+    while t > 0 {
+        t -= 1;
+        out[i] = tmp[t];
+        i += 1;
+    }
+    i
+}
+
+fn push_str(out: &mut [u8], i: usize, s: &[u8]) -> usize {
+    out[i..i + s.len()].copy_from_slice(s);
+    i + s.len()
+}
+
+fn write_banner(hdr: &Header) {
+    let mut b = [0u8; 160];
+    let mut i = 0usize;
+    i = push_str(&mut b, i, b"badapple: ");
+    i = push_u32(&mut b, hdr.width, i);
+    i = push_str(&mut b, i, b"x");
+    i = push_u32(&mut b, hdr.height, i);
+    i = push_str(&mut b, i, b"  enc_fps=");
+    i = push_u32(&mut b, hdr.fps, i);
+    i = push_str(&mut b, i, b"  frames=");
+    i = push_u32(&mut b, hdr.nframes, i);
+    i = push_str(&mut b, i, b"  dur_s=");
+    i = push_u32(&mut b, hdr.nframes / hdr.fps, i);
+    i = push_str(&mut b, i, b" (src~30fps sampled; q=quit)\n");
+    let _ = sys::debug_write(core::str::from_utf8(&b[..i]).unwrap_or("\n"));
+}
+
 /*
- * render_frame - build one ANSI+ASCII frame and write it in a single syscall
+ * render_frame - picture + status line with frame index / totals
  */
-fn render_frame(pack: &[u8], w: usize, h: usize, bits: usize, out: &mut [u8]) -> usize {
+fn render_frame(
+    pack: &[u8],
+    w: usize,
+    h: usize,
+    bits: usize,
+    fi: usize,
+    nframes: usize,
+    enc_fps: usize,
+    drawn: usize,
+    out: &mut [u8],
+) {
     let mut n = 0usize;
-    /* Cursor home (no full clear — cheaper, less flicker). */
     out[n] = 0x1b;
     out[n + 1] = b'[';
     out[n + 2] = b'H';
@@ -144,8 +196,17 @@ fn render_frame(pack: &[u8], w: usize, h: usize, bits: usize, out: &mut [u8]) ->
         out[n] = b'\n';
         n += 1;
     }
+    /* Status under the picture. */
+    n = push_str(out, n, b"frame ");
+    n = push_u32(out, fi + 1, n);
+    n = push_str(out, n, b"/");
+    n = push_u32(out, nframes, n);
+    n = push_str(out, n, b"  enc_fps=");
+    n = push_u32(out, enc_fps, n);
+    n = push_str(out, n, b"  drawn=");
+    n = push_u32(out, drawn, n);
+    n = push_str(out, n, b"   \n");
     let _ = sys::debug_write(core::str::from_utf8(&out[..n]).unwrap_or(""));
-    n
 }
 
 fn quit_requested() -> bool {
@@ -161,9 +222,36 @@ fn wait_until(deadline_ms: u64) {
         if quit_requested() {
             return;
         }
-        /* Short busy-poll then yield — keeps pacing tight under TCG. */
         let _ = sys::yield_now();
     }
+}
+
+fn decode_one(
+    body: &[u8],
+    off: &mut usize,
+    plen: usize,
+    xor_buf: &mut [u8],
+    prev: &mut [u8],
+    cur: &mut [u8],
+) -> bool {
+    if *off + 2 > body.len() {
+        return false;
+    }
+    let enc_len = u16::from_le_bytes([body[*off], body[*off + 1]]) as usize;
+    *off += 2;
+    if *off + enc_len > body.len() || enc_len > xor_buf.len() {
+        return false;
+    }
+    let enc = &body[*off..*off + enc_len];
+    *off += enc_len;
+    if !rle_decode(enc, &mut xor_buf[..plen]) {
+        return false;
+    }
+    for i in 0..plen {
+        cur[i] = prev[i] ^ xor_buf[i];
+    }
+    prev[..plen].copy_from_slice(&cur[..plen]);
+    true
 }
 
 #[no_mangle]
@@ -176,7 +264,7 @@ pub extern "C" fn main() {
         }
     };
 
-    let _ = sys::debug_write("badapple: realtime ASCII 16-level (q=quit)\n");
+    write_banner(&hdr);
     let _ = sys::debug_write("\x1b[2J\x1b[H");
 
     let plen = packed_len(hdr.width, hdr.height, hdr.bits);
@@ -185,47 +273,67 @@ pub extern "C" fn main() {
     let mut xor_buf = [0u8; MAX_PACKED];
     let mut frame = [0u8; MAX_FRAME_CHARS];
 
-    let period_ms = 1000u64 / hdr.fps as u64;
+    let fps = hdr.fps as u64;
     let mut off = 0usize;
-    let mut deadline = sys::time_ms();
+    let t0 = sys::time_ms();
+    let mut drawn = 0usize;
 
-    for _fi in 0..hdr.nframes {
+    for fi in 0..hdr.nframes {
         if quit_requested() {
             break;
         }
-        if off + 2 > hdr.body.len() {
-            let _ = sys::debug_write("badapple: truncated stream\n");
+        if !decode_one(
+            hdr.body,
+            &mut off,
+            plen,
+            &mut xor_buf,
+            &mut prev,
+            &mut cur,
+        ) {
+            let _ = sys::debug_write("badapple: decode error\n");
             break;
         }
-        let enc_len = u16::from_le_bytes([hdr.body[off], hdr.body[off + 1]]) as usize;
-        off += 2;
-        if off + enc_len > hdr.body.len() || enc_len > xor_buf.len() {
-            let _ = sys::debug_write("badapple: bad frame\n");
-            break;
-        }
-        let enc = &hdr.body[off..off + enc_len];
-        off += enc_len;
-        if !rle_decode(enc, &mut xor_buf[..plen]) {
-            let _ = sys::debug_write("badapple: rle error\n");
-            break;
-        }
-        for i in 0..plen {
-            cur[i] = prev[i] ^ xor_buf[i];
-        }
-        render_frame(&cur[..plen], hdr.width, hdr.height, hdr.bits, &mut frame);
-        prev[..plen].copy_from_slice(&cur[..plen]);
 
-        deadline = deadline.wrapping_add(period_ms);
-        let now = sys::time_ms();
-        if now + 2 < deadline {
-            wait_until(deadline);
-        } else if now > deadline.wrapping_add(period_ms) {
-            /* Severely behind: drop catch-up waits. */
-            deadline = now;
+        /*
+         * Wall-clock target frame. If we are late, skip drawing (decode
+         * still runs — stream is delta-coded) so timeline stays aligned
+         * with the source (enc_fps samples of original time).
+         */
+        let elapsed = sys::time_ms().wrapping_sub(t0);
+        let target = ((elapsed * fps) / 1000) as usize;
+        if fi < target {
+            continue;
         }
+
+        drawn += 1;
+        render_frame(
+            &cur[..plen],
+            hdr.width,
+            hdr.height,
+            hdr.bits,
+            fi,
+            hdr.nframes,
+            hdr.fps,
+            drawn,
+            &mut frame,
+        );
+
+        /* Next frame due at t0 + (fi+1)/fps seconds. */
+        let next_ms = t0.wrapping_add(((fi as u64 + 1) * 1000) / fps);
+        wait_until(next_ms);
     }
 
-    let _ = sys::debug_write("\nbadapple: done\n");
+    let elapsed = sys::time_ms().wrapping_sub(t0);
+    let mut b = [0u8; 96];
+    let mut i = 0usize;
+    i = push_str(&mut b, i, b"\nbadapple: done  wall_ms=");
+    i = push_u32(&mut b, elapsed as usize, i);
+    i = push_str(&mut b, i, b"  drawn=");
+    i = push_u32(&mut b, drawn, i);
+    i = push_str(&mut b, i, b"/");
+    i = push_u32(&mut b, hdr.nframes, i);
+    i = push_str(&mut b, i, b"\n");
+    let _ = sys::debug_write(core::str::from_utf8(&b[..i]).unwrap_or("\n"));
     sys::exit(0);
 }
 
