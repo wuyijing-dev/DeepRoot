@@ -1,0 +1,38 @@
+[
+  {
+    "version": "v1.10.0",
+    "label": "1.10.0（当前 · 可加载模块）"
+  },
+  {
+    "version": "v1.9.1",
+    "label": "1.9.1（重定向修复）"
+  },
+  {
+    "version": "v1.9.0",
+    "label": "1.9.0（FS 目录）"
+  },
+  {
+    "version": "v1.8.0",
+    "label": "1.8.0（自研 shell+）"
+  },
+  {
+    "version": "v1.7.0",
+    "label": "1.7.0（SMP）"
+  },
+  {
+    "version": "v1.6.1",
+    "label": "1.6.1（自有 DTS）"
+  },
+  {
+    "version": "v1.6.0",
+    "label": "1.6.0（FDT + virtio-blk）"
+  },
+  {
+    "version": "v1.4.1",
+    "label": "1.4.1（DRFS 基线）"
+  },
+  {
+    "version": "v1.4.0",
+    "label": "1.4.0（块层替身）"
+  }
+]
