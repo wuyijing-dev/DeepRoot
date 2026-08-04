@@ -2,14 +2,14 @@
 
 ## 文档基线
 
-本学习笔记默认对齐 **`v1.6.0`**（FDT 平台发现 + virtio-blk 上的 DRFS）。  
-页首选择器还可打开 **`v1.4.1`** / **`v1.4.0`** 等冻结快照。
+本学习笔记默认对齐 **`v1.6.1`**（自有 DTS + virtio-blk 上的 DRFS）。  
+页首选择器还可打开 **`v1.6.0`** / **`v1.4.1`** / **`v1.4.0`** 等冻结快照。
 
 核对三处是否一致：
 
 1. 仓库根目录 `VERSION` **第一行**  
 2. 启动横幅 `DeepRoot microkernel …`  
-3. Git 标签（若你按标签检出）：`git checkout v1.6.0`
+3. Git 标签（若你按标签检出）：`git checkout v1.6.1`
 
 若你跟的是 `main` 且已超前，以 `VERSION` 为准，并注意文档可能尚未改写。
 
@@ -49,7 +49,7 @@ GitHub Pages 上：
 | 1.9 | Framebuffer 简易 UI（非桌面） |
 | 2.0.0 | 集成发布 |
 
-当前 **current** 是 `1.6.0`（1.5 FDT + 1.6 virtio-blk 已落地）。下一站见 `VERSION` 的 1.7+。
+当前 **current** 是 `1.6.1`（`platform/qemu-virt/deeproot.dts` 为板级真源，经 `-dtb` 交给内核）。下一站见 `VERSION` 的 1.7+。
 
 ## 建议的 Git 用法
 

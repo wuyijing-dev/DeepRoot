@@ -1,4 +1,4 @@
-1.6.0
+1.6.1
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -211,8 +211,9 @@
 #   W3  Smoke: virtio-blk ready + DRFS + existing canopy markers
 #
 # Releases:
-# 1.6.0   Device-backed block path usable for teaching FS ← current
-# 1.6.y   Driver polish only
+# 1.6.0   Device-backed block path usable for teaching FS
+# 1.6.1   In-tree DTS (platform/qemu-virt) passed via -dtb ← current
+# 1.6.y   Driver / DT polish only
 #
 # Out of scope for 1.6: networked block, full VFS, many FS types.
 

@@ -12,9 +12,15 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TARGET="riscv64gc-unknown-none-elf"
 KERNEL_ELF="${ROOT}/target/${TARGET}/release/deeproot-kernel"
 DISK_IMG="${ROOT}/build/deeproot-disk.img"
+DTB="${ROOT}/build/deeproot-qemu-virt.dtb"
 MODE="${1:-}"
 
 cd "${ROOT}"
+
+# DeepRoot's own device tree (not QEMU auto-generated).
+chmod +x "${ROOT}/scripts/build-dtb.sh"
+"${ROOT}/scripts/build-dtb.sh"
+
 cargo build -p deeproot-kernel --release --target "${TARGET}"
 
 mkdir -p "${ROOT}/build"
@@ -35,6 +41,7 @@ QEMU_COMMON=(
   -nographic
   -bios default
   -kernel "${KERNEL_ELF}"
+  -dtb "${DTB}"
   -drive "file=${DISK_IMG},if=none,format=raw,id=hd0"
   -device virtio-blk-device,drive=hd0,bus=virtio-mmio-bus.0
 )
@@ -52,8 +59,9 @@ if [[ "${MODE}" == "--smoke" ]]; then
   set -e
   ok=1
   for needle in \
-    "DeepRoot microkernel 1.6.0" \
-    "fdt: blob" \
+    "DeepRoot microkernel 1.6.1" \
+    "fdt: model \"DeepRoot QEMU virt\"" \
+    "fdt: board deeproot,qemu-virt" \
     "fdt: virtio-mmio count=" \
     "virtio-blk: ready" \
     "block: virtio-blk ready" \

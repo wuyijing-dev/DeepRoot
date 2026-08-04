@@ -1,7 +1,11 @@
 [
   {
+    "version": "v1.6.1",
+    "label": "1.6.1（当前 · 自有 DTS）"
+  },
+  {
     "version": "v1.6.0",
-    "label": "1.6.0（当前 · FDT + virtio-blk）"
+    "label": "1.6.0（FDT + virtio-blk）"
   },
   {
     "version": "v1.4.1",

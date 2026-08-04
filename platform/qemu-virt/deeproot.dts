@@ -1,0 +1,138 @@
+/*
+ * DeepRoot platform device tree — QEMU `virt` teaching board.
+ *
+ * This is DeepRoot's own DTS (source of truth in-tree), not "whatever QEMU
+ * happened to generate". Addresses match QEMU riscv virt so OpenSBI + our
+ * virtio-blk path keep working. Edit here when the teaching board changes.
+ *
+ * Build:  scripts/build-dtb.sh  →  build/deeproot-qemu-virt.dtb
+ * Boot:   scripts/run-qemu.sh passes -dtb that blob (OpenSBI → a1).
+ */
+
+/dts-v1/;
+
+/ {
+	model = "DeepRoot QEMU virt";
+	compatible = "deeproot,qemu-virt", "riscv-virtio";
+	#address-cells = <2>;
+	#size-cells = <2>;
+
+	chosen {
+		stdout-path = "/soc/uart@10000000";
+		bootargs = "deeproot=1.6";
+	};
+
+	aliases {
+		serial0 = &uart0;
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		timebase-frequency = <10000000>;
+
+		cpu0: cpu@0 {
+			device_type = "cpu";
+			reg = <0>;
+			status = "okay";
+			compatible = "riscv";
+			riscv,isa = "rv64imafdc";
+			mmu-type = "riscv,sv39";
+
+			cpu0_intc: interrupt-controller {
+				#interrupt-cells = <1>;
+				interrupt-controller;
+				compatible = "riscv,cpu-intc";
+			};
+		};
+	};
+
+	memory@80000000 {
+		device_type = "memory";
+		/* Match scripts/run-qemu.sh -m 256M */
+		reg = <0x0 0x80000000 0x0 0x10000000>;
+	};
+
+	soc {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		compatible = "simple-bus";
+		ranges;
+
+		uart0: uart@10000000 {
+			compatible = "ns16550a";
+			reg = <0x0 0x10000000 0x0 0x100>;
+			reg-shift = <0>;
+			reg-io-width = <1>;
+			interrupts = <10>;
+			interrupt-parent = <&plic>;
+			clock-frequency = <3686400>;
+		};
+
+		/* QEMU virt: eight virtio-mmio transports @ 0x10001000 + n*0x1000 */
+		virtio_mmio@10001000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10001000 0x0 0x1000>;
+			interrupts = <1>;
+			interrupt-parent = <&plic>;
+		};
+		virtio_mmio@10002000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10002000 0x0 0x1000>;
+			interrupts = <2>;
+			interrupt-parent = <&plic>;
+		};
+		virtio_mmio@10003000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10003000 0x0 0x1000>;
+			interrupts = <3>;
+			interrupt-parent = <&plic>;
+		};
+		virtio_mmio@10004000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10004000 0x0 0x1000>;
+			interrupts = <4>;
+			interrupt-parent = <&plic>;
+		};
+		virtio_mmio@10005000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10005000 0x0 0x1000>;
+			interrupts = <5>;
+			interrupt-parent = <&plic>;
+		};
+		virtio_mmio@10006000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10006000 0x0 0x1000>;
+			interrupts = <6>;
+			interrupt-parent = <&plic>;
+		};
+		virtio_mmio@10007000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10007000 0x0 0x1000>;
+			interrupts = <7>;
+			interrupt-parent = <&plic>;
+		};
+		virtio_mmio@10008000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10008000 0x0 0x1000>;
+			interrupts = <8>;
+			interrupt-parent = <&plic>;
+		};
+
+		clint@2000000 {
+			compatible = "riscv,clint0";
+			reg = <0x0 0x2000000 0x0 0x10000>;
+			interrupts-extended = <&cpu0_intc 3 &cpu0_intc 7>;
+		};
+
+		plic: interrupt-controller@c000000 {
+			compatible = "riscv,plic0";
+			reg = <0x0 0xc000000 0x0 0x4000000>;
+			#address-cells = <0>;
+			#interrupt-cells = <1>;
+			interrupt-controller;
+			interrupts-extended = <&cpu0_intc 11 &cpu0_intc 9>;
+			riscv,ndev = <96>;
+		};
+	};
+};

@@ -3,11 +3,11 @@
 Rust capability microkernel for RISC-V.
 
 Repository: https://github.com/wuyijing-dev/DeepRoot  
-Version: see [`VERSION`](VERSION) — current **1.4.0**
+Version: see [`VERSION`](VERSION) — current **1.6.1**
 
 ## Learning docs
 
-面向新手的逐步教程（基线 **v1.4.0**）：
+面向新手的逐步教程（基线 **v1.6.1**）：
 
 - 在线：https://wuyijing-dev.github.io/DeepRoot/
 - 本地：`cargo install mdbook && cd book && mdbook serve --open`
@@ -21,10 +21,10 @@ rustup target add riscv64gc-unknown-none-elf
 ./scripts/run-qemu.sh --smoke  # CI gate
 ```
 
-Requirements: Rust stable, `qemu-system-riscv64`.
+Requirements: Rust stable, `qemu-system-riscv64`, `dtc` (device-tree-compiler).
 
-ABI: native capability microkernel (not Linux). Teaching path through **1.4**:
-per-task AS + `SYS_SPAWN` / `SYS_EXEC`, serial shell, ramfs (text + ELF), ramdisk stand-in.
+ABI: native capability microkernel (not Linux). Teaching path through **1.6**:
+per-task AS + shell + ramfs + **in-tree DTS** + virtio-blk DRFS.
 
 Shell: `ls`, `cat readme.txt`, `run hello`, `run badapple` (realtime ASCII).
 
@@ -34,9 +34,10 @@ Shell: `ls`, `cat readme.txt`, `run hello`, `run badapple` (realtime ASCII).
 kernel/           # microkernel (no_std)
 libs/             # deeproot-abi, deeproot-user
 user/             # init, console, ping, shell, hello…
+platform/         # DeepRoot board DTS (qemu-virt/deeproot.dts)
 book/             # mdBook source (Chinese learning notes)
 docs/             # built site for GitHub Pages (/docs)
-scripts/          # QEMU helpers
+scripts/          # QEMU helpers + build-dtb.sh
 VERSION           # current release + full roadmap
 ```
 

@@ -44,6 +44,10 @@ pub struct FramebufferHint {
 
 pub struct Platform {
     pub dtb_pa: usize,
+    pub model: [u8; 64],
+    pub model_len: usize,
+    pub board_compat: [u8; 64],
+    pub board_compat_len: usize,
     pub memory: Option<Reg>,
     pub uart: Option<UartDev>,
     pub virtio: [VirtioMmio; MAX_VIRTIO],
@@ -55,6 +59,10 @@ static READY: AtomicBool = AtomicBool::new(false);
 static DTB_PA: AtomicUsize = AtomicUsize::new(0);
 static mut PLATFORM: Platform = Platform {
     dtb_pa: 0,
+    model: [0; 64],
+    model_len: 0,
+    board_compat: [0; 64],
+    board_compat_len: 0,
     memory: None,
     uart: None,
     virtio: [VirtioMmio {
@@ -75,6 +83,10 @@ pub fn probe(dtb_pa: usize) {
     let plat = unsafe { &mut *core::ptr::addr_of_mut!(PLATFORM) };
     *plat = Platform {
         dtb_pa,
+        model: [0; 64],
+        model_len: 0,
+        board_compat: [0; 64],
+        board_compat_len: 0,
         memory: None,
         uart: None,
         virtio: [VirtioMmio {
@@ -138,6 +150,19 @@ pub fn memory_reg() -> Option<(PhysAddr, PhysAddr)> {
 }
 
 fn log_summary(p: &Platform) {
+    if p.model_len > 0 {
+        let m = core::str::from_utf8(&p.model[..p.model_len]).unwrap_or("?");
+        println!("fdt: model \"{}\"", m);
+    }
+    if p.board_compat_len > 0 {
+        /* First compatible string only (NUL-separated list). */
+        let end = p.board_compat[..p.board_compat_len]
+            .iter()
+            .position(|&c| c == 0)
+            .unwrap_or(p.board_compat_len);
+        let c = core::str::from_utf8(&p.board_compat[..end]).unwrap_or("?");
+        println!("fdt: board {}", c);
+    }
     if let Some(m) = p.memory {
         println!(
             "fdt: memory {:#x}..{:#x} ({} MiB)",
@@ -260,6 +285,16 @@ fn walk(dtb_pa: usize, hdr: &Header, plat: &mut Platform) {
                             reg = Some(Reg { base, size });
                         }
                     }
+                } else if pname == "model" && depth == 1 && len > 0 && plat.model_len == 0 {
+                    let n = len.min(63);
+                    unsafe {
+                        core::ptr::copy_nonoverlapping(p as *const u8, plat.model.as_mut_ptr(), n);
+                    }
+                    let mut ml = n;
+                    while ml > 0 && plat.model[ml - 1] == 0 {
+                        ml -= 1;
+                    }
+                    plat.model_len = ml;
                 } else if pname == "compatible" && len > 0 {
                     let n = len.min(63);
                     unsafe {
@@ -273,6 +308,11 @@ fn walk(dtb_pa: usize, hdr: &Header, plat: &mut Platform) {
                     compat_len = n;
                     while compat_len > 0 && compat[compat_len - 1] == 0 {
                         compat_len -= 1;
+                    }
+                    /* Root board compatible (empty node name, depth 1). */
+                    if depth == 1 && node_name_len == 0 && plat.board_compat_len == 0 {
+                        plat.board_compat[..n].copy_from_slice(&compat[..n]);
+                        plat.board_compat_len = n;
                     }
                 } else if pname == "interrupts" && len >= 4 {
                     irq = unsafe { read_u32_be(p) };
