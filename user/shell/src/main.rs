@@ -1,4 +1,4 @@
-//! shell — DeepRoot-native shell 1.9 (dirs + kernel cwd; 1.8 argv/history/env/|/&).
+//! shell — DeepRoot-native shell 1.10 (modload + 1.9 dirs + 1.8 argv/|/&).
 
 #![no_std]
 #![no_main]
@@ -163,6 +163,32 @@ fn write_u32(mut n: u32) {
         n /= 10;
     }
     let _ = sys::debug_write_bytes(&buf[i..]);
+}
+
+fn parse_u64(s: &[u8]) -> Option<u64> {
+    let s = trim(s);
+    if s.is_empty() {
+        return None;
+    }
+    let (s, base) = if s.len() > 2 && s[0] == b'0' && (s[1] == b'x' || s[1] == b'X') {
+        (&s[2..], 16u64)
+    } else {
+        (s, 10u64)
+    };
+    let mut v = 0u64;
+    for &c in s {
+        let d = match c {
+            b'0'..=b'9' => (c - b'0') as u64,
+            b'a'..=b'f' => (c - b'a' + 10) as u64,
+            b'A'..=b'F' => (c - b'A' + 10) as u64,
+            _ => return None,
+        };
+        if d >= base {
+            return None;
+        }
+        v = v.saturating_mul(base).saturating_add(d);
+    }
+    Some(v)
 }
 
 fn trim(mut line: &[u8]) -> &[u8] {
@@ -458,15 +484,15 @@ fn run_exec(
 }
 
 fn help() {
-    let _ = sys::debug_write("DeepRoot shell 1.9 — builtins:\n");
+    let _ = sys::debug_write("DeepRoot shell 1.10 — builtins:\n");
     let _ = sys::debug_write("  help / ls [DIR] / cat FILE / run ELF / hello / badapple / exit\n");
     let _ = sys::debug_write("  mkdir DIR / rmdir DIR / rm FILE\n");
+    let _ = sys::debug_write("  modload PATH [badge] / modules   (1.10 loadable server)\n");
     let _ = sys::debug_write("  echo ARGS   pwd   cd DIR   env   export KEY=VAL   history\n");
     let _ = sys::debug_write("Operators:  |  pipe   > file   &  background\n");
-    let _ = sys::debug_write("Quotes: \"...\" or '...';  $VAR expands in echo.\n");
     let _ = sys::debug_write("Examples:\n");
-    let _ = sys::debug_write("  mkdir demo; cd demo; echo hi > a.txt; cat a.txt; cd /; ls\n");
-    let _ = sys::debug_write("  run hello &\n");
+    let _ = sys::debug_write("  mkdir demo; cd demo; echo hi > a.txt; cat a.txt\n");
+    let _ = sys::debug_write("  modload moddemo; modules\n");
 }
 
 fn read_line(buf: &mut [u8], hist: &History) -> usize {
@@ -610,6 +636,33 @@ fn run_stage(
             let _ = sys::debug_write("shell: rm <file>\n");
         }
         return 0;
+    } else if cmd == b"modules" {
+        let _ = sys::module_list();
+        return 0;
+    } else if cmd == b"modload" {
+        let Some(p) = st.argv.get(1) else {
+            let _ = sys::debug_write("shell: modload <elf> [badge_hex]\n");
+            return 0;
+        };
+        let mut badge: u64 = 0xD001;
+        if let Some(b) = st.argv.get(2) {
+            badge = parse_u64(b).unwrap_or(badge);
+        }
+        let slot = sys::spawn_server(p, badge);
+        if slot < 0 {
+            let _ = sys::debug_write("shell: modload failed\n");
+        } else {
+            let _ = sys::debug_write("shell: modload ok slot=");
+            write_u32(slot as u32);
+            let _ = sys::debug_write("\n");
+            let _ = sys::yield_now();
+            let _ = sys::yield_now();
+            let rc = sys::ipc_call(slot as usize, 0x4D44, 1);
+            if rc >= 0 {
+                let _ = sys::debug_write("shell: module call ok\n");
+            }
+        }
+        return 0;
     } else if cmd == b"env" {
         env.list();
         return 0;
@@ -690,13 +743,13 @@ fn run_stage(
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write(
-        "shell: DeepRoot shell 1.9 ready (help, mkdir, cd, |, >, &, env, history)\n",
+        "shell: DeepRoot shell 1.10 ready (help, modload, mkdir, |, >, &)\n",
     );
     let mut buf = [0u8; LINE_MAX];
     let mut hist = History::new();
     let mut env = Env::new();
     let _ = env.set(b"SHELL", b"deeproot");
-    let _ = env.set(b"VERSION", b"1.9.1");
+    let _ = env.set(b"VERSION", b"1.10.0");
 
     loop {
         let _ = sys::debug_write("deeproot> ");

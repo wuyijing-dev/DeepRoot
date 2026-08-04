@@ -1,4 +1,4 @@
-1.9.1
+1.10.0
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -275,7 +275,7 @@
 # Releases:
 # 1.9.0   First FS-depth slice (in-RAM VFS dirs + mkdir/cd + shell)
 # 1.9.1   Fix shell hang on `>` (tokenize spun on redirect operators)
-# 1.9.y   Continue FS depth / durability / fd polish without bumping to 1.10
+# 1.9.y   Further FS depth / durability / fd polish as needed
 #
 # Out of scope for 1.9: full POSIX VFS, many FS types, networked FS, framebuffer.
 
@@ -293,7 +293,7 @@
 #   W4  Smoke: boot without module, then load one demo module and call it
 #
 # Releases:
-# 1.10.0  First loadable module / dynamic server path
+# 1.10.0  First loadable module path (SYS_SPAWN_SERVER + /moddemo) ← current
 # 1.10.y  Loader / registry fixes and more demo modules
 #
 # Out of scope for 1.10: Linux kmod ABI, live kernel patching, signed modules.
@@ -363,8 +363,8 @@
 # [1.6]  virtio-blk behind teaching FS path
 # [1.7]  Multi-hart scheduling on QEMU virt
 # [1.8]  Richer native shell (argv/env/history/&/simple pipes) — no bash port
-# [1.9]  Filesystem depth (dirs, durable writes, fds) — current; long 1.9.y
-# [1.10] Loadable modules / dynamic servers
+# [1.9]  Filesystem depth (dirs, durable writes, fds) — long 1.9.y
+# [1.10] Loadable modules / dynamic servers ← current
 # [1.11] More practical runtime utilities / I/O polish
 # [1.12] Framebuffer clear/draw + simple UI (deferred)
 # [2.0]  Integrated release of the above (when themes are ready)

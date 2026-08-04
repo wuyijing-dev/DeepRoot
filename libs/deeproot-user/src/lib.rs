@@ -86,6 +86,23 @@ pub mod sys {
         unsafe { ecall(SYS_GETCWD, buf.as_mut_ptr() as usize, buf.len(), 0, 0) }
     }
 
+    /// Spawn path ELF as IPC server; mint endpoint into caller. → cap slot
+    pub fn spawn_server(path: &[u8], badge: u64) -> isize {
+        unsafe {
+            ecall(
+                SYS_SPAWN_SERVER,
+                path.as_ptr() as usize,
+                path.len(),
+                badge as usize,
+                0,
+            )
+        }
+    }
+
+    pub fn module_list() -> isize {
+        unsafe { ecall(SYS_MODULE_LIST, 0, 0, 0, 0) }
+    }
+
     pub fn exec(path: &[u8]) -> isize {
         unsafe { ecall(SYS_EXEC, path.as_ptr() as usize, path.len(), 0, 0) }
     }

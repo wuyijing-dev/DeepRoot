@@ -75,6 +75,9 @@
 - [1.9 文件系统加深](path/13-fs19.md)
   - [1.9.1 VFS 树与路径](path/fs19/01-vfs-tree.md)
   - [1.9.2 syscall 与 shell 内建](path/fs19/02-syscalls-shell.md)
+- [1.10 可加载模块](path/14-modules.md)
+  - [1.10.1 SYS_SPAWN_SERVER](path/modules/01-spawn-server.md)
+  - [1.10.2 moddemo 与 init](path/modules/02-moddemo-init.md)
 
 # 动手玩
 

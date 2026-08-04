@@ -16,6 +16,7 @@ mod ipc;
 mod vfs;
 mod ledger;
 mod mm;
+mod module;
 mod sbi;
 mod sched;
 mod servers;

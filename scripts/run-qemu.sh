@@ -59,7 +59,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
   set -e
   ok=1
     for needle in \
-    "DeepRoot microkernel 1.9.1" \
+    "DeepRoot microkernel 1.10.0" \
     "fdt: model \"DeepRoot QEMU virt\"" \
     "fdt: board deeproot,qemu-virt" \
     "fdt: cpu count=2" \
@@ -73,7 +73,12 @@ if [[ "${MODE}" == "--smoke" ]]; then
     "canopy ready" \
     "ping: pong" \
     "hello: spawned ELF says hi" \
-    "shell: DeepRoot shell 1.9 ready" \
+    "module: loaded 'moddemo'" \
+    "moddemo: online" \
+    "moddemo: pong" \
+    "init: module loaded" \
+    "init: module call ok" \
+    "shell: DeepRoot shell 1.10 ready" \
     "init: handing off to shell"
   do
     if ! grep -q "${needle}" "${LOG}"; then

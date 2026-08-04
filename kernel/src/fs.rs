@@ -11,6 +11,7 @@ use crate::vfs::{self, Kind, ROOT};
 
 static HELLO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-hello"));
 static BADAPPLE_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-badapple"));
+static MODDEMO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-moddemo"));
 
 struct File {
     name: &'static str,
@@ -20,7 +21,7 @@ struct File {
 static FILES: &[File] = &[
     File {
         name: "readme.txt",
-        data: b"DeepRoot 1.9 - dirs via mkdir; try: mkdir demo; cd demo; echo hi > a.txt\n",
+        data: b"DeepRoot 1.10 - try: modload moddemo; modules; (init also loads it)\n",
     },
     File {
         name: "hello.txt",
@@ -28,7 +29,7 @@ static FILES: &[File] = &[
     },
     File {
         name: "version",
-        data: b"1.9.1\n",
+        data: b"1.10.0\n",
     },
     File {
         name: "hello",
@@ -37,6 +38,10 @@ static FILES: &[File] = &[
     File {
         name: "badapple",
         data: BADAPPLE_ELF,
+    },
+    File {
+        name: "moddemo",
+        data: MODDEMO_ELF,
     },
 ];
 

@@ -1116,6 +1116,63 @@ pub fn handle_syscall(
             let buf = unsafe { core::slice::from_raw_parts_mut(ptr as *mut u8, len) };
             crate::fs::getcwd(cwd, buf) as isize
         }
+        SYS_SPAWN_SERVER => {
+            use deeproot_abi::rights;
+            let mut pbuf = [0u8; 96];
+            let path = match copy_user_path(a0 as usize, a1 as usize, &mut pbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            if path.is_empty() {
+                return ERR_GENERIC;
+            }
+            let badge = a2;
+            if badge == 0 {
+                return ERR_GENERIC;
+            }
+            let (name, bytes) = match crate::fs::lookup(path) {
+                Some(v) => v,
+                None => return ERR_GENERIC,
+            };
+            if bytes.len() < 4 || &bytes[..4] != b"\x7fELF" {
+                return ERR_GENERIC;
+            }
+            let cap = match tasks.spawn(name) {
+                Some(t) => t,
+                None => return ERR_GENERIC,
+            };
+            if eps.create(cap, badge).is_err() {
+                return ERR_GENERIC;
+            }
+            let slot = {
+                let s = inner();
+                match s.tasks.iter().position(|t| t.state == TaskState::Empty) {
+                    Some(i) => i,
+                    None => return ERR_GENERIC,
+                }
+            };
+            let stack = next_spawn_stack_base(slot);
+            let Some(sched_id) = spawn_elf_bytes(name, bytes, stack, cap) else {
+                return ERR_GENERIC;
+            };
+            let cs = match tasks.cspace_mut(current) {
+                Some(c) => c,
+                None => return ERR_GENERIC,
+            };
+            let Ok(cap_slot) =
+                cs.install_copy(CapType::Endpoint, rights::IPC, badge, CapReason::Mint)
+            else {
+                return ERR_GENERIC;
+            };
+            let _ = crate::module::register(name, badge, sched_id, cap_slot);
+            /* Give the new server a moment to run its online banner. */
+            let _ = yield_now();
+            cap_slot as isize
+        }
+        SYS_MODULE_LIST => {
+            crate::module::list();
+            0
+        }
         _ => ERR_NOSYS,
     }
 }

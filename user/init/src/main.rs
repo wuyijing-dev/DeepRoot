@@ -1,4 +1,4 @@
-//! init — root server: IPC demos then hand off to shell.
+//! init — root server: IPC demos, load optional module, hand off to shell.
 
 #![no_std]
 #![no_main]
@@ -28,6 +28,9 @@ _start:
 "#
 );
 
+/// Must match user/moddemo and SYS_SPAWN_SERVER badge.
+const MODDEMO_BADGE: u64 = 0xD001;
+
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write("init: root server online\n");
@@ -42,6 +45,23 @@ pub extern "C" fn main() {
     if hid >= 0 {
         let _ = sys::debug_write("init: spawned hello ELF\n");
     }
+
+    /* 1.10: load optional server from path (not part of bring_up canopy). */
+    let slot = sys::spawn_server(b"moddemo", MODDEMO_BADGE);
+    if slot >= 0 {
+        let _ = sys::debug_write("init: module loaded\n");
+        let _ = sys::yield_now();
+        let _ = sys::yield_now();
+        let mrc = sys::ipc_call(slot as usize, 0x4D44, 1); /* 'MD' */
+        if mrc >= 0 {
+            let _ = sys::debug_write("init: module call ok\n");
+        } else {
+            let _ = sys::debug_write("init: module call failed\n");
+        }
+    } else {
+        let _ = sys::debug_write("init: module load failed\n");
+    }
+
     let _ = sys::yield_now();
     let _ = sys::yield_now();
     let _ = sys::debug_write("init: handing off to shell\n");

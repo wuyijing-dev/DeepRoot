@@ -8,9 +8,9 @@ MAJOR.PATCHLEVEL.SUBLEVEL
 
 | 段 | 含义 | 初学者怎么用 |
 |---|---|---|
-| MAJOR | ABI 大断裂或平台跃迁（2.0 = 集成发布，不赶） | 文档基线在 **1.x**，当前推荐 **v1.9.1** |
-| PATCHLEVEL | 一个主题系列（放慢；系列内多用 SUBLEVEL） | 按 0.1 → … → 1.9 读文档 |
-| SUBLEVEL | 系列内分段落地与打磨 | 例：1.9.0 → 1.9.1 → … |
+| MAJOR | ABI 大断裂或平台跃迁（2.0 = 集成发布，不赶） | 文档基线在 **1.x**，当前推荐 **v1.10.0** |
+| PATCHLEVEL | 一个主题系列（放慢；系列内多用 SUBLEVEL） | 按 0.1 → … → 1.10 读文档 |
+| SUBLEVEL | 系列内分段落地与打磨 | 例：1.10.0 → 1.10.1 → … |
 
 完整注释清单在仓库根目录 [`VERSION`](https://github.com/wuyijing-dev/DeepRoot/blob/main/VERSION)。
 
@@ -52,19 +52,20 @@ MAJOR.PATCHLEVEL.SUBLEVEL
 | **1.7** | `smp: 2 hart(s) online`；两条 `timer: hart=` / `idle hart=` |
 | **1.8** | `shell: DeepRoot shell 1.8 ready`；`help` 含 \| / > / & |
 | **1.9** | `vfs: in-RAM tree ready`；`mkdir` / 真实 `cd`；`shell … 1.9 ready` |
+| **1.10** | `module: loaded 'moddemo'`；`moddemo: pong`；`shell … 1.10 ready` |
 
 ## 3. 推荐学习节奏
 
 1. **第 0 天**：只做 [第一次启动](../intro/first-boot.md)，不改代码。  
-2. **然后**：按章节顺序读到 **1.9**；每章至少做一半「动手验证」。  
+2. **然后**：按章节顺序读到 **1.10**；每章至少做一半「动手验证」。  
 3. **卡壳时**：先查 [常见问题](../hands-on/faq.md)。  
 4. **想创造时**：完成 1.3 后再做 [自己写用户程序](../hands-on/write-user-prog.md)。
 
-请固定 **`v1.9.1`**（或页首选择器打开对应冻结快照），否则日志和截图对不上。
+请固定 **`v1.10.0`**（或页首选择器打开对应冻结快照），否则日志和截图对不上。
 
 ## 4. 一句话心态
 
 先求「跑起来、看见现象」，再求「为什么这样设计」。  
-1.9 起优先把 **文件系统做深**（长 `1.9.y`）；framebuffer 延后（见 `VERSION` 与 [下一步](../appendix/next.md)）。
+1.10 起可玩动态服务器；framebuffer 延后（见 `VERSION` 与 [下一步](../appendix/next.md)）。
 
 下一章：[0.1 启动与串口](01-boot.md)。

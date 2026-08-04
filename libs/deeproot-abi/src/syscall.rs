@@ -1,4 +1,4 @@
-//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.9.
+//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.10.
 //!
 //! 0..9 frozen at 1.0.0. New numbers are additive only.
 
@@ -59,6 +59,13 @@ pub const SYS_FS_UNLINK: usize = 25;
 pub const SYS_CHDIR: usize = 26;
 /// `a0`=buf, `a1`=buflen → bytes written (absolute path)
 pub const SYS_GETCWD: usize = 27;
+
+/* ---- 1.10 loadable servers ---- */
+
+/// `a0`=path, `a1`=plen, `a2`=badge — spawn ELF server + mint EP to caller → cap slot
+pub const SYS_SPAWN_SERVER: usize = 28;
+/// Print module registry to console
+pub const SYS_MODULE_LIST: usize = 29;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

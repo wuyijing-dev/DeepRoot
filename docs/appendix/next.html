@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2a8fabe9.js";
+            window.path_to_searchindex_js = "../searchindex-742f603d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-48a07b87.js"></script>
+        <script src="../toc-019e6423.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,36 +181,33 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="下一步可以看什么"><a class="header" href="#下一步可以看什么">下一步可以看什么</a></h1>
-<p>你已经走完 DeepRoot <strong>1.9</strong>（当前推荐 <strong><code>v1.9.1</code></strong>）：自有 DTS、virtio-blk、SMP、自研 shell、<strong>in-RAM 目录树</strong>。</p>
-<p>按根目录 <code>VERSION</code>：<strong>先不急着上 framebuffer</strong>，也<strong>先不跳到 1.10</strong>。接下来继续用 <strong>较长的 1.9.y</strong> 把文件系统做深（持久写、fd…）；显示推到更后的系列。版本号会<strong>放慢</strong>——同一主题多用 <code>SUBLEVEL</code>。</p>
+<p>你已经走完 DeepRoot <strong>1.10.0</strong>（当前推荐 <strong><code>v1.10.0</code></strong>）：自有 DTS、virtio-blk、SMP、自研 shell、VFS 目录、<strong>可加载模块</strong>。</p>
+<p>按根目录 <code>VERSION</code>：framebuffer 仍延后。接下来可在 <strong>1.10.y</strong> 加更多 demo / unload，或开 <strong>1.11</strong> 实用运行时。版本号继续放慢。</p>
 <h2 id="1-巩固"><a class="header" href="#1-巩固">1. 巩固</a></h2>
 <ul>
-<li><code>mkdir</code> / <code>cd</code> / <code>pwd</code> / <code>rm</code> / <code>rmdir</code> 与 <code>&gt;</code> 写嵌套路径各试一遍</li>
-<li>读 <code>kernel/src/vfs.rs</code> 与 <a href="../path/13-fs19.html">1.9 章</a></li>
-<li>回看 <a href="../path/12-shell18.html">1.8 shell</a></li>
+<li><code>modload moddemo</code> / <code>modules</code>；对照 <a href="../path/14-modules.html">1.10 章</a></li>
+<li>回看 <a href="../path/13-fs19.html">1.9 FS</a> 与 <a href="../path/12-shell18.html">1.8 shell</a></li>
 </ul>
-<h2 id="2-官方下一站实用优先"><a class="header" href="#2-官方下一站实用优先">2. 官方下一站（实用优先）</a></h2>
+<h2 id="2-官方下一站"><a class="header" href="#2-官方下一站">2. 官方下一站</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>系列</th><th>目标</th><th>节奏提示</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>1.9.y</strong></td><td>文件系统加深（落盘、fd…）</td><td><strong>继续停在本系列</strong></td></tr>
-<tr><td><strong>1.10</strong></td><td>可加载模块 / 动态服务器</td><td>FS 够教了再开</td></tr>
-<tr><td><strong>1.11</strong></td><td>更多实用运行时（工具、I/O 打磨…）</td><td>从 backlog 选做</td></tr>
-<tr><td><strong>1.12</strong></td><td>Framebuffer 简易 UI（<strong>延后</strong>）</td><td>实用主题够用后再开</td></tr>
-<tr><td><strong>2.0</strong></td><td>平台集成发布</td><td>不赶；主题齐了再标</td></tr>
+<tr><td><strong>1.10.y</strong></td><td>更多模块、unload、registry 打磨</td><td>可停一阵</td></tr>
+<tr><td><strong>1.11</strong></td><td>实用运行时（工具、I/O…）</td><td>backlog 选做</td></tr>
+<tr><td><strong>1.12</strong></td><td>Framebuffer（<strong>延后</strong>）</td><td>实用主题够用后再开</td></tr>
+<tr><td><strong>2.0</strong></td><td>平台集成发布</td><td>不赶</td></tr>
 </tbody>
 </table>
 </div>
 <h2 id="3-自己玩"><a class="header" href="#3-自己玩">3. 自己玩</a></h2>
 <ul>
-<li>给 VFS 加简单配额或更大 <code>FILE_MAX</code></li>
-<li>在 shell 里做 <code>cp</code>（仍走现有 syscall）</li>
-<li>对照 <code>VERSION</code> 勾选下一小段 W3/W4</li>
+<li>再写一个 badge 不同的小服务器，用 <code>modload PATH 0x….</code> 加载</li>
+<li>给 registry 加简单名字查询</li>
 </ul>
-<p>心态：DeepRoot 是<strong>自研能力微内核</strong>；学别人可以，<strong>不要</strong>把 Linux VFS 整棵搬进来。</p>
+<p>心态：DeepRoot 是<strong>自研能力微内核</strong>；学别人可以，不要搬 Linux kmod。</p>
 
                     </main>
 

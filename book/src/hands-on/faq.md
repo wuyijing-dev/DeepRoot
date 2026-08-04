@@ -103,7 +103,7 @@ killall qemu-system-riscv64
 
 ### Q: `--smoke` 失败但交互能进 shell
 
-看 smoke 脚本在 `grep` 哪些字符串；可能日志文案变了。先读 `scripts/run-qemu.sh`（当前应对齐 **1.9.1**）。
+看 smoke 脚本在 `grep` 哪些字符串；可能日志文案变了。先读 `scripts/run-qemu.sh`（当前应对齐 **1.10.0**）。
 
 ## Shell 输入
 
