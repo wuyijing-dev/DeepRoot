@@ -31,7 +31,7 @@ sudo apt-get install -y qemu-system-misc
 ```bash
 git clone git@github.com:wuyijing-dev/DeepRoot.git
 cd DeepRoot
-git checkout v1.6.1   # 与本教程文字对齐；更早快照用选择器或其它标签
+git checkout v1.7.0   # 与本教程文字对齐；更早快照用选择器或其它标签
 ```
 
 ## 2. `run-qemu.sh` 实际做了什么？
@@ -47,6 +47,7 @@ git checkout v1.6.1   # 与本教程文字对齐；更早快照用选择器或�
    - `-kernel …/deeproot-kernel`  
    - **`-dtb build/deeproot-qemu-virt.dtb`**：DeepRoot **自有**设备树  
    - `-drive` + `-device virtio-blk-device,…`：教学块设备  
+   - `-smp 2`：双 hart（1.7）  
    - `-accel tcg,thread=multi`  
 
 交互模式会 `exec` 进 QEMU；`--smoke` 模式会限时跑并 `grep` 关键字符串。
@@ -74,7 +75,7 @@ git checkout v1.6.1   # 与本教程文字对齐；更早快照用选择器或�
 ### 4.2 内核横幅
 
 ```text
-  DeepRoot microkernel 1.6.1
+  DeepRoot microkernel 1.7.0
   RISC-V S-mode · capability microkernel
   remote: git@github.com:wuyijing-dev/DeepRoot.git
 ```
@@ -82,38 +83,42 @@ git checkout v1.6.1   # 与本教程文字对齐；更早快照用选择器或�
 来自 `kernel_main` 里的 `println!`（`kernel/src/main.rs`）。版本号来自仓库根 `VERSION` 第一行。  
 若版本不是你以为的那个，检查 `VERSION` 第一行与 `git describe`。
 
-### 4.3 FDT / mm / block / timer
+### 4.3 FDT / SMP / mm / block / timer
 
 ```text
 fdt: blob pa=...
 fdt: model "DeepRoot QEMU virt"
 fdt: board deeproot,qemu-virt
-fdt: memory ...
-fdt: uart ns16550a @ ...
+fdt: cpu count=2
 fdt: virtio-mmio count=8
 mm: hart=... ram=... free=...
 mm: Sv39 identity map active
+smp: secondary hart=… ready
+smp: 2 hart(s) online mask=0x3 (boot=…)
 virtio-blk: ready mmio=... legacy
 block: virtio-blk ready size=... files=... (DRFS)
-timer: hart=... slice=...
+timer: hart=0 …
+timer: hart=1 …
+servers: idle hart=0 …
+servers: idle hart=1 …
 ```
 
 含义速记：
 
-- **fdt model/board**：正在用仓库里的自有 DTS（1.6.1）  
+- **fdt model/board / cpu count**：自有 DTS；**1.7** 起应看到 `cpu count=2`  
+- **smp: … online**：二级核已由 HSM 拉起（见 [1.7 SMP](../path/11-smp.md)）  
 - **stvec / mm**：陷阱与页表  
 - **virtio-blk / block**：真盘上的 DRFS  
-- **timer**：时钟中断/时间片  
+- **timer ×2 / idle ×2**：每 hart 各自的时钟与空闲任务  
 
 ### 4.4 加载用户 ELF + canopy
 
 ```text
-elf: ...   （若当前版本仍打印）
-servers: canopy ready (ping=... console=... init=... shell=... idle=...)
-servers: teaching path 1.1–1.4 ...
+servers: canopy ready (ping=… console=… init=… shell=…) harts=2
+servers: teaching path 1.1–1.7 …
 ```
 
-表示多个用户态任务已挂上调度器。
+表示多个用户态任务已挂上调度器，且（双核时）两个 hart 都有 idle。
 
 ### 4.5 用户态自我介绍
 

@@ -67,6 +67,23 @@ killall qemu-system-riscv64
 
 见 [1.5–1.6 章](../path/10-fdt-virtio.md)。
 
+### Q: 怎么确认是双核在跑？
+
+看内核自己的日志，不要只看 OpenSBI 的 `HART Count`：
+
+- `fdt: cpu count=2`  
+- `smp: 2 hart(s) online mask=0x3`  
+- `smp: secondary hart=… ready`  
+- 两条 `timer: hart=` / `servers: idle hart=`  
+
+详见 [1.7 SMP](../path/11-smp.md)。双核**不等于**性能一定提升（教学负载很轻）。
+
+### Q: `smp: 1 hart(s) online` / 没有 secondary
+
+- `run-qemu.sh` 是否 `-smp 2`  
+- DTS 是否有 `cpu@1`（≥ v1.7.0）  
+- 日志是否有 `hart_start … failed` / `timed out`  
+
 ### Q: `virtio-blk: no block device` / 回退 ramdisk
 
 - QEMU 是否带了 `-device virtio-blk-device,…`  
@@ -86,7 +103,7 @@ killall qemu-system-riscv64
 
 ### Q: `--smoke` 失败但交互能进 shell
 
-看 smoke 脚本在 `grep` 哪些字符串；可能日志文案变了。先读 `scripts/run-qemu.sh`（当前应对齐 **1.6.1**）。
+看 smoke 脚本在 `grep` 哪些字符串；可能日志文案变了。先读 `scripts/run-qemu.sh`（当前应对齐 **1.7.0**）。
 
 ## Shell 输入
 

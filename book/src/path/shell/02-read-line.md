@@ -13,7 +13,7 @@ shell 循环调用读串口字节（经 syscall）：
 
 ## 2. 为什么要 `yield`？
 
-单 hart 上还有 ping / console / idle。  
+**1.7** 起默认双 hart：ping/console 常在 hart0，init/shell 在 hart1；串口仍共享。
 shell 若忙等空串口，会饿死别人；让出 CPU 后调度器才能转一圈。
 
 ## 3. 缓冲区上限

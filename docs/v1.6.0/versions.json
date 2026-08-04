@@ -1,7 +1,11 @@
 [
   {
+    "version": "v1.7.0",
+    "label": "1.7.0（当前 · SMP）"
+  },
+  {
     "version": "v1.6.1",
-    "label": "1.6.1（当前 · 自有 DTS）"
+    "label": "1.6.1（自有 DTS）"
   },
   {
     "version": "v1.6.0",

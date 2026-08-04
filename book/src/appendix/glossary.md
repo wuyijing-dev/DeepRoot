@@ -18,8 +18,11 @@
 | **ELF** | 可执行文件格式；用户程序以 ELF 嵌入并加载。 |
 | **Endpoint** | IPC 通信端点对象；常通过能力引用。 |
 | **FDT** | Flattened Device Tree；内核侧 walker 在 `kernel/src/fdt.rs`。 |
-| **hart** | Hardware thread，一颗硬件硬件线程/核。 |
+| **hart** | Hardware thread，一颗硬件线程/核。 |
+| **home_hart** | 任务所属运行队列的 hart（1.7 per-hart RQ）。 |
+| **HSM** | SBI Hart State Management：`hart_start` 拉起二级核。 |
 | **idle** | 无可运行任务时睡的内核任务（常 `wfi`）。 |
+| **IPI** | Inter-Processor Interrupt；DeepRoot 用 SBI IPI 置对端 SSIP。 |
 | **IPC** | 进程/任务间通信；DeepRoot 教学树以同步 call/recv/reply 为主。 |
 | **Ledger** | Root Ledger，环形事件账本，便于观察启动与 IPC。 |
 | **M / S / U** | RISC-V 特权级：Machine / Supervisor / User。 |
@@ -31,13 +34,17 @@
 | **QEMU virt** | 常用的虚拟开发板机型；DeepRoot 脚本默认用它。 |
 | **ramfs** | 教学内存文件系统：名字→静态字节。 |
 | **ramdisk** | 用内存假装磁盘；1.4 块层替身，1.6 起多为 virtio 失败时的回退。 |
+| **RQ** | Runqueue，运行队列；1.7 起按 hart 分。 |
 | **SBI** | Supervisor Binary Interface：S-mode 向固件借的服务。 |
 | **satp** | 控制页表根与模式的 CSR；切任务时常切 satp。 |
 | **sched id** | 调度器任务槽编号；`SYS_EXEC`/`SYS_WAIT` 使用。 |
 | **sepc** | 陷阱发生时的 PC；从用户态返回时用它恢复。 |
 | **shell** | DeepRoot 用户态交互程序，不是 bash。 |
+| **SMP** | Symmetric Multiprocessing；多 hart 共享内存的内核。 |
+| **SSIP** | Supervisor Software Interrupt Pending；IPI 唤醒用。 |
 | **sret** | 从陷阱返回的指令。 |
 | **stvec** | 陷阱入口地址寄存器。 |
+| **tp** | 通用寄存器 x4；1.7 内核用它保存 **hart id**（勿在 sret 时清零）。 |
 | **Sv39** | RISC-V 39 位虚址页表模式（三级页表）。 |
 | **syscall** | 系统调用；DeepRoot 用 `a7` 放号码。 |
 | **TCB** | 任务控制块：调度器眼里的任务状态。 |

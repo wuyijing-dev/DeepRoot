@@ -21,10 +21,12 @@ DeepRoot/
 │   ├── linker.ld
 │   └── src/
 │       ├── main.rs         # kernel_main
-│       ├── boot.rs         # _start
+│       ├── boot.rs         # _start / _secondary_start
+│       ├── smp.rs          # HSM 拉核、online、IPI
+│       ├── sync.rs         # 自旋锁
 │       ├── fdt.rs          # FDT 遍历 → Platform
 │       ├── virtio_blk.rs   # legacy virtio-mmio 块驱动
-│       ├── sbi.rs          # 控制台 / 时钟等 SBI
+│       ├── sbi.rs          # 控制台 / 时钟 / HSM / IPI
 │       ├── trap.rs         # 陷阱与 syscall 入口
 │       ├── sched.rs        # 调度 + 大部分 syscall 实现
 │       ├── mm/             # 内存与页表
@@ -47,12 +49,13 @@ DeepRoot/
 
 | 你想搞懂… | 先打开 |
 |---|---|
-| 开机入口 | `kernel/src/boot.rs`、`main.rs`、`sbi.rs` |
+| 开机入口 | `kernel/src/boot.rs`、`main.rs`、`sbi.rs`、`smp.rs` |
 | 页表 / 内存 | `kernel/src/mm/`（`memmap` → `frame` → `sv39`） |
 | 设备树 | `platform/qemu-virt/deeproot.dts`、`kernel/src/fdt.rs` |
 | 能力 | `kernel/src/cap/`、`libs/deeproot-abi` |
 | IPC / Ledger | `kernel/src/ipc.rs`、`ledger.rs`、`user/init`、`user/ping` |
-| 调度与 syscall | `kernel/src/sched.rs`、`trap.rs` |
+| 调度与 syscall | `kernel/src/sched.rs`、`trap.rs`、`sync.rs` |
+| SMP | `kernel/src/smp.rs`、`sched.rs`（`home_hart`）、`sbi.rs`（HSM/IPI） |
 | 用户程序怎么进内核 | `libs/deeproot-user/src/lib.rs` |
 | shell / ramfs | `user/shell/`、`kernel/src/fs.rs`、`kernel/build.rs` |
 | 块 / virtio | `kernel/src/block.rs`、`virtio_blk.rs` |
@@ -90,5 +93,6 @@ DeepRoot/
 | 1.3 | `fs.rs`、`SYS_EXEC` |
 | 1.4 | `block.rs`（DRFS） |
 | 1.5–1.6 | `platform/…/deeproot.dts`、`fdt.rs`、`virtio_blk.rs` |
+| 1.7 | `smp.rs`、`sync.rs`、每 hart `sched` / `trap` 栈 |
 
 下一章回主线：[学习路线图](../path/overview.md)。若尚未开机，先去 [第一次启动](first-boot.md)。

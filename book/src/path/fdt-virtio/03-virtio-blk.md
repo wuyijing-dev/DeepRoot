@@ -75,4 +75,4 @@ block: virtio-blk ready size=65536 files=3 (DRFS)
 - 把 ELF 也放到 DRFS 再 `run`  
 - 完整文件系统（ext 等）  
 
-下一站建议：[Shell 常用命令](../../hands-on/shell-commands.md)，或路线图里的 **1.7 SMP**（见 `VERSION`）。
+下一站建议：[1.7 SMP 多 hart](../11-smp.md)。

@@ -1,80 +1,46 @@
 # 版本与标签
 
-## 文档基线
+## 1. 文档对齐哪一版？
 
-本学习笔记默认对齐 **`v1.6.1`**（自有 DTS + virtio-blk 上的 DRFS）。  
-页首选择器还可打开 **`v1.6.0`** / **`v1.4.1`** / **`v1.4.0`** 等冻结快照。
+本学习笔记默认对齐 **`v1.7.0`**（SMP 多 hart + 自有 DTS + virtio-blk）。  
+页首选择器还可打开 **`v1.6.1`** / **`v1.6.0`** / **`v1.4.1`** / **`v1.4.0`** 等冻结快照。
 
-核对三处是否一致：
+核对三处：
 
-1. 仓库根目录 `VERSION` **第一行**  
-2. 启动横幅 `DeepRoot microkernel …`  
-3. Git 标签（若你按标签检出）：`git checkout v1.6.1`
+1. 仓库根 `VERSION` 第一行非注释内容  
+2. QEMU 横幅：`DeepRoot microkernel …`  
+3. Git 标签（若你按标签检出）：`git checkout v1.7.0`
 
-若你跟的是 `main` 且已超前，以 `VERSION` 为准，并注意文档可能尚未改写。
-
-## 在线怎么切换版本？
-
-GitHub Pages 上：
-
-- 默认站点：`/DeepRoot/`（通常跟踪 `main` 最新教程）  
-- 冻结版：`/DeepRoot/v1.4.1/`、`/DeepRoot/v1.4.0/` …  
-- 数据源：根目录 [`versions.json`](https://github.com/wuyijing-dev/DeepRoot/blob/main/docs/versions.json)
-
-打 `v*` 标签时，workflow 会把该 tag 的 mdBook 产物发布到 `docs/<tag>/`。
-
-## 版本号怎么读
-
-见 `VERSION` 文件头部注释：
-
-- **MAJOR**：ABI 断裂或平台级跃迁（**2.0** = DT/SMP/显示等集成，不是桌面 OS）  
-- **PATCHLEVEL**：一个功能系列（文档按这个组织章节）  
-- **SUBLEVEL**：系列内修复与打磨  
-
-政策摘要（1.x–2.0）：
-
-- DeepRoot-native ABI，**不是** Linux/POSIX  
-- syscall **尽量只增不改号**；若必须改约定，写进该系列说明  
-- shell **自研**扩展；学习 xv6/BusyBox 结构，**不**移植 bash  
-- 路线图规划到 **2.0**（详见 `VERSION` 正文 1.5–2.0 节）
-
-## 前方路线（摘要）
-
-| 标签目标 | 内容 |
-|---|---|
-| 1.5 | 设备树平台发现 |
-| 1.6 | virtio-blk 等块后端打磨 |
-| 1.7 | 多 hart（SMP） |
-| 1.8 | 更完善的自研 shell（含简单管道） |
-| 1.9 | Framebuffer 简易 UI（非桌面） |
-| 2.0.0 | 集成发布 |
-
-当前 **current** 是 `1.6.1`（`platform/qemu-virt/deeproot.dts` 为板级真源，经 `-dtb` 交给内核）。下一站见 `VERSION` 的 1.7+。
-
-## 建议的 Git 用法
+## 2. 标签怎么用？
 
 ```bash
-# 跟着当前教程学（可复现）
 git fetch --tags
-git checkout v1.4.1
-
-# 对照块层替身初版
-git checkout v1.4.0
-
-# 看最新开发（含 2.0 路线图注释）
-git checkout main
+git tag -l 'v*'
+git checkout v1.7.0
 ```
 
-## 标签清单（教学相关）
+冻结教程 HTML 在站点的 `/DeepRoot/<tag>/`（由标签工作流发布）。  
+日常开发跟 `main` 时，以 `VERSION` 第一行为准。
 
-仓库应提供（以 GitHub Releases/Tags 实际为准）：
+## 3. 版本号怎么读？
 
-- `v1.0.0` … 冻结 ABI 附近  
-- `v1.1.0` … 地址空间 / spawn  
-- `v1.2.0` … shell  
-- `v1.3.0` … ramfs / exec  
-- `v1.4.0` … 块层替身（ramdisk 初版）  
-- `v1.4.1` … DRFS 镜像；`ls`/`cat` 可读块上文本  
-- （规划）`v1.5.0` … `v2.0.0` — 见上文与 `VERSION`
+见根目录 `VERSION` 文件头注释。摘要：
 
-想对比某一系列引入了什么：`git log v1.4.0..v1.4.1 --oneline`。
+- **MAJOR**：ABI 断裂或平台级跃迁（**2.0** = DT/SMP/显示等集成，不是桌面 OS）  
+- **PATCHLEVEL**：一类用户可见能力（0.1 启动、1.2 shell、1.7 SMP…）  
+- **SUBLEVEL**：该系列内的修复与打磨  
+
+| PATCHLEVEL | 主题 |
+|---|---|
+| 0.1–0.6 | 启动 → 调度 |
+| 1.0–1.4 | ABI → shell → ramfs → 块替身 |
+| 1.5–1.6 | FDT → virtio-blk；1.6.1 自有 DTS |
+| **1.7** | 多 hart（SMP） |
+| 1.8+ | 更丰富 shell → 简易图形 → 2.0 |
+
+当前 **current** 是 `1.7.0`。下一站见 `VERSION` 的 1.8+。
+
+## 4. 和 GitHub Releases
+
+若维护者打了 GitHub Release，说明文字应指向同一 `VERSION` 与标签。  
+学习时以 **git tag + 本站选择器** 为准即可。

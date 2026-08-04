@@ -64,6 +64,10 @@
   - [1.6.1 自有设备树 `deeproot.dts`](path/fdt-virtio/01-own-dts.md)
   - [1.5 跟读 `fdt.rs`](path/fdt-virtio/02-fdt-walker.md)
   - [1.6 virtio-blk 与 DRFS 后端](path/fdt-virtio/03-virtio-blk.md)
+- [1.7 SMP 多 hart](path/11-smp.md)
+  - [1.7.1 HSM 拉起二级核](path/smp/01-hsm-bringup.md)
+  - [1.7.2 每 hart 运行队列与 idle](path/smp/02-per-hart-rq.md)
+  - [1.7.3 锁、IPI 与 `tp` 陷阱](path/smp/03-locks-ipi.md)
 
 # 动手玩
 
