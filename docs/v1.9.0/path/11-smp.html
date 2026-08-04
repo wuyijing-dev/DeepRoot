@@ -1,0 +1,289 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>1.7 SMP 多 hart - DeepRoot 学习笔记</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="面向新手的 DeepRoot 微内核学习文档（基于 v1.6.1）">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">DeepRoot 学习笔记</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/wuyijing-dev/DeepRoot" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/wuyijing-dev/DeepRoot/edit/main/book/src/path/11-smp.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="17-smp多-hart-调度对齐-v170"><a class="header" href="#17-smp多-hart-调度对齐-v170">1.7 SMP：多 hart 调度（对齐 v1.7.0）</a></h1>
+<p>到 <strong>1.6</strong> 你已经有：自有 DTS、FDT、virtio-blk 上的 DRFS、交互 shell。<br />
+<strong>1.7</strong> 把「单核假设」拆掉——QEMU <code>-smp 2</code> 上，两个 hart 都能跑 U-mode 任务。</p>
+<p>当前推荐标签：<strong><code>v1.7.0</code></strong>。</p>
+<h2 id="本章拆读顺序"><a class="header" href="#本章拆读顺序">本章拆读顺序</a></h2>
+<ol>
+<li><a href="smp/01-hsm-bringup.html">HSM 拉起二级核</a></li>
+<li><a href="smp/02-per-hart-rq.html">每 hart 运行队列与 idle</a></li>
+<li><a href="smp/03-locks-ipi.html">锁、IPI 与 <code>tp</code> 陷阱</a></li>
+</ol>
+<h2 id="1-这一章要解决什么"><a class="header" href="#1-这一章要解决什么">1. 这一章要解决什么？</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>误解</th><th>纠正</th></tr></thead><tbody>
+<tr><td>「<code>-smp 2</code> 就会自动变快」</td><td>教学负载很轻；1.7 目标是<strong>正确多核调度</strong>，不是吞吐</td></tr>
+<tr><td>「OpenSBI 会把所有核都送进 <code>_start</code>」</td><td>冷启动通常只有 <strong>一个</strong> boot hart；其余用 <strong>SBI HSM</strong> <code>hart_start</code></td></tr>
+<tr><td>「两个核各打各的串口就行」</td><td><code>println!</code> / IPC / 调度表必须 <strong>加锁</strong>；唤醒对端用 <strong>IPI</strong></td></tr>
+<tr><td>「日志里有 OpenSBI HART Count=2 就等于内核双核」</td><td>还要看内核自己的 <code>smp: 2 hart(s) online</code></td></tr>
+</tbody></table>
+</div>
+<h2 id="2-一张图串起来"><a class="header" href="#2-一张图串起来">2. 一张图串起来</a></h2>
+<pre><code class="language-text">QEMU -smp 2 + deeproot.dts (cpu@0, cpu@1)
+        │
+        ▼
+OpenSBI ──冷启动──► boot hart: _start → kernel_main
+        │                │
+        │                ├─ mm / satp
+        │                ├─ smp::mark_mm_ready
+        │                └─ sbi_hart_start(other, _secondary_start)
+        │                              │
+        │                              ▼
+        │                    secondary_main → satp / timer / online
+        │
+        ▼
+servers::bring_up
+  · 每 hart 一个 idle
+  · 任务 home_hart（如 ping@0, init@1）
+  · mark_sched_ready + IPI
+        │
+        ▼
+每 hart：pick_next(home==me) → sret 进 U-mode
+跨 hart IPC：Ready 对端任务 → sbi IPI → 对端 WFI 醒来
+</code></pre>
+<h2 id="3-版本对照读日志时用"><a class="header" href="#3-版本对照读日志时用">3. 版本对照（读日志时用）</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>标签</th><th>你该看见</th></tr></thead><tbody>
+<tr><td>≤1.6.x</td><td><code>-smp 1</code>；没有 <code>smp:</code> 行</td></tr>
+<tr><td><strong>1.7.0</strong></td><td><code>-smp 2</code>；<code>fdt: cpu count=2</code>；<code>smp: 2 hart(s) online</code>；两条 <code>timer: hart=</code>；两条 <code>servers: idle hart=</code></td></tr>
+</tbody></table>
+</div>
+<h2 id="4-动手验收请逐条做"><a class="header" href="#4-动手验收请逐条做">4. 动手验收（请逐条做）</a></h2>
+<pre><code class="language-bash">git checkout v1.7.0   # 或当前 main，以 VERSION 为准
+./scripts/run-qemu.sh --smoke
+</code></pre>
+<p>交互启动后，在串口日志里核对：</p>
+<pre><code class="language-text">fdt: cpu count=2
+smp: secondary hart=… ready
+smp: 2 hart(s) online mask=0x3 …
+timer: hart=0 …
+timer: hart=1 …          # 顺序可能交错
+servers: idle hart=0 …
+servers: idle hart=1 …
+servers: canopy ready … harts=2
+</code></pre>
+<p><code>mask=0x3</code> 表示 hart0 与 hart1 的 online 位都置上了。</p>
+<h2 id="5-性能先别期待"><a class="header" href="#5-性能先别期待">5. 性能？先别期待</a></h2>
+<p>双核<strong>在跑</strong>，不等于 shell / Bad Apple 会明显加速。原因见子页与 FAQ：负载轻、QEMU TCG、共享锁会串行化。1.7 验收的是「两个 hart 都在调度」，不是 benchmark。</p>
+<h2 id="6-源码地图"><a class="header" href="#6-源码地图">6. 源码地图</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>文件</th><th>角色</th></tr></thead><tbody>
+<tr><td><code>kernel/src/smp.rs</code></td><td>HSM 拉核、online 掩码、IPI、<code>tp</code></td></tr>
+<tr><td><code>kernel/src/boot.rs</code></td><td><code>_start</code> / <code>_secondary_start</code>、每 hart 栈</td></tr>
+<tr><td><code>kernel/src/sched.rs</code></td><td><code>home_hart</code>、每 hart current/idle、SCHED_LOCK</td></tr>
+<tr><td><code>kernel/src/sbi.rs</code></td><td><code>hart_start</code> / <code>send_ipi_hart</code></td></tr>
+<tr><td><code>kernel/src/sync.rs</code></td><td>自旋锁</td></tr>
+<tr><td><code>kernel/src/trap.rs</code></td><td>每 hart trap 栈；软中断；CTX_LOCK</td></tr>
+<tr><td><code>platform/qemu-virt/deeproot.dts</code></td><td><code>cpu@0</code> / <code>cpu@1</code> + CLINT/PLIC 接线</td></tr>
+<tr><td><code>scripts/run-qemu.sh</code></td><td><code>-smp 2</code> + smoke 字符串</td></tr>
+</tbody></table>
+</div>
+<p>下一页：<a href="smp/01-hsm-bringup.html">HSM 拉起二级核</a>。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../path/fdt-virtio/03-virtio-blk.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../path/smp/01-hsm-bringup.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../path/fdt-virtio/03-virtio-blk.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../path/smp/01-hsm-bringup.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
