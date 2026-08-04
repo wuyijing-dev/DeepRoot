@@ -100,8 +100,8 @@ hello 若死循环且不 exit，shell 的 `wait` 会一直 `ERR_AGAIN`。重启 
 
 ```bash
 cargo install mdbook
-cd docs
+cd book
 mdbook serve --open
 ```
 
-在线地址见仓库 README 的 GitHub Pages 链接。
+在线：https://wuyijing-dev.github.io/DeepRoot/

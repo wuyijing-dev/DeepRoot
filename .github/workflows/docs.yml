@@ -1,11 +1,11 @@
-# Publish docs to GitHub Pages (gh-pages branch)
+# Publish mdBook into docs/ on main (GitHub Pages: branch main, folder /docs)
 name: docs
 
 on:
   push:
     branches: [main]
     paths:
-      - "docs/**"
+      - "book/**"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
@@ -31,12 +31,14 @@ jobs:
 
       - name: Build book
         run: mdbook build
-        working-directory: docs
+        working-directory: book
 
-      - name: Deploy to gh-pages
+      - name: Deploy site into docs/
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/book
-          force_orphan: true
-          commit_message: "docs: publish mdBook"
+          publish_dir: ./book/book
+          publish_branch: main
+          destination_dir: docs
+          commit_message: "docs: publish mdBook site"
+          force_orphan: false

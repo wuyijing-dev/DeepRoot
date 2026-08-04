@@ -101,10 +101,10 @@ cargo install mdbook
 ## 6. 本地预览本学习文档
 
 ```bash
-cd docs
+cd book
 mdbook serve --open
 ```
 
-在线托管（GitHub Pages）链接写在仓库根目录 `README.md`。
+在线：https://wuyijing-dev.github.io/DeepRoot/（仓库 Settings → Pages → **main** 分支 → **/docs** 目录）。
 
 下一章：[第一次启动](first-boot.md)。

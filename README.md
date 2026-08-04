@@ -10,7 +10,8 @@ Version: see [`VERSION`](VERSION) — current **1.4.0**
 面向新手的逐步教程（基线 **v1.4.0**）：
 
 - 在线：https://wuyijing-dev.github.io/DeepRoot/
-- 本地：`cargo install mdbook && cd docs && mdbook serve --open`
+- 本地：`cargo install mdbook && cd book && mdbook serve --open`
+- 源码在 `book/`；GitHub Pages 发布目录为 `docs/`（Settings → Pages → **main** / **/docs**）
 
 ## Quick start
 
@@ -33,7 +34,8 @@ Shell: `ls`, `cat readme.txt`, `run hello`, `run badapple` (realtime ASCII).
 kernel/           # microkernel (no_std)
 libs/             # deeproot-abi, deeproot-user
 user/             # init, console, ping, shell, hello…
-docs/             # mdBook learning notes (Chinese)
+book/             # mdBook source (Chinese learning notes)
+docs/             # built site for GitHub Pages (/docs)
 scripts/          # QEMU helpers
 VERSION           # current release + full roadmap
 ```

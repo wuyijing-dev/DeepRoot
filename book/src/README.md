@@ -47,4 +47,4 @@
 
 准备好了？从 [这是什么？](intro/what-is-deeproot.md) 开始。
 
-> 在线站点由 `gh-pages` 分支发布（mdBook 构建产物）。
+> 在线站点由仓库 `docs/` 目录发布（mdBook 构建产物；Pages 选 main → /docs）。

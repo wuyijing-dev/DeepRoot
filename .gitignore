@@ -1,5 +1,5 @@
-# mdBook output
-docs/book/
+# mdBook local build output (published site lives in docs/ for GitHub Pages)
+book/book/
 
 # Build artifacts
 /target/

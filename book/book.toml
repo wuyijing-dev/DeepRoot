@@ -12,7 +12,7 @@ build-dir = "book"
 default-theme = "light"
 preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/wuyijing-dev/DeepRoot"
-edit-url-template = "https://github.com/wuyijing-dev/DeepRoot/edit/main/docs/{path}"
+edit-url-template = "https://github.com/wuyijing-dev/DeepRoot/edit/main/book/{path}"
 site-url = "/DeepRoot/"
 no-section-label = true
 
