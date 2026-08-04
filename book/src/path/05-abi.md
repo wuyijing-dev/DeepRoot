@@ -13,6 +13,26 @@ ABI = Application Binary Interface：用户程序与内核之间的「接线标�
 
 封装见 `libs/deeproot-user/src/lib.rs` 的 `ecall`。
 
+## 1.1 用户态怎么“发 ecall”（跟源码对齐）
+
+你在 `libs/deeproot-user/src/lib.rs` 里能看到用户态统一封装：
+
+```text
+ecall(nr, a0, a1, a2, a3):
+  让 a7 = nr
+  让 a0..a3 = 参数
+  执行 ecall
+  从返回寄存器取回 ret（约定为 isize）
+```
+
+例如：
+
+- `sys::debug_write(s)`：`SYS_DEBUG_WRITE`，参数放到 `a0=s.as_ptr()`、`a1=s.len()`
+- `sys::debug_read_byte()`：`SYS_DEBUG_READ`，参数全 0
+- `sys::exec(path)`：`SYS_EXEC`，参数放到 `a0=path.as_ptr()`、`a1=path.len()`
+
+**关键点**：用户态并不知道“内核用哪个寄存器怎么解析”，它只负责把 `a7/a0..a3` 摆好，内核 trap 路径再按约定读出来。
+
 ## 2. 错误码
 
 | 常量 | 值 | 含义 |
@@ -20,6 +40,12 @@ ABI = Application Binary Interface：用户程序与内核之间的「接线标�
 | `ERR_GENERIC` | -1 | 泛型失败 |
 | `ERR_AGAIN` | -11 | 暂时没有（如串口无新字节、wait 子任务还在跑） |
 | `ERR_NOSYS` | -38 | 未知 syscall |
+
+在学习时你可以用一个经验法则判断“这是策略问题还是数据问题”：
+
+- `ERR_AGAIN`：通常是“还没准备好”，按协议 `yield_now()` / 再试即可（例如 `SYS_DEBUG_READ`、`SYS_WAIT` 的轮询语义）
+- `ERR_NOSYS`：ABI 不匹配（syscall 号写错、或用户库/内核没一起重编）
+- `ERR_GENERIC`：多半是参数/路径/ELF 映射失败（比如 `SYS_EXEC` 找不到 ramfs 文件，或 ELF magic 不对）
 
 ## 3. 系统调用一览（v1.4 教学树）
 
@@ -52,13 +78,31 @@ ABI = Application Binary Interface：用户程序与内核之间的「接线标�
 | 15 | `SYS_TIME` | — → 毫秒 | 彩蛋/节奏 |
 | 16 | `SYS_WAIT` | sched_id → 0 / `-11` | shell 等待子任务 |
 
-## 4. 动手验证
+## 4. 从 ecall 到 handle_syscall（跟读 trap.rs）
+
+用户态执行 `ecall` 后，`kernel/src/trap.rs` 会走到 `trap_handler()`。
+
+当它判定这是用户态 ecall（`scause` 的异常码对应）时，会做这些事：
+
+1. 读取 syscall 号：`nr = tf.x[17]`（也就是用户态的 `a7`）
+2. 读取参数：`a0=tf.x[10]`、`a1=tf.x[11]`、`a2=tf.x[12]`、`a3=tf.x[13]`
+3. `tf.sepc += 4`：跳过 ecall 指令，避免回到同一条 ecall 反复触发
+4. 调度器分发：`ret = sched::handle_syscall(&mut ctx.tasks, &mut ctx.eps, nr, a0, a1, a2, a3)`
+5. 把返回值写回“发起 syscall 的那个任务”：`sched::set_syscall_return(issuer, ret)`
+6. `sched::restore_user()`：恢复用户寄存器并 `sret` 回到用户态
+
+因此你能理解两件事：
+
+- `SYS_WAIT` 结束后，`wait(id)` 返回的值是写回给“调用 wait 的那一个任务”的 `a0`
+- 如果你看到返回值异常（比如一直是 `-11`），通常不是用户库错了，而是内核调度/阻塞路径没发生你预期的状态切换
+
+## 5. 动手验证
 
 1. 在 `deeproot-user` 给 `debug_write` 临时打日志（或在内核 `SYS_DEBUG_WRITE` 分支计数）。  
 2. 自己写用户程序调用非法 `a7`，确认得到 `ERR_NOSYS`。  
 3. 对比：`SYS_SPAWN(0)` 与 `SYS_EXEC("hello")` 都能跑 hello，但路径不同——一个吃嵌入 blob id，一个吃 ramfs 名字。
 
-## 5. 易错点
+## 6. 易错点
 
 - 改了 ABI 却只重编用户或只重编内核 → 必炸。应整仓构建。  
 - 把 Linux 的 `write(1, …)` 脑补进来——号码和语义都对不上。

@@ -6,7 +6,7 @@
 1.1 起：
 
 - 每个任务有自己的 **根页表**（`UserTask.root_pa` / `AddrSpace`）  
-- 调度切换时 `satp` 切到下一个任务的根  
+- 调度切换时调度器会调用 `UserTask.activate_as()`：如果 `root_pa != 0`，就用 `sv39::activate(root_pa)` 切换到该任务的根页表环境（也就是“真正打开了它的地址空间”）  
 - ELF 加载进**该任务**的虚址空间  
 
 这是现代 OS「进程」直觉的教学版（仍然没有 Linux 那套 fd/信号）。
@@ -23,6 +23,8 @@
    - `elf::load_into` 映射 PT_LOAD  
    - 填 trap frame 的 `sepc`（入口）、`sp` 等  
 5. 返回 **sched id**（正数）给调用者  
+
+注意：这个 **sched id** 在 `SYS_SPAWN` 里不只是“任务编号”。调度器会先找一个空闲槽位下标 `slot`，再用 `next_spawn_stack_base(slot)` 计算栈虚址基址。也就是说：槽位和栈地址是绑定的，天然减少了任务之间互相覆盖栈的风险。
 
 init 里：
 
@@ -42,6 +44,8 @@ shell 后来更多用 `SYS_EXEC`，但底层仍走相似的 `spawn_elf_bytes`。
 
 历史上 badapple 变大时就碰到过上限，需要调大 `MAX_PAGES`。
 
+另一个“会导致诡异 page fault”的细节：ELF 加载器会把多个 `PT_LOAD` 可能落在同一页上的段做**合并**（合并权限位），避免出现“前一步把页映成 R-X，下一段又把它覆盖成 R-W 却不允许执行”的情况。
+
 ## 4. 僵尸与等待
 
 任务 `SYS_EXIT` → `Zombie`。  
@@ -53,6 +57,8 @@ exec(path) → id
 ```
 
 `SYS_WAIT`：若是僵尸则清空槽位返回 0；若还在跑返回 `ERR_AGAIN`。
+
+因此你在 shell 的 `wait` 循环里会看到：当返回值是 `-11`（`ERR_AGAIN`）时，并不是“失败了”，而是“还没退出”。shell 选择 `yield_now()` 让出 CPU，再来 poll 一次。
 
 ## 5. 动手验证
 

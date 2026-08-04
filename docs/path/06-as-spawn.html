@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-34777262.js";
+            window.path_to_searchindex_js = "../searchindex-0f2fb5b8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9b9500d6.js"></script>
@@ -185,7 +185,7 @@
 <p>若所有用户程序共用内核那套「大一统」映射，隔离很弱，一个程序乱写容易牵连别人。<br>1.1 起：</p>
 <ul>
 <li>每个任务有自己的 <strong>根页表</strong>（<code>UserTask.root_pa</code> / <code>AddrSpace</code>）</li>
-<li>调度切换时 <code>satp</code> 切到下一个任务的根</li>
+<li>调度切换时调度器会调用 <code>UserTask.activate_as()</code>：如果 <code>root_pa != 0</code>，就用 <code>sv39::activate(root_pa)</code> 切换到该任务的根页表环境（也就是“真正打开了它的地址空间”）</li>
 <li>ELF 加载进<strong>该任务</strong>的虚址空间</li>
 </ul>
 <p>这是现代 OS「进程」直觉的教学版（仍然没有 Linux 那套 fd/信号）。</p>
@@ -204,6 +204,7 @@
 </li>
 <li>返回 <strong>sched id</strong>（正数）给调用者</li>
 </ol>
+<p>注意：这个 <strong>sched id</strong> 在 <code>SYS_SPAWN</code> 里不只是“任务编号”。调度器会先找一个空闲槽位下标 <code>slot</code>，再用 <code>next_spawn_stack_base(slot)</code> 计算栈虚址基址。也就是说：槽位和栈地址是绑定的，天然减少了任务之间互相覆盖栈的风险。</p>
 <p>init 里：</p>
 <pre><code class="language-text">sys::spawn(0)  →  期望看到 hello 输出
 </code></pre>
@@ -217,12 +218,14 @@
 <li><strong>页数上限</strong>（<code>MAX_PAGES</code>）：ELF 太大（例如巨大的帧数据）会加载失败 → shell 报 <code>exec failed</code></li>
 </ul>
 <p>历史上 badapple 变大时就碰到过上限，需要调大 <code>MAX_PAGES</code>。</p>
+<p>另一个“会导致诡异 page fault”的细节：ELF 加载器会把多个 <code>PT_LOAD</code> 可能落在同一页上的段做<strong>合并</strong>（合并权限位），避免出现“前一步把页映成 R-X，下一段又把它覆盖成 R-W 却不允许执行”的情况。</p>
 <h2 id="4-僵尸与等待"><a class="header" href="#4-僵尸与等待">4. 僵尸与等待</a></h2>
 <p>任务 <code>SYS_EXIT</code> → <code>Zombie</code>。<br>若不回收，槽位会耗尽。shell 的 <code>run</code>：</p>
 <pre><code class="language-text">exec(path) → id
 循环: wait(id)；若 ERR_AGAIN 则 yield；否则结束
 </code></pre>
 <p><code>SYS_WAIT</code>：若是僵尸则清空槽位返回 0；若还在跑返回 <code>ERR_AGAIN</code>。</p>
+<p>因此你在 shell 的 <code>wait</code> 循环里会看到：当返回值是 <code>-11</code>（<code>ERR_AGAIN</code>）时，并不是“失败了”，而是“还没退出”。shell 选择 <code>yield_now()</code> 让出 CPU，再来 poll 一次。</p>
 <h2 id="5-动手验证"><a class="header" href="#5-动手验证">5. 动手验证</a></h2>
 <ol>
 <li><code>run hello</code> 两次，确认都能成功（说明 wait 回收了槽位）。</li>

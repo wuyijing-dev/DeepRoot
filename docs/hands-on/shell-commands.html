@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-34777262.js";
+            window.path_to_searchindex_js = "../searchindex-0f2fb5b8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9b9500d6.js"></script>
@@ -234,14 +234,33 @@ deeproot&gt; cat hello
 </ul>
 <p>Bad Apple <strong>不是</strong>教学主线，跳过完全没问题。</p>
 <h2 id="3-行为细节避免踩坑"><a class="header" href="#3-行为细节避免踩坑">3. 行为细节（避免踩坑）</a></h2>
+<h3 id="30-输入回显与退格来自-read_line"><a class="header" href="#30-输入回显与退格来自-read_line">3.0 输入回显与退格（来自 <code>read_line</code>）</a></h3>
+<p>shell 的输入并不是“读取一整行再解析”，而是逐字节从内核拿：</p>
+<ul>
+<li>每来一个可打印字符（<code>b &gt;= 0x20</code>），就回显到串口并写进缓冲区</li>
+<li><code>\r</code> / <code>\n</code>：回显换行并结束这一行</li>
+<li><code>0x7f</code> / <code>0x08</code>（退格）：如果缓冲区里已有内容，就退一步并输出 <code>"\x08 \x08"</code>（典型终端退格效果）</li>
+<li>其它控制字符（比如 <code>Ctrl</code> 组合）会被丢弃</li>
+</ul>
+<p>如果串口暂时没有新字节，<code>read_line</code> 会得到一个负返回值（常见是 <code>-11</code>），然后执行 <code>sys::yield_now()</code> 再继续等，因此你看到的体验是“能输入，但系统在忙着切别的任务”。</p>
 <h3 id="31-空格"><a class="header" href="#31-空格">3.1 空格</a></h3>
 <p><code>catreadme.txt</code>（没空格）不会被识别成 <code>cat</code>。<br><code>run  hello</code>（多空格）——<code>trim</code> 只剥两端，中间依赖你写对；<code>run </code> 后面再 trim path。</p>
 <h3 id="32-路径"><a class="header" href="#32-路径">3.2 路径</a></h3>
 <p><code>cat /version</code> 与 <code>cat version</code> 通常都行（内核 <code>normalize</code> 剥 <code>/</code>）。</p>
 <h3 id="33-阻塞"><a class="header" href="#33-阻塞">3.3 阻塞</a></h3>
 <p><code>run</code> / <code>hello</code> / <code>badapple</code> 会占用 shell，直到子任务 <code>SYS_EXIT</code> 并被 <code>wait</code> 收尸。<br>这是刻意的「前台」模型，不是 bug。</p>
+<p>更“源码向”的理解：shell 的 <code>run_path</code> 逻辑大致是：</p>
+<pre><code class="language-text">id = sys::exec(path)
+if id &lt; 0: 直接打印 exec failed
+else:
+  循环：
+    st = sys::wait(id)
+    若 st == -11（ERR_AGAIN）: yield_now() 再 poll
+    否则：子任务已退出（或已被错误状态收掉），跳出循环
+</code></pre>
+<p>这也解释了为什么长任务（如 badapple）期间提示符不返回：shell 自己就在前台 <code>wait</code> 里轮询/让出 CPU。</p>
 <h3 id="34-缓冲区"><a class="header" href="#34-缓冲区">3.4 缓冲区</a></h3>
-<p>一行最多约 64 字节（<code>buf = [0u8; 64]</code>）。别贴超长命令。</p>
+<p>一行最多约 64 字节（<code>buf = [0u8; 64]</code>）。别贴超长命令；超过缓冲区上限的部分不会再被加入到这一行里。</p>
 <h2 id="4-和-linux-shell-的对照防脑补"><a class="header" href="#4-和-linux-shell-的对照防脑补">4. 和 Linux shell 的对照（防脑补）</a></h2>
 <div class="table-wrapper">
 <table>

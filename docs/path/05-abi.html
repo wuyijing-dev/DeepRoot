@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-34777262.js";
+            window.path_to_searchindex_js = "../searchindex-0f2fb5b8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9b9500d6.js"></script>
@@ -196,6 +196,21 @@
 </table>
 </div>
 <p>封装见 <code>libs/deeproot-user/src/lib.rs</code> 的 <code>ecall</code>。</p>
+<h2 id="11-用户态怎么发-ecall跟源码对齐"><a class="header" href="#11-用户态怎么发-ecall跟源码对齐">1.1 用户态怎么“发 ecall”（跟源码对齐）</a></h2>
+<p>你在 <code>libs/deeproot-user/src/lib.rs</code> 里能看到用户态统一封装：</p>
+<pre><code class="language-text">ecall(nr, a0, a1, a2, a3):
+  让 a7 = nr
+  让 a0..a3 = 参数
+  执行 ecall
+  从返回寄存器取回 ret（约定为 isize）
+</code></pre>
+<p>例如：</p>
+<ul>
+<li><code>sys::debug_write(s)</code>：<code>SYS_DEBUG_WRITE</code>，参数放到 <code>a0=s.as_ptr()</code>、<code>a1=s.len()</code></li>
+<li><code>sys::debug_read_byte()</code>：<code>SYS_DEBUG_READ</code>，参数全 0</li>
+<li><code>sys::exec(path)</code>：<code>SYS_EXEC</code>，参数放到 <code>a0=path.as_ptr()</code>、<code>a1=path.len()</code></li>
+</ul>
+<p><strong>关键点</strong>：用户态并不知道“内核用哪个寄存器怎么解析”，它只负责把 <code>a7/a0..a3</code> 摆好，内核 trap 路径再按约定读出来。</p>
 <h2 id="2-错误码"><a class="header" href="#2-错误码">2. 错误码</a></h2>
 <div class="table-wrapper">
 <table>
@@ -209,6 +224,12 @@
 </tbody>
 </table>
 </div>
+<p>在学习时你可以用一个经验法则判断“这是策略问题还是数据问题”：</p>
+<ul>
+<li><code>ERR_AGAIN</code>：通常是“还没准备好”，按协议 <code>yield_now()</code> / 再试即可（例如 <code>SYS_DEBUG_READ</code>、<code>SYS_WAIT</code> 的轮询语义）</li>
+<li><code>ERR_NOSYS</code>：ABI 不匹配（syscall 号写错、或用户库/内核没一起重编）</li>
+<li><code>ERR_GENERIC</code>：多半是参数/路径/ELF 映射失败（比如 <code>SYS_EXEC</code> 找不到 ramfs 文件，或 ELF magic 不对）</li>
+</ul>
 <h2 id="3-系统调用一览v14-教学树"><a class="header" href="#3-系统调用一览v14-教学树">3. 系统调用一览（v1.4 教学树）</a></h2>
 <blockquote>
 <p>下表以 <code>libs/deeproot-abi/src/syscall.rs</code> 为准；学的时候请打开文件核对。</p>
@@ -250,13 +271,29 @@
 </tbody>
 </table>
 </div>
-<h2 id="4-动手验证"><a class="header" href="#4-动手验证">4. 动手验证</a></h2>
+<h2 id="4-从-ecall-到-handle_syscall跟读-traprs"><a class="header" href="#4-从-ecall-到-handle_syscall跟读-traprs">4. 从 ecall 到 handle_syscall（跟读 trap.rs）</a></h2>
+<p>用户态执行 <code>ecall</code> 后，<code>kernel/src/trap.rs</code> 会走到 <code>trap_handler()</code>。</p>
+<p>当它判定这是用户态 ecall（<code>scause</code> 的异常码对应）时，会做这些事：</p>
+<ol>
+<li>读取 syscall 号：<code>nr = tf.x[17]</code>（也就是用户态的 <code>a7</code>）</li>
+<li>读取参数：<code>a0=tf.x[10]</code>、<code>a1=tf.x[11]</code>、<code>a2=tf.x[12]</code>、<code>a3=tf.x[13]</code></li>
+<li><code>tf.sepc += 4</code>：跳过 ecall 指令，避免回到同一条 ecall 反复触发</li>
+<li>调度器分发：<code>ret = sched::handle_syscall(&amp;mut ctx.tasks, &amp;mut ctx.eps, nr, a0, a1, a2, a3)</code></li>
+<li>把返回值写回“发起 syscall 的那个任务”：<code>sched::set_syscall_return(issuer, ret)</code></li>
+<li><code>sched::restore_user()</code>：恢复用户寄存器并 <code>sret</code> 回到用户态</li>
+</ol>
+<p>因此你能理解两件事：</p>
+<ul>
+<li><code>SYS_WAIT</code> 结束后，<code>wait(id)</code> 返回的值是写回给“调用 wait 的那一个任务”的 <code>a0</code></li>
+<li>如果你看到返回值异常（比如一直是 <code>-11</code>），通常不是用户库错了，而是内核调度/阻塞路径没发生你预期的状态切换</li>
+</ul>
+<h2 id="5-动手验证"><a class="header" href="#5-动手验证">5. 动手验证</a></h2>
 <ol>
 <li>在 <code>deeproot-user</code> 给 <code>debug_write</code> 临时打日志（或在内核 <code>SYS_DEBUG_WRITE</code> 分支计数）。</li>
 <li>自己写用户程序调用非法 <code>a7</code>，确认得到 <code>ERR_NOSYS</code>。</li>
 <li>对比：<code>SYS_SPAWN(0)</code> 与 <code>SYS_EXEC("hello")</code> 都能跑 hello，但路径不同——一个吃嵌入 blob id，一个吃 ramfs 名字。</li>
 </ol>
-<h2 id="5-易错点"><a class="header" href="#5-易错点">5. 易错点</a></h2>
+<h2 id="6-易错点"><a class="header" href="#6-易错点">6. 易错点</a></h2>
 <ul>
 <li>改了 ABI 却只重编用户或只重编内核 → 必炸。应整仓构建。</li>
 <li>把 Linux 的 <code>write(1, …)</code> 脑补进来——号码和语义都对不上。</li>

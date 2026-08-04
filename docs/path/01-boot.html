@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-34777262.js";
+            window.path_to_searchindex_js = "../searchindex-0f2fb5b8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9b9500d6.js"></script>
@@ -190,6 +190,7 @@
     → DeepRoot 清 BSS、设栈、调用 kernel_main
 </code></pre>
 <p>你<strong>不需要</strong>会写 OpenSBI；只要记住：内核拿到的 <code>hartid</code> / <code>dtb_pa</code> 来自固件约定。</p>
+<p>更具体一点：在 <code>kernel/src/boot.rs</code> 里，<code>_start</code> 会先把 <code>a0</code>（hartid）和 <code>a1</code>（DTB 物理地址）临时保存起来，再清 BSS，再把这两个值用 <code>mv a0, s0</code> / <code>mv a1, s1</code> 交还给 Rust 的 <code>kernel_main(hartid, dtb_pa)</code>。</p>
 <h2 id="2-跟读-_startkernelsrcbootrs"><a class="header" href="#2-跟读-_startkernelsrcbootrs">2. 跟读 <code>_start</code>（<code>kernel/src/boot.rs</code>）</a></h2>
 <p>入口汇编做了三件实事：</p>
 <ol>
@@ -199,6 +200,7 @@
 <li><strong><code>call kernel_main</code></strong> — 把 hartid/dtb 放回 <code>a0</code>/<code>a1</code></li>
 </ol>
 <p>如果 BSS 没清干净，你会遇到「全局变量里是垃圾」这种最难查的鬼畜 bug。所以开机第一课往往是：相信链接脚本 + 清 BSS。</p>
+<p>你可以把这一步当成“把现场整理干净”。后面 <code>trap</code>、<code>mm</code>、<code>servers</code> 之所以能稳定工作，很多初始化都默认“BSS 是 0”。</p>
 <h2 id="3-跟读-kernel_mainkernelsrcmainrs"><a class="header" href="#3-跟读-kernel_mainkernelsrcmainrs">3. 跟读 <code>kernel_main</code>（<code>kernel/src/main.rs</code>）</a></h2>
 <p>当前启动顺序（读代码时请逐行对）：</p>
 <pre><code class="language-text">ledger::init + Boot 事件
@@ -210,6 +212,14 @@ timer::init         ← 时钟
 servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 </code></pre>
 <p><code>kernel_main</code> 的返回类型是 <code>-&gt; !</code>：正常路径不会回到 <code>_start</code> 的 <code>wfi</code> 死循环；那只是兜底。</p>
+<p>从 <code>kernel/src/main.rs</code> 看，启动链路里这几个阶段各自负责一种“系统感”：</p>
+<ul>
+<li><code>ledger::init</code>：给之后的 boot/trap/IPC 记录打底</li>
+<li><code>trap::init</code>：先挂陷阱入口，否则后续 ecall/缺页只能进入固件的“黑盒”</li>
+<li><code>mm::init</code>：准备 Sv39 页表环境（不然用户态 ELF 没法被正确映射）</li>
+<li><code>block::init</code>：1.4 教学块层替身先 ready（便于你区分“模块已加载但暂时没被用”）</li>
+<li><code>servers::bring_up</code>：装入多个 U-mode ELF 并把控制权交给调度器；这一步通常“不返回”</li>
+</ul>
 <h2 id="4-字是怎么出来的sbi-控制台"><a class="header" href="#4-字是怎么出来的sbi-控制台">4. 字是怎么出来的？SBI 控制台</a></h2>
 <p><code>println!</code> → <code>console::_print</code> → 最终会走到 <code>sbi::console_putchar</code> 或批量 <code>console_write</code>。</p>
 <p><code>kernel/src/sbi.rs</code> 里要点：</p>
@@ -219,6 +229,7 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li>读字符用 <strong>legacy getchar</strong>（EID <strong><code>0x02</code></strong>，千万别和 putchar 弄反——历史上弄反过会导致 shell 读入全是空字节）</li>
 </ul>
 <p>对新手：先记住「内核打印 ≈ SBI 借固件写 UART」，用户态打印 ≈ <code>SYS_DEBUG_WRITE</code> 再进内核同一套输出路径。</p>
+<p>补一个更“源码向”的理解：<code>kernel/src/sbi.rs</code> 里 <code>console_write</code> 会优先走 SBI Debug Console（DBCN）批量写；如果固件不支持或失败，就逐字节回退 legacy <code>console_putchar</code>。这就是为什么早期输出有时你会看到“先快后慢/先稳后回退”的差异。</p>
 <h2 id="5-trap-为什么这么早初始化"><a class="header" href="#5-trap-为什么这么早初始化">5. Trap 为什么这么早初始化？</a></h2>
 <p>没有陷阱入口时，一次非法指令/缺页可能直接让你懵在固件里。<br><code>trap::init</code> 先挂上向量，后面用户态 ecall、时钟中断才有地方可去。</p>
 <p>你在日志里看到的 <code>trap: early stvec=...</code> / <code>trap: user stvec=...</code>，就是在说：「入口地址已经写进 <code>stvec</code>」。</p>
@@ -228,6 +239,9 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li>确认顺序符合你的预期。</li>
 <li>故意把 <code>sbi::console_getchar</code> 的 EID 改错，跑 shell——观察是否「一回车就 unknown」（学完 shell 章再做）。</li>
 </ol>
+<p>额外建议：先别改代码，直接用脚本给的 smoke 目标“对照验收”。<code>scripts/run-qemu.sh --smoke</code> 里会检查一组关键字符串（适用于 v1.4.0）：</p>
+<p><code>DeepRoot microkernel 1.4.0</code> / <code>canopy ready</code> / <code>ping: pong</code> / <code>hello: spawned ELF says hi</code> / <code>shell: DeepRoot shell ready</code> / <code>block: ramdisk ready</code> / <code>init: handing off to shell</code>。</p>
+<p>你可以把这些字符串当成“里程碑坐标”：某一项缺失，通常就意味着启动链路在对应阶段还没成功走完。</p>
 <h2 id="7-易错点"><a class="header" href="#7-易错点">7. 易错点</a></h2>
 <div class="table-wrapper">
 <table>
