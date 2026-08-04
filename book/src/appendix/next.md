@@ -1,7 +1,7 @@
 # 下一步可以看什么
 
-你已经走完 DeepRoot **1.6** 教学主线（当前推荐标签 **`v1.6.1`**）：自有 DTS、FDT 发现、virtio-blk 上的 DRFS。  
-仓库路线图继续到 **2.0**（见根目录 `VERSION`）：SMP → 更完善自研 shell → framebuffer 简易 UI。
+你已经走完 DeepRoot **1.7** 教学主线（当前推荐标签 **`v1.7.0`**）：自有 DTS、FDT、virtio-blk、以及 QEMU `-smp 2` 多 hart 调度。  
+仓库路线图继续到 **2.0**（见根目录 `VERSION`）：更完善自研 shell → framebuffer 简易 UI → 集成发布。
 
 ## 1. 巩固（强烈建议）
 
@@ -9,16 +9,15 @@
 - 按 [自己写用户程序](../hands-on/write-user-prog.md) 做一个新 ELF  
 - 对照 `ls`：分清哪些文件来自 embed、哪些来自 DRFS  
 - 把 [名词表](glossary.md) 里仍模糊的词对照源码再读一遍  
+- 对照 `smp:` / `timer: hart=` 启动日志，确认两个 hart 都起来了  
 
-## 2. 官方下一站（1.5 → 2.0）
+## 2. 官方下一站（1.8 → 2.0）
 
 按 `VERSION` 顺序推进（实现前请先读该文件里的 W1…验收条）：
 
 | 系列 | 用户可见目标 |
 |---|---|
-| **1.5** | FDT 发现 UART / virtio / memory（少硬编码） |
-| **1.6** | 真 virtio-blk（或等价）接在现有 FS/DRFS 路径后 |
-| **1.7** | QEMU `-smp 2` 多 hart 调度 |
+| **1.5–1.7** | FDT / virtio-blk / SMP（已落地，见对应标签） |
 | **1.8** | **自研**更完善 shell（argv/环境/history/`&`/简单管道）；**不**移植 bash |
 | **1.9** | Framebuffer：清屏、画点/矩形、简单菜单或图形终端（不做桌面） |
 | **2.0.0** | 以上能力集成发布与文档基线 |
@@ -27,10 +26,9 @@
 
 | 方向 | 从哪开始 |
 |---|---|
-| 设备树 | `kernel/src/mm/memmap.rs` 的 FDT 雏形 → 计划中的 `fdt` 模块 |
-| 真·virtio-blk | `kernel/src/block.rs`；保留路径 API |
-| 多核 | `timer` / `sched` / `ipc` 里的单 hart 假设 |
-| 图形 | QEMU ramfb / virtio-gpu（等 1.5/1.7 更稳再上更轻松） |
+| 更完善 shell | `user/shell`；扩展 argv / history / 管道原语 |
+| 图形 | QEMU ramfb / simple-framebuffer（FDT 已有 hint） |
+| SMP 加深 | `kernel/src/smp.rs`、`sched.rs` 的 per-hart RQ / IPI |
 
 ## 3. 对照其它教材（换口味）
 
@@ -52,4 +50,4 @@
 
 ## 5. 参与项目
 
-远程：`git@github.com:wuyijing-dev/DeepRoot.git`。发 issue / PR 前先说明你对齐的标签（`v1.4.1` 等）或目标系列（如 1.5）。
+远程：`git@github.com:wuyijing-dev/DeepRoot.git`。发 issue / PR 前先说明你对齐的标签（`v1.7.0` 等）或目标系列（如 1.8）。

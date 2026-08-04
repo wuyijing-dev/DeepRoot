@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-aa065fd8.js";
+            window.path_to_searchindex_js = "searchindex-f67de18e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b6d20683.js"></script>
@@ -3913,15 +3913,16 @@ git checkout main
 <p>想对比某一系列引入了什么：<code>git log v1.4.0..v1.4.1 --oneline</code>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="下一步可以看什么"><a class="header" href="#下一步可以看什么">下一步可以看什么</a></h1>
-<p>你已经走完 DeepRoot <strong>1.6</strong> 教学主线（当前推荐标签 <strong><code>v1.6.1</code></strong>）：自有 DTS、FDT 发现、virtio-blk 上的 DRFS。<br>仓库路线图继续到 <strong>2.0</strong>（见根目录 <code>VERSION</code>）：SMP → 更完善自研 shell → framebuffer 简易 UI。</p>
+<p>你已经走完 DeepRoot <strong>1.7</strong> 教学主线（当前推荐标签 <strong><code>v1.7.0</code></strong>）：自有 DTS、FDT、virtio-blk、以及 QEMU <code>-smp 2</code> 多 hart 调度。<br>仓库路线图继续到 <strong>2.0</strong>（见根目录 <code>VERSION</code>）：更完善自研 shell → framebuffer 简易 UI → 集成发布。</p>
 <h2 id="1-巩固强烈建议"><a class="header" href="#1-巩固强烈建议">1. 巩固（强烈建议）</a></h2>
 <ul>
 <li>不看文档，独立画出：<code>ecall</code> → <code>trap</code> → <code>handle_syscall</code> → <code>sret</code></li>
 <li>按 <a href="#自己写一个用户程序逐步教程">自己写用户程序</a> 做一个新 ELF</li>
 <li>对照 <code>ls</code>：分清哪些文件来自 embed、哪些来自 DRFS</li>
 <li>把 <a href="#名词表">名词表</a> 里仍模糊的词对照源码再读一遍</li>
+<li>对照 <code>smp:</code> / <code>timer: hart=</code> 启动日志，确认两个 hart 都起来了</li>
 </ul>
-<h2 id="2-官方下一站15--20"><a class="header" href="#2-官方下一站15--20">2. 官方下一站（1.5 → 2.0）</a></h2>
+<h2 id="2-官方下一站18--20"><a class="header" href="#2-官方下一站18--20">2. 官方下一站（1.8 → 2.0）</a></h2>
 <p>按 <code>VERSION</code> 顺序推进（实现前请先读该文件里的 W1…验收条）：</p>
 <div class="table-wrapper">
 <table>
@@ -3929,9 +3930,7 @@ git checkout main
 <tr><th>系列</th><th>用户可见目标</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>1.5</strong></td><td>FDT 发现 UART / virtio / memory（少硬编码）</td></tr>
-<tr><td><strong>1.6</strong></td><td>真 virtio-blk（或等价）接在现有 FS/DRFS 路径后</td></tr>
-<tr><td><strong>1.7</strong></td><td>QEMU <code>-smp 2</code> 多 hart 调度</td></tr>
+<tr><td><strong>1.5–1.7</strong></td><td>FDT / virtio-blk / SMP（已落地，见对应标签）</td></tr>
 <tr><td><strong>1.8</strong></td><td><strong>自研</strong>更完善 shell（argv/环境/history/<code>&amp;</code>/简单管道）；<strong>不</strong>移植 bash</td></tr>
 <tr><td><strong>1.9</strong></td><td>Framebuffer：清屏、画点/矩形、简单菜单或图形终端（不做桌面）</td></tr>
 <tr><td><strong>2.0.0</strong></td><td>以上能力集成发布与文档基线</td></tr>
@@ -3945,10 +3944,9 @@ git checkout main
 <tr><th>方向</th><th>从哪开始</th></tr>
 </thead>
 <tbody>
-<tr><td>设备树</td><td><code>kernel/src/mm/memmap.rs</code> 的 FDT 雏形 → 计划中的 <code>fdt</code> 模块</td></tr>
-<tr><td>真·virtio-blk</td><td><code>kernel/src/block.rs</code>；保留路径 API</td></tr>
-<tr><td>多核</td><td><code>timer</code> / <code>sched</code> / <code>ipc</code> 里的单 hart 假设</td></tr>
-<tr><td>图形</td><td>QEMU ramfb / virtio-gpu（等 1.5/1.7 更稳再上更轻松）</td></tr>
+<tr><td>更完善 shell</td><td><code>user/shell</code>；扩展 argv / history / 管道原语</td></tr>
+<tr><td>图形</td><td>QEMU ramfb / simple-framebuffer（FDT 已有 hint）</td></tr>
+<tr><td>SMP 加深</td><td><code>kernel/src/smp.rs</code>、<code>sched.rs</code> 的 per-hart RQ / IPI</td></tr>
 </tbody>
 </table>
 </div>
@@ -3971,7 +3969,7 @@ git checkout main
 <li>把 Bad Apple 或完整桌面 WM 当 2.0 必达项</li>
 </ul>
 <h2 id="5-参与项目"><a class="header" href="#5-参与项目">5. 参与项目</a></h2>
-<p>远程：<code>git@github.com:wuyijing-dev/DeepRoot.git</code>。发 issue / PR 前先说明你对齐的标签（<code>v1.4.1</code> 等）或目标系列（如 1.5）。</p>
+<p>远程：<code>git@github.com:wuyijing-dev/DeepRoot.git</code>。发 issue / PR 前先说明你对齐的标签（<code>v1.7.0</code> 等）或目标系列（如 1.8）。</p>
 
                     </main>
 
