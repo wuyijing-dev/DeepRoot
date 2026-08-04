@@ -1,4 +1,4 @@
-1.9.0
+1.9.1
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -273,7 +273,8 @@
 #   W5  Smoke + docs for the FS surface landed so far; more W* as needed in 1.9.y
 #
 # Releases:
-# 1.9.0   First FS-depth slice (in-RAM VFS dirs + mkdir/cd + shell) ← current
+# 1.9.0   First FS-depth slice (in-RAM VFS dirs + mkdir/cd + shell)
+# 1.9.1   Fix shell hang on `>` (tokenize spun on redirect operators)
 # 1.9.y   Continue FS depth / durability / fd polish without bumping to 1.10
 #
 # Out of scope for 1.9: full POSIX VFS, many FS types, networked FS, framebuffer.

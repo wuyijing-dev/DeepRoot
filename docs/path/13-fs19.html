@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d854b485.js";
+            window.path_to_searchindex_js = "../searchindex-2a8fabe9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-48a07b87.js"></script>
@@ -180,9 +180,9 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="19-文件系统加深对齐-v190"><a class="header" href="#19-文件系统加深对齐-v190">1.9 文件系统加深（对齐 v1.9.0）</a></h1>
-<p>对齐：<strong>v1.9.0</strong>（系列会在 <code>1.9.y</code> 上停留较久）。</p>
-<p>当前推荐标签：<strong><code>v1.9.0</code></strong>。</p>
+                        <h1 id="19-文件系统加深对齐-v191"><a class="header" href="#19-文件系统加深对齐-v191">1.9 文件系统加深（对齐 v1.9.1）</a></h1>
+<p>对齐：<strong>v1.9.1</strong>（系列会在 <code>1.9.y</code> 上停留较久）。</p>
+<p>当前推荐标签：<strong><code>v1.9.1</code></strong>（含 <code>echo … &gt; file</code> 卡住修复；目录功能自 1.9.0）。</p>
 <h2 id="这一站解决什么"><a class="header" href="#这一站解决什么">这一站解决什么？</a></h2>
 <p>1.8 之前的教学 FS 基本是<strong>扁平</strong>名字：embed 文件、DRFS 根目录条目、以及 1.8 的 scratch 写。<br><strong>1.9.0</strong> 先落地一层 <strong>in-RAM VFS 树</strong>：真正的目录结点、<code>mkdir</code> / <code>rmdir</code> / <code>rm</code>、以及与 shell 一致的 <strong>kernel cwd</strong>。</p>
 <p>后续 <code>1.9.y</code> 再慢慢做：更大的持久 DRFS、fd 表等——<strong>不要急着跳到 1.10</strong>。</p>
@@ -219,10 +219,12 @@ rmdir demo
 <li><a href="fs19/02-syscalls-shell.html">syscall 与 shell 内建</a></li>
 </ul>
 <h2 id="验收"><a class="header" href="#验收">验收</a></h2>
-<pre><code class="language-bash">git checkout v1.9.0
+<pre><code class="language-bash">git checkout v1.9.1
 ./scripts/run-qemu.sh --smoke
 </code></pre>
 <p>smoke 会核对 <code>vfs: in-RAM tree ready</code> 与 <code>shell: DeepRoot shell 1.9 ready</code> 等标记。</p>
+<h3 id="已知修复191"><a class="header" href="#已知修复191">已知修复（1.9.1）</a></h3>
+<p>主循环里会对<strong>整行</strong>做一次 <code>tokenize</code>（识别 <code>cd</code> / <code>export</code>）。若行里有 <code>&gt;</code> / <code>|</code> 而 tokenize 不跳过运算符，会在 <code>&gt;</code> 处死循环。<br>1.9.1 起 tokenize 会跳过这些运算符；<code>split_pipeline</code> 仍负责真正的重定向解析。</p>
 
                     </main>
 

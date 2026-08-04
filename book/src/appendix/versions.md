@@ -2,21 +2,21 @@
 
 ## 1. 文档对齐哪一版？
 
-本学习笔记默认对齐 **`v1.9.0`**（in-RAM VFS 目录 + shell cwd）。  
+本学习笔记默认对齐 **`v1.9.1`**（in-RAM VFS 目录 + shell cwd）。  
 页首选择器还可打开更早冻结快照（如 `v1.8.0`、`v1.7.0`…）。
 
 核对三处：
 
 1. 仓库根 `VERSION` 第一行非注释内容  
 2. QEMU 横幅：`DeepRoot microkernel …`  
-3. Git 标签（若你按标签检出）：`git checkout v1.9.0`
+3. Git 标签（若你按标签检出）：`git checkout v1.9.1`
 
 ## 2. 标签怎么用？
 
 ```bash
 git fetch --tags
 git tag -l 'v*'
-git checkout v1.9.0
+git checkout v1.9.1
 ```
 
 冻结教程 HTML 在站点的 `/DeepRoot/<tag>/`（由标签工作流发布）。  
@@ -43,7 +43,7 @@ git checkout v1.9.0
 | 1.12 | Framebuffer（延后） |
 | 2.0 | 集成发布（不赶） |
 
-当前 **current** 是 `1.9.0`。系列内继续 FS 深度见 `VERSION`；framebuffer 仍延后。
+当前 **current** 是 `1.9.1`。系列内继续 FS 深度见 `VERSION`；framebuffer 仍延后。
 
 ## 4. 和 GitHub Releases
 

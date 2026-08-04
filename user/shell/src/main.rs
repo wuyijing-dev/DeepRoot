@@ -247,6 +247,12 @@ fn tokenize(line: &[u8], argv: &mut Argv) -> bool {
         if i >= line.len() {
             break;
         }
+        /* Operators are handled by split_pipeline; skip them here so a
+         * one-shot tokenize of a full line (e.g. `echo x > f`) cannot spin. */
+        if line[i] == b'|' || line[i] == b'>' || line[i] == b'<' || line[i] == b'&' {
+            i += 1;
+            continue;
+        }
         let mut tok = [0u8; ARG_LEN];
         let mut tn = 0usize;
         if line[i] == b'"' || line[i] == b'\'' {
@@ -690,7 +696,7 @@ pub extern "C" fn main() {
     let mut hist = History::new();
     let mut env = Env::new();
     let _ = env.set(b"SHELL", b"deeproot");
-    let _ = env.set(b"VERSION", b"1.9.0");
+    let _ = env.set(b"VERSION", b"1.9.1");
 
     loop {
         let _ = sys::debug_write("deeproot> ");

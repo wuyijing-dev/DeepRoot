@@ -1,6 +1,6 @@
 # 下一步可以看什么
 
-你已经走完 DeepRoot **1.9.0**（当前推荐 **`v1.9.0`**）：自有 DTS、virtio-blk、SMP、自研 shell、**in-RAM 目录树**。  
+你已经走完 DeepRoot **1.9**（当前推荐 **`v1.9.1`**）：自有 DTS、virtio-blk、SMP、自研 shell、**in-RAM 目录树**。  
 
 按根目录 `VERSION`：**先不急着上 framebuffer**，也**先不跳到 1.10**。接下来继续用 **较长的 1.9.y** 把文件系统做深（持久写、fd…）；显示推到更后的系列。版本号会**放慢**——同一主题多用 `SUBLEVEL`。
 

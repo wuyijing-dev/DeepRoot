@@ -59,7 +59,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
   set -e
   ok=1
     for needle in \
-    "DeepRoot microkernel 1.9.0" \
+    "DeepRoot microkernel 1.9.1" \
     "fdt: model \"DeepRoot QEMU virt\"" \
     "fdt: board deeproot,qemu-virt" \
     "fdt: cpu count=2" \

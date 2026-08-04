@@ -45,7 +45,7 @@ deeproot> cat hello
 期望：
 
 - `ls` 打印当前目录（根上含 embed / VFS / DRFS 条目）  
-- `cat version` → `1.9.0`（embed）  
+- `cat version` → `1.9.1`（embed）  
 - `cat block.txt` → 一段说明文字（DRFS / 块上）  
 - 对 `hello` 提示用 `run`，不要刷二进制  
 
