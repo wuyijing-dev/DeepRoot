@@ -11,9 +11,9 @@
 #
 # First line above is the CURRENT release. Lines below are the full roadmap.
 #
-# Policy (1.x):
+# Policy (1.x through 1.4):
 #   - DeepRoot-native capability ABI — NOT Linux/POSIX compatible.
-#   - Additive syscalls only within 1.x; breaking ABI waits for 2.0 (unplanned).
+#   - Additive syscalls only; do not plan past 1.4 in this file.
 #   - Do not mint a new SUBLEVEL for every commit; finish a chunk, then release.
 #   - Shell is a small DeepRoot-native ELF (learn from xv6/BusyBox; do not port bash).
 #
