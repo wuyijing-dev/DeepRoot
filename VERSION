@@ -1,4 +1,4 @@
-0.5.5
+0.6.5
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -51,7 +51,7 @@
 # 0.5.2   console server (move UART out of kernel hot path)
 # 0.5.3   Kernel keeps only early printk for panic
 # 0.5.4   Sample ping server over IPC
-# 0.5.5   Multi-server bring-up worksheet ← current
+# 0.5.5   Multi-server bring-up worksheet
 
 # ---------- 0.6.x Schedule Canopy ----------
 # 0.6.0   Thread TCB + kernel stacks
@@ -59,7 +59,7 @@
 # 0.6.2   Timer interrupt via SBI/OpenSBI
 # 0.6.3   Blocking IPC wait / wakeup
 # 0.6.4   Preemption points; idle thread
-# 0.6.5   Multi-hart prep (still single-hart OK)
+# 0.6.5   Multi-hart prep (still single-hart OK) ← current
 
 # ---------- 0.7.x Lesson Gates ----------
 # 0.7.0   All lesson-* features documented in Cargo.toml only

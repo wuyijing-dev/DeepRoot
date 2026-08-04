@@ -1,4 +1,4 @@
-//! Server Grove bring-up — load init/console/ping and enter U-mode (0.5.x).
+//! Server Grove + Schedule Canopy bring-up.
 
 use crate::cap::{CapSpace, TaskTable};
 use crate::elf;
@@ -16,7 +16,7 @@ const STACK_CONSOLE: usize = 0x1110_0000;
 const STACK_PING: usize = 0x1210_0000;
 
 /*
- * bring_up - multi-server worksheet (0.5.5)
+ * bring_up - load servers, spawn idle, enter U-mode under timer preemption
  */
 pub fn bring_up() -> ! {
     let init_l = match elf::load("init", include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-init"))) {
@@ -41,6 +41,7 @@ pub fn bring_up() -> ! {
     let t_init = tasks.spawn("init").expect("init task");
     let t_console = tasks.spawn("console").expect("console task");
     let t_ping = tasks.spawn("ping").expect("ping task");
+    let t_idle = tasks.spawn("idle").expect("idle task");
 
     eps.create(t_ping, PING_BADGE).expect("ping ep");
     eps.create(t_console, CONSOLE_BADGE).expect("console ep");
@@ -63,12 +64,13 @@ pub fn bring_up() -> ! {
     let id_console =
         sched::spawn("console", console_l.entry, STACK_CONSOLE, t_console).expect("spawn console");
     let id_init = sched::spawn("init", init_l.entry, STACK_INIT, t_init).expect("spawn init");
+    let id_idle = sched::spawn_idle(t_idle).expect("spawn idle");
 
     println!(
-        "servers: grove ready (ping={} console={} init={})",
-        id_ping, id_console, id_init
+        "servers: canopy ready (ping={} console={} init={} idle={})",
+        id_ping, id_console, id_init, id_idle
     );
-    println!("servers: UART for servers via SYS_DEBUG_WRITE; kernel printk = boot/panic only");
+    println!("servers: UART via SYS_DEBUG_WRITE; timer preemption + blocking IPC on");
 
     trap::install_ctx(tasks, eps);
     trap::enable_user();

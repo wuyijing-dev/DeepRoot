@@ -1,7 +1,7 @@
 //! Synchronous IPC stubs — Ledger Vein (0.4.x).
 //!
 //! Single-hart rendezvous: one pending call and one reply per endpoint.
-//! Real blocking waits arrive with Schedule Canopy (0.6.x).
+//! Blocking recv/wakeup is handled by the scheduler (0.6.x).
 
 use crate::cap::{CapError, CapSpace, TaskId, TaskTable};
 use crate::ledger::LEDGER;

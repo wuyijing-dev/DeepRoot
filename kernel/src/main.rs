@@ -1,6 +1,6 @@
 //! DeepRoot kernel binary — educational RISC-V microkernel.
 //!
-//! Current milestone: **0.5.x Server Grove**.
+//! Current milestone: **0.6.x Schedule Canopy**.
 
 #![no_std]
 #![no_main]
@@ -18,6 +18,7 @@ mod sbi;
 mod sched;
 mod servers;
 mod syscall;
+mod timer;
 mod trap;
 mod version;
 
@@ -41,6 +42,11 @@ pub extern "C" fn kernel_main(hartid: usize, dtb_pa: usize) -> ! {
     #[cfg(feature = "lesson-mm")]
     {
         mm::init(hartid, dtb_pa);
+    }
+
+    #[cfg(feature = "lesson-sched")]
+    {
+        timer::init(hartid);
     }
 
     #[cfg(feature = "lesson-servers")]

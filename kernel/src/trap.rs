@@ -67,6 +67,10 @@ pub unsafe extern "C" fn trap_vector() {
         "sd t0, 32*8(sp)",
         "csrr t0, sstatus",
         "sd t0, 33*8(sp)",
+        /* Keep SIE clear while in the kernel trap path. Never set SIE in
+         * S-mode: this vector assumes sscratch → U TrapFrame. */
+        "li t0, 2",
+        "csrc sstatus, t0",
         "la sp, __boot_stack_top",
         "call trap_handler",
         "j trap_idle",
@@ -125,10 +129,18 @@ pub extern "C" fn trap_handler() {
         let a2 = tf.x[12] as u64;
         let a3 = tf.x[13] as u64;
         tf.sepc = tf.sepc.wrapping_add(4);
+        let issuer = sched::current_id();
         let ctx = ctx_mut();
         let ret = sched::handle_syscall(&mut ctx.tasks, &mut ctx.eps, nr, a0, a1, a2, a3);
-        let tf2 = unsafe { &mut *(sched::current_tf_ptr() as *mut TrapFrame) };
-        tf2.x[10] = ret as usize;
+        /* Return value belongs to the task that issued the syscall (may have yielded). */
+        sched::set_syscall_return(issuer, ret);
+        sched::restore_user();
+    }
+
+    /* Supervisor timer interrupt (0.6.2) — preempt current U-task. */
+    if is_interrupt && code == 5 {
+        let _ = crate::timer::on_interrupt();
+        sched::preempt();
         sched::restore_user();
     }
 
@@ -144,12 +156,16 @@ pub extern "C" fn trap_handler() {
             EXC_INSTRUCTION_PAGE_FAULT | EXC_LOAD_PAGE_FAULT | EXC_STORE_PAGE_FAULT
         )
     {
+        let id = sched::current_id();
         println!(
-            "trap: page fault scause={:#x} sepc={:#x} stval={:#x} ({})",
+            "trap: page fault scause={:#x} sepc={:#x} stval={:#x} ({}) task={} ra={:#x} sp={:#x}",
             scause,
             tf.sepc,
             stval,
-            crate::mm::sv39::page_fault_hint(stval)
+            crate::mm::sv39::page_fault_hint(stval),
+            id,
+            tf.x[1],
+            tf.x[2],
         );
     } else {
         println!(
@@ -181,5 +197,5 @@ pub fn init() {
 pub fn enable_user() {
     let addr = trap_vector as *const () as usize;
     set_stvec(addr);
-    println!("trap: user stvec={:#x}", addr);
+    println!("trap: user stvec={:#x} (timer+ecall)", addr);
 }

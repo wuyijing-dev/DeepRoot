@@ -3,7 +3,7 @@
 Educational Rust microkernel for RISC-V.
 
 Repository: https://github.com/wuyijing-dev/DeepRoot  
-Version: see [`VERSION`](VERSION) — current **0.5.5** Server Grove  
+Version: see [`VERSION`](VERSION) — current **0.6.5** Schedule Canopy
 
 ## Quick start
 
@@ -21,7 +21,6 @@ kernel/           # microkernel (no_std)
 libs/             # deeproot-abi, deeproot-user
 user/             # init, console, ping (U-mode ELFs)
 scripts/          # QEMU helpers
-.cursor/rules/    # project policy
 VERSION           # current release + full roadmap
 ```
 
