@@ -58,7 +58,7 @@ struct PageSlot {
     write: bool,
 }
 
-const MAX_PAGES: usize = 128;
+const MAX_PAGES: usize = 512;
 
 /*
  * load - parse ELF, coalesce PT_LOAD onto shared pages, map U|perms

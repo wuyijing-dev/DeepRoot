@@ -535,13 +535,11 @@ pub fn handle_syscall(
         SYS_DEBUG_WRITE => {
             let ptr = a0 as usize;
             let len = a1 as usize;
-            if len > 4096 {
+            if len > 8192 {
                 return ERR_GENERIC;
             }
             let slice = unsafe { core::slice::from_raw_parts(ptr as *const u8, len) };
-            if let Ok(s) = core::str::from_utf8(slice) {
-                crate::console::_print(core::format_args!("{}", s));
-            }
+            crate::console::write_bytes(slice);
             len as isize
         }
         SYS_LEDGER_DUMP => {

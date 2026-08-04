@@ -16,6 +16,19 @@ MODE="${1:-}"
 cd "${ROOT}"
 cargo build -p deeproot-kernel --release --target "${TARGET}"
 
+# Host is usually x86_64: RISC-V guests run under TCG. Prefer multi-thread TCG
+# and a large TB cache so ASCII playback is less jerky.
+QEMU_ACCEL=(-accel tcg,thread=multi)
+QEMU_COMMON=(
+  -machine virt
+  -cpu rv64
+  -smp 1
+  -m 256M
+  -nographic
+  -bios default
+  -kernel "${KERNEL_ELF}"
+)
+
 if [[ "${MODE}" == "--smoke" ]]; then
   echo "smoke: running QEMU (30s cap)…"
   LOG="$(mktemp)"
@@ -23,12 +36,8 @@ if [[ "${MODE}" == "--smoke" ]]; then
   trap cleanup EXIT
   set +e
   timeout 30 qemu-system-riscv64 \
-    -machine virt \
-    -cpu rv64 \
-    -m 128M \
-    -nographic \
-    -bios default \
-    -kernel "${KERNEL_ELF}" \
+    "${QEMU_ACCEL[@]}" \
+    "${QEMU_COMMON[@]}" \
     >"${LOG}" 2>&1
   set -e
   ok=1
@@ -62,10 +71,6 @@ if [[ "${MODE}" == "--gdb" ]]; then
 fi
 
 exec qemu-system-riscv64 \
-  -machine virt \
-  -cpu rv64 \
-  -m 128M \
-  -nographic \
-  -bios default \
-  -kernel "${KERNEL_ELF}" \
+  "${QEMU_ACCEL[@]}" \
+  "${QEMU_COMMON[@]}" \
   "${GDB_ARGS[@]}"

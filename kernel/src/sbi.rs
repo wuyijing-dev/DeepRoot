@@ -13,6 +13,7 @@ const SBI_EXT_0_1_CONSOLE_PUTCHAR: usize = 0x01;
 const SBI_EXT_0_1_CONSOLE_GETCHAR: usize = 0x02;
 const SBI_EXT_HSM: usize = 0x48534D; /* "HSM" */
 
+const SBI_DBCN_CONSOLE_WRITE: usize = 0;
 const SBI_DBCN_CONSOLE_WRITE_BYTE: usize = 2;
 const SBI_HSM_HART_STOP: usize = 1;
 
@@ -59,6 +60,30 @@ pub fn console_putchar(c: u8) {
     if r.error != 0 {
         /* Legacy putchar: a7=0x01, character in a0; a6 ignored. */
         let _ = sbi_call(SBI_EXT_0_1_CONSOLE_PUTCHAR, 0, c as usize, 0, 0);
+    }
+}
+
+/*
+ * console_write - bulk write via SBI Debug Console (fast path for ASCII video)
+ *
+ * DBCN needs a physical address OpenSBI can read. Kernel identity map means
+ * this buffer's VA equals PA. Callers must pass a kernel-resident slice.
+ */
+pub fn console_write(buf: &[u8]) {
+    if buf.is_empty() {
+        return;
+    }
+    let r = sbi_call(
+        SBI_EXT_DBCN,
+        SBI_DBCN_CONSOLE_WRITE,
+        buf.len(),
+        buf.as_ptr() as usize,
+        0,
+    );
+    if r.error != 0 {
+        for &b in buf {
+            console_putchar(b);
+        }
     }
 }
 

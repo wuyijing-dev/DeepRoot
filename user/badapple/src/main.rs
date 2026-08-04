@@ -1,8 +1,7 @@
-//! badapple — realtime ASCII render from compressed BA01 frames.
+//! badapple — realtime ASCII from BA02 4-bit frames.
 //!
-//! Frames are 1-bit pixel buffers (xor+RLE). Each tick we decode → map to
-//! ASCII → draw, then pace with SYS_TIME so playback tracks the encoded fps.
-//! Press `q` to quit early.
+//! Decode → map 16 gray levels to an ASCII ramp → one bulk console write,
+//! paced with SYS_TIME. Press `q` to quit.
 
 #![no_std]
 #![no_main]
@@ -33,40 +32,64 @@ _start:
 );
 
 static FRAMES: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/frames.ba01"));
-
-/* Fail the build if the compressed stream is missing / empty. */
 const _: [(); 1] = [(); (FRAMES.len() > 10_000) as usize];
 
-const MAX_PIXELS: usize = 64 * 32;
-const MAX_PACKED: usize = (MAX_PIXELS + 7) / 8;
+const MAX_PIXELS: usize = 128 * 48;
+const MAX_PACKED: usize = (MAX_PIXELS + 1) / 2;
+/* ANSI home + w chars + newline per row */
+const MAX_FRAME_CHARS: usize = 8 + MAX_PIXELS + 128;
+
+/// 16-level ramp: black → white (dense → blank).
+const RAMP: &[u8; 16] = b"@&#%*+=:;~-_,.  ";
 
 struct Header {
     width: usize,
     height: usize,
     fps: usize,
+    bits: usize,
     nframes: usize,
     body: &'static [u8],
 }
 
 fn parse_header(blob: &'static [u8]) -> Option<Header> {
-    if blob.len() < 12 || &blob[0..4] != b"BA01" {
+    if blob.len() < 12 {
+        return None;
+    }
+    let ver = &blob[0..4];
+    if ver != b"BA02" && ver != b"BA01" {
         return None;
     }
     let width = blob[4] as usize;
     let height = blob[5] as usize;
     let fps = blob[6] as usize;
-    /* blob[7] = pad; nframes at 8..12 */
+    let bits = if ver == b"BA02" {
+        blob[7] as usize
+    } else {
+        1
+    };
     let nframes = u32::from_le_bytes([blob[8], blob[9], blob[10], blob[11]]) as usize;
-    if width == 0 || height == 0 || fps == 0 || nframes == 0 || width * height > MAX_PIXELS {
+    if width == 0 || height == 0 || fps == 0 || nframes == 0 {
+        return None;
+    }
+    if !(bits == 1 || bits == 4) || width * height > MAX_PIXELS {
         return None;
     }
     Some(Header {
         width,
         height,
         fps,
+        bits,
         nframes,
         body: &blob[12..],
     })
+}
+
+fn packed_len(w: usize, h: usize, bits: usize) -> usize {
+    if bits == 4 {
+        (w * h + 1) / 2
+    } else {
+        (w * h + 7) / 8
+    }
 }
 
 fn rle_decode(src: &[u8], dst: &mut [u8]) -> bool {
@@ -87,27 +110,42 @@ fn rle_decode(src: &[u8], dst: &mut [u8]) -> bool {
     di == dst.len()
 }
 
-fn pixel(bits: &[u8], i: usize) -> bool {
-    (bits[i >> 3] & (1 << (7 - (i & 7)))) != 0
+fn level_at(pack: &[u8], i: usize, bits: usize) -> u8 {
+    if bits == 4 {
+        let b = pack[i >> 1];
+        if (i & 1) == 0 {
+            b >> 4
+        } else {
+            b & 0x0f
+        }
+    } else if (pack[i >> 3] & (1 << (7 - (i & 7)))) != 0 {
+        15
+    } else {
+        0
+    }
 }
 
 /*
- * render_frame - map 1-bit pixels to ASCII and redraw the terminal region
- *
- * Realtime path: no pre-baked character frames; glyphs are chosen here.
+ * render_frame - build one ANSI+ASCII frame and write it in a single syscall
  */
-fn render_frame(bits: &[u8], w: usize, h: usize, line: &mut [u8]) {
-    let _ = sys::debug_write("\x1b[H");
+fn render_frame(pack: &[u8], w: usize, h: usize, bits: usize, out: &mut [u8]) -> usize {
+    let mut n = 0usize;
+    /* Cursor home (no full clear — cheaper, less flicker). */
+    out[n] = 0x1b;
+    out[n + 1] = b'[';
+    out[n + 2] = b'H';
+    n += 3;
     for y in 0..h {
-        let mut n = 0usize;
         for x in 0..w {
-            line[n] = if pixel(bits, y * w + x) { b'#' } else { b' ' };
+            let lv = level_at(pack, y * w + x, bits) as usize;
+            out[n] = RAMP[lv & 15];
             n += 1;
         }
-        line[n] = b'\n';
+        out[n] = b'\n';
         n += 1;
-        let _ = sys::debug_write(core::str::from_utf8(&line[..n]).unwrap_or("\n"));
     }
+    let _ = sys::debug_write(core::str::from_utf8(&out[..n]).unwrap_or(""));
+    n
 }
 
 fn quit_requested() -> bool {
@@ -123,6 +161,7 @@ fn wait_until(deadline_ms: u64) {
         if quit_requested() {
             return;
         }
+        /* Short busy-poll then yield — keeps pacing tight under TCG. */
         let _ = sys::yield_now();
     }
 }
@@ -132,24 +171,23 @@ pub extern "C" fn main() {
     let hdr = match parse_header(FRAMES) {
         Some(h) => h,
         None => {
-            let _ = sys::debug_write("badapple: bad frames.ba01\n");
+            let _ = sys::debug_write("badapple: bad frames blob\n");
             sys::exit(1);
         }
     };
 
-    let _ = sys::debug_write("badapple: realtime ASCII (q=quit)\n");
+    let _ = sys::debug_write("badapple: realtime ASCII 16-level (q=quit)\n");
     let _ = sys::debug_write("\x1b[2J\x1b[H");
 
-    let packed_len = (hdr.width * hdr.height + 7) / 8;
+    let plen = packed_len(hdr.width, hdr.height, hdr.bits);
     let mut prev = [0u8; MAX_PACKED];
     let mut cur = [0u8; MAX_PACKED];
     let mut xor_buf = [0u8; MAX_PACKED];
-    let mut line = [0u8; 128];
+    let mut frame = [0u8; MAX_FRAME_CHARS];
 
     let period_ms = 1000u64 / hdr.fps as u64;
     let mut off = 0usize;
-    let start = sys::time_ms();
-    let mut deadline = start;
+    let mut deadline = sys::time_ms();
 
     for _fi in 0..hdr.nframes {
         if quit_requested() {
@@ -167,22 +205,22 @@ pub extern "C" fn main() {
         }
         let enc = &hdr.body[off..off + enc_len];
         off += enc_len;
-        if !rle_decode(enc, &mut xor_buf[..packed_len]) {
+        if !rle_decode(enc, &mut xor_buf[..plen]) {
             let _ = sys::debug_write("badapple: rle error\n");
             break;
         }
-        for i in 0..packed_len {
+        for i in 0..plen {
             cur[i] = prev[i] ^ xor_buf[i];
         }
-        render_frame(&cur[..packed_len], hdr.width, hdr.height, &mut line);
-        prev[..packed_len].copy_from_slice(&cur[..packed_len]);
+        render_frame(&cur[..plen], hdr.width, hdr.height, hdr.bits, &mut frame);
+        prev[..plen].copy_from_slice(&cur[..plen]);
 
         deadline = deadline.wrapping_add(period_ms);
-        /* If we fell behind (serial slow), skip waiting rather than snowball. */
         let now = sys::time_ms();
-        if now + 5 < deadline {
+        if now + 2 < deadline {
             wait_until(deadline);
-        } else {
+        } else if now > deadline.wrapping_add(period_ms) {
+            /* Severely behind: drop catch-up waits. */
             deadline = now;
         }
     }
