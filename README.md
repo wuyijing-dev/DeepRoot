@@ -3,7 +3,7 @@
 Educational Rust microkernel for RISC-V.
 
 Repository: https://github.com/wuyijing-dev/DeepRoot  
-Version: see [`VERSION`](VERSION) — current **0.7.3**
+Version: see [`VERSION`](VERSION) — current **0.8.2**
 
 ## Quick start
 

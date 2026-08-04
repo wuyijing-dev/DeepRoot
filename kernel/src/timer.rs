@@ -11,8 +11,6 @@ const SBI_TIME_SET_TIMER: usize = 0;
 
 /// Supervisor timer interrupt pending / enable bit in `sip`/`sie`.
 pub const SIE_STIE: usize = 1 << 5;
-/// Global interrupt enable in `sstatus`.
-pub const SSTATUS_SIE: usize = 1 << 1;
 
 /// Default quantum ≈ 10 ms at 10 MHz.
 pub const TICKS_PER_SLICE: u64 = 100_000;

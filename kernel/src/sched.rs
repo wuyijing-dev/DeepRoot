@@ -9,7 +9,6 @@ use crate::mm::frame;
 use crate::mm::layout::{PhysAddr, PAGE_SIZE};
 use crate::mm::sv39;
 use crate::println;
-use crate::syscall;
 use crate::timer;
 
 pub const MAX_UTASKS: usize = 8;
@@ -50,6 +49,7 @@ pub enum TaskState {
 pub enum BlockReason {
     None,
     IpcRecv { badge: u64 },
+    IpcCall { badge: u64 },
 }
 
 /// Thread Control Block.
@@ -114,11 +114,59 @@ pub fn set_current_tf(tf: *mut TrapFrame) {
 
 /*
  * set_syscall_return - write a0 for the task that issued the ecall
+ *
+ * Parked IPC callers (IpcCall) keep a0 until complete_call delivers the reply.
  */
 pub fn set_syscall_return(task_id: usize, ret: isize) {
     let s = inner();
     if task_id < MAX_UTASKS && s.tasks[task_id].state != TaskState::Empty {
+        if matches!(s.tasks[task_id].block, BlockReason::IpcCall { .. }) {
+            return;
+        }
         s.tasks[task_id].tf.x[10] = ret as usize;
+    }
+}
+
+pub fn find_sched_id(cap: TaskId) -> Option<usize> {
+    let s = inner();
+    s.tasks
+        .iter()
+        .position(|t| t.state != TaskState::Empty && t.cap_task == cap)
+}
+
+/*
+ * complete_call - deliver reply label to a blocked IPC caller and Ready it
+ */
+pub fn complete_call(sched_id: usize, ret: isize) {
+    let s = inner();
+    if sched_id >= MAX_UTASKS {
+        return;
+    }
+    s.tasks[sched_id].tf.x[10] = ret as usize;
+    if s.tasks[sched_id].state == TaskState::Blocked {
+        s.tasks[sched_id].state = TaskState::Ready;
+        s.tasks[sched_id].block = BlockReason::None;
+    }
+}
+
+/*
+ * abort_ipc_waiters - wake recv/call waiters on @badge with an error in a0
+ */
+pub fn abort_ipc_waiters(badge: u64, err: isize) {
+    let s = inner();
+    for t in s.tasks.iter_mut() {
+        if t.state != TaskState::Blocked {
+            continue;
+        }
+        let match_b = match t.block {
+            BlockReason::IpcRecv { badge: b } | BlockReason::IpcCall { badge: b } => b == badge,
+            BlockReason::None => false,
+        };
+        if match_b {
+            t.tf.x[10] = err as usize;
+            t.state = TaskState::Ready;
+            t.block = BlockReason::None;
+        }
     }
 }
 
@@ -235,7 +283,21 @@ pub fn mark_zombie(code: usize) {
 }
 
 /*
- * block_current_ipc - mark current task Blocked waiting for endpoint badge
+ * kill_current - mark current U-task Zombie after a fatal trap
+ */
+pub fn kill_current(reason: &'static str) {
+    let s = inner();
+    let id = s.current;
+    if s.tasks[id].is_idle {
+        return;
+    }
+    println!("sched: {} killed ({})", s.tasks[id].name, reason);
+    s.tasks[id].state = TaskState::Zombie;
+    s.tasks[id].block = BlockReason::None;
+}
+
+/*
+ * block_current_ipc - mark current task Blocked waiting to recv on @badge
  */
 pub fn block_current_ipc(badge: u64) {
     let s = inner();
@@ -248,7 +310,20 @@ pub fn block_current_ipc(badge: u64) {
 }
 
 /*
- * wakeup_ipc - Ready any task blocked on @badge
+ * block_current_call - mark current task Blocked waiting for a reply on @badge
+ */
+pub fn block_current_call(badge: u64) {
+    let s = inner();
+    let id = s.current;
+    if s.tasks[id].is_idle {
+        return;
+    }
+    s.tasks[id].state = TaskState::Blocked;
+    s.tasks[id].block = BlockReason::IpcCall { badge };
+}
+
+/*
+ * wakeup_ipc - Ready any task blocked in recv on @badge
  */
 pub fn wakeup_ipc(badge: u64) {
     let s = inner();
@@ -318,10 +393,6 @@ pub fn preempt() {
         );
     }
     let _ = yield_now();
-}
-
-pub fn preempt_count() -> u64 {
-    inner().preempt_count
 }
 
 pub fn enter_first(id: usize) -> ! {
@@ -406,6 +477,7 @@ pub fn handle_syscall(
     a3: u64,
 ) -> isize {
     use deeproot_abi::syscall::*;
+    use deeproot_abi::{CapReason, CapType, LedgerKind};
     let current = current_cap_task();
     match nr {
         SYS_YIELD => {
@@ -416,11 +488,6 @@ pub fn handle_syscall(
                     i != cur && t.state == TaskState::Ready
                 });
                 if !any_ready {
-                    /*
-                     * Keep SIE clear: trap_vector still uses sscratch → U
-                     * TrapFrame, so an S-mode timer IRQ would clobber it.
-                     * WFI still retires when STIP is pending (sie.STIE set).
-                     */
                     unsafe {
                         core::arch::asm!("wfi", options(nomem, nostack));
                     }
@@ -444,7 +511,7 @@ pub fn handle_syscall(
             let ptr = a0 as usize;
             let len = a1 as usize;
             if len > 4096 {
-                return -1;
+                return ERR_GENERIC;
             }
             let slice = unsafe { core::slice::from_raw_parts(ptr as *const u8, len) };
             if let Ok(s) = core::str::from_utf8(slice) {
@@ -452,43 +519,141 @@ pub fn handle_syscall(
             }
             len as isize
         }
+        SYS_LEDGER_DUMP => {
+            crate::ledger::LEDGER.dump_to_console();
+            0
+        }
+        SYS_CAP_MINT => {
+            let cs = match tasks.cspace_mut(current) {
+                Some(c) => c,
+                None => return ERR_GENERIC,
+            };
+            let cap_ty = match a2 as u8 {
+                x if x == CapType::Untyped as u8 => CapType::Untyped,
+                x if x == CapType::Endpoint as u8 => CapType::Endpoint,
+                x if x == CapType::Frame as u8 => CapType::Frame,
+                x if x == CapType::CNode as u8 => CapType::CNode,
+                _ => return ERR_GENERIC,
+            };
+            match cs.mint_badged(a0 as usize, a1 as u32, cap_ty, a3, CapReason::Mint) {
+                Ok(slot) => {
+                    crate::ledger::LEDGER.record(
+                        LedgerKind::CapMint,
+                        a0 as u32,
+                        slot as u32,
+                        a1 as u32,
+                    );
+                    slot as isize
+                }
+                Err(_) => ERR_GENERIC,
+            }
+        }
+        SYS_CAP_DERIVE => {
+            let cs = match tasks.cspace_mut(current) {
+                Some(c) => c,
+                None => return ERR_GENERIC,
+            };
+            match cs.derive(a0 as usize, a1 as u32, a2, CapReason::Derive) {
+                Ok(slot) => {
+                    crate::ledger::LEDGER.record(
+                        LedgerKind::CapDerive,
+                        a0 as u32,
+                        slot as u32,
+                        a1 as u32,
+                    );
+                    slot as isize
+                }
+                Err(_) => ERR_GENERIC,
+            }
+        }
+        SYS_CAP_REVOKE => {
+            let slot = a0 as usize;
+            let badge = tasks
+                .cspace(current)
+                .and_then(|cs| cs.get(slot))
+                .filter(|s| s.cap_type == CapType::Endpoint)
+                .map(|s| s.badge);
+            let cs = match tasks.cspace_mut(current) {
+                Some(c) => c,
+                None => return ERR_GENERIC,
+            };
+            match cs.revoke(slot) {
+                Ok(n) => {
+                    if let Some(b) = badge {
+                        eps.clear_badge(b);
+                        abort_ipc_waiters(b, ERR_GENERIC);
+                    }
+                    crate::ledger::LEDGER.record(
+                        LedgerKind::CapRevoke,
+                        slot as u32,
+                        n as u32,
+                        0,
+                    );
+                    n as isize
+                }
+                Err(_) => ERR_GENERIC,
+            }
+        }
         SYS_IPC_CALL => {
             let mut msg = deeproot_abi::IpcMessage::with_label(a1);
             msg.words[0] = a2;
+            let badge = match tasks.cspace(current).and_then(|cs| cs.get(a0 as usize)) {
+                Some(s) if s.cap_type == CapType::Endpoint => s.badge,
+                _ => return ERR_GENERIC,
+            };
             match crate::ipc::call_from_cap(tasks, eps, current, a0 as usize, msg) {
                 Ok(()) => {
-                    /* Wake servers blocked in recv on this endpoint. */
-                    if let Some(cs) = tasks.cspace(current) {
-                        if let Some(slot) = cs.get(a0 as usize) {
-                            wakeup_ipc(slot.badge);
+                    wakeup_ipc(badge);
+                    match eps.take_reply(current, badge) {
+                        Ok(m) => m.label as isize,
+                        Err(crate::ipc::IpcError::Empty) => {
+                            block_current_call(badge);
+                            let _ = yield_now();
+                            0
                         }
+                        Err(_) => ERR_GENERIC,
                     }
-                    0
                 }
-                Err(_) => -1,
+                Err(_) => ERR_GENERIC,
             }
         }
         SYS_IPC_RECV => {
             let badge = a0;
             let cs = match tasks.cspace_mut(current) {
                 Some(c) => c,
-                None => return -1,
+                None => return ERR_GENERIC,
             };
             match eps.recv(current, badge, cs) {
                 Ok(m) => m.label as isize,
                 Err(crate::ipc::IpcError::Empty) => {
-                    /*
-                     * Park this task and switch; user retries on -11 (EAGAIN).
-                     * Cannot re-recv here: yield_now only flips `current`, it
-                     * does not run the sender until restore_user().
-                     */
                     block_current_ipc(badge);
                     let _ = yield_now();
-                    -11
+                    ERR_AGAIN
                 }
-                Err(_) => -1,
+                Err(_) => ERR_GENERIC,
             }
         }
-        _ => syscall::dispatch(tasks, eps, current, nr, a0, a1, a2, a3),
+        SYS_IPC_REPLY => {
+            let badge = a0;
+            let mut msg = deeproot_abi::IpcMessage::with_label(a1);
+            msg.words[0] = a2;
+            let caller = match eps.caller_of(badge) {
+                Some(c) => c,
+                None => return ERR_GENERIC,
+            };
+            match eps.reply(current, badge, msg) {
+                Ok(()) => match eps.take_reply(caller, badge) {
+                    Ok(m) => {
+                        if let Some(sid) = find_sched_id(caller) {
+                            complete_call(sid, m.label as isize);
+                        }
+                        0
+                    }
+                    Err(_) => ERR_GENERIC,
+                },
+                Err(_) => ERR_GENERIC,
+            }
+        }
+        _ => ERR_NOSYS,
     }
 }

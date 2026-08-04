@@ -8,6 +8,7 @@ use crate::sched::{self, TrapFrame};
 use deeproot_abi::LedgerKind;
 
 const EXC_ECALL_U: usize = 8;
+const EXC_ILLEGAL_INSN: usize = 2;
 const EXC_INSTRUCTION_PAGE_FAULT: usize = 12;
 const EXC_LOAD_PAGE_FAULT: usize = 13;
 const EXC_STORE_PAGE_FAULT: usize = 15;
@@ -167,11 +168,37 @@ pub extern "C" fn trap_handler() {
             tf.x[1],
             tf.x[2],
         );
-    } else {
+        sched::kill_current("page fault");
+        if !sched::yield_now() {
+            println!("trap: no runnable tasks after fault — hanging");
+            loop {
+                crate::sbi::hart_suspend_idle();
+            }
+        }
+        sched::restore_user();
+    }
+
+    if !is_interrupt && code == EXC_ILLEGAL_INSN {
         println!(
-            "trap: scause={:#x} sepc={:#x} stval={:#x} (unhandled)",
+            "trap: illegal insn scause={:#x} sepc={:#x} stval={:#x}",
             scause, tf.sepc, stval
         );
+        sched::kill_current("illegal insn");
+        if !sched::yield_now() {
+            loop {
+                crate::sbi::hart_suspend_idle();
+            }
+        }
+        sched::restore_user();
+    }
+
+    println!(
+        "trap: scause={:#x} sepc={:#x} stval={:#x} (unhandled)",
+        scause, tf.sepc, stval
+    );
+    sched::kill_current("unhandled trap");
+    if sched::yield_now() {
+        sched::restore_user();
     }
 }
 

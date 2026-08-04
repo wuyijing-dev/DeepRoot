@@ -145,6 +145,6 @@ pub fn page_fault_hint(stval: usize) -> &'static str {
     if stval == 0 {
         "null pointer?"
     } else {
-        "unmapped VA — check identity range / user AS stubs"
+        "unmapped VA — check identity map / user mappings"
     }
 }

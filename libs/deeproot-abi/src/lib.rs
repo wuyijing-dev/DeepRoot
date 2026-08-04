@@ -1,8 +1,10 @@
 //! Shared ABI between DeepRoot kernel and userspace.
 //!
+//! **ABI freeze candidate (0.8.x → 1.0.0):** syscall numbers, `IpcMessage`,
+//! `CapView` / `CapType` / rights, and ledger event layouts are stable.
+//! Breaking changes require MAJOR bump after 1.0.0; 1.1+ is additive only.
+//!
 //! Keep this crate `no_std` and dependency-light so both sides can link it.
-//! Numbers here are part of the public ABI — bump MAJOR in VERSION after 1.0
-//! if you break them.
 
 #![no_std]
 

@@ -1,4 +1,4 @@
-//! init — root userspace server (0.5.1).
+//! init — root userspace server.
 
 #![no_std]
 #![no_main]
@@ -31,16 +31,14 @@ _start:
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write("init: root server online\n");
+    /* SYS_IPC_CALL blocks until the server replies. */
     let rc = sys::ipc_call(0, 0x5049, 1);
-    let _ = sys::yield_now();
     let _ = sys::debug_write("init: ping call done\n");
-    if rc == 0 {
+    if rc >= 0 {
         let _ = sys::debug_write("init: ping accepted\n");
     }
     let _ = sys::ipc_call(1, 0xC045, 0);
-    let _ = sys::yield_now();
     let _ = sys::debug_write("init: console notified\n");
-    let _ = sys::yield_now();
     sys::exit(0);
 }
 

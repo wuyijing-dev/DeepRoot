@@ -183,6 +183,26 @@ impl EndpointTable {
         );
         Ok(msg)
     }
+
+    /*
+     * caller_of - outstanding client TaskId for @badge, if any
+     */
+    pub fn caller_of(&self, badge: u64) -> Option<TaskId> {
+        let idx = self.find_badge(badge)?;
+        self.eps[idx].caller_task
+    }
+
+    /*
+     * clear_badge - drop in-flight messages when an Endpoint cap is revoked
+     */
+    pub fn clear_badge(&mut self, badge: u64) {
+        if let Some(idx) = self.find_badge(badge) {
+            let ep = &mut self.eps[idx];
+            ep.pending = None;
+            ep.reply = None;
+            ep.caller_task = None;
+        }
+    }
 }
 
 impl Default for EndpointTable {
