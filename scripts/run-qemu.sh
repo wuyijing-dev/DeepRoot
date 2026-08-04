@@ -32,7 +32,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
     >"${LOG}" 2>&1
   set -e
   ok=1
-  for needle in "canopy ready" "ping: pong" "sched: init exited"; do
+  for needle in "DeepRoot microkernel 1.0.0" "canopy ready" "ping: pong" "sched: init exited"; do
     if ! grep -q "${needle}" "${LOG}"; then
       echo "smoke: FAIL missing: ${needle}"
       ok=0

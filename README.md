@@ -1,9 +1,9 @@
 # DeepRoot
 
-Educational Rust microkernel for RISC-V.
+Rust capability microkernel for RISC-V.
 
 Repository: https://github.com/wuyijing-dev/DeepRoot  
-Version: see [`VERSION`](VERSION) — current **0.9.2** (`1.0.0-rc3`)
+Version: see [`VERSION`](VERSION) — current **1.0.0**
 
 ## Quick start
 
@@ -16,6 +16,7 @@ rustup target add riscv64gc-unknown-none-elf
 Requirements: Rust stable, `qemu-system-riscv64`.
 
 ABI numbers live in `libs/deeproot-abi` and are frozen for 1.0 (additive only in 1.1+).
+
 ## Layout
 
 ```
