@@ -10,7 +10,9 @@ pub struct TaskId(pub usize);
 
 struct Task {
     alive: bool,
+    #[allow(dead_code)]
     name: [u8; NAME_LEN],
+    #[allow(dead_code)]
     name_len: usize,
     cspace: CapSpace,
 }
@@ -56,6 +58,7 @@ impl TaskTable {
         Some(TaskId(idx))
     }
 
+    #[allow(dead_code)]
     pub fn name(&self, id: TaskId) -> &str {
         let t = &self.tasks[id.0];
         core::str::from_utf8(&t.name[..t.name_len]).unwrap_or("?")
@@ -72,6 +75,7 @@ impl TaskTable {
             .map(|t| &mut t.cspace)
     }
 
+    #[allow(dead_code)]
     pub fn alive_count(&self) -> usize {
         self.tasks.iter().filter(|t| t.alive).count()
     }

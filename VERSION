@@ -1,4 +1,4 @@
-0.8.2
+0.9.2
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -67,13 +67,15 @@
 # 0.7.2   run-qemu --smoke
 # 0.7.3   Roadmap freeze for 0.8 ABI work
 
-# ---------- 0.8.x / 0.9.x Stabilization ----------
-# 0.8.0   ABI freeze candidate (-rc path begins)
+# ---------- 0.8.x Stabilization ----------
+# 0.8.0   ABI freeze candidate
 # 0.8.1   Panic / trap: kill faulting U-task and reschedule
-# 0.8.2   Sync IPC call + endpoint revoke cleanup ← current
-# 0.9.0   1.0.0-rc1
-# 0.9.1   1.0.0-rc2
-# 0.9.2   1.0.0-rc3
+# 0.8.2   Sync IPC call + endpoint revoke cleanup
+
+# ---------- 0.9.x Release candidates (1.0.0-rcN) ----------
+# 0.9.0   1.0.0-rc1 — sync IPC + trap kill + CI smoke
+# 0.9.1   1.0.0-rc2 — warning cleanup
+# 0.9.2   1.0.0-rc3 — ABI freeze text ← current
 
 # ---------- 1.x Stable ----------
 # 1.0.0   Stable ABI + server set

@@ -58,9 +58,10 @@ pub struct UserTask {
     pub name: &'static str,
     pub cap_task: TaskId,
     pub tf: TrapFrame,
+    #[allow(dead_code)]
     pub stack_top: usize,
-    /// Dedicated kernel stack top (single-hart traps still use boot stack;
-    /// field reserved for multi-hart / nested IRQ work — 0.6.0 / 0.6.5).
+    /// Dedicated kernel stack top (reserved for multi-hart / nested IRQ).
+    #[allow(dead_code)]
     pub kstack_top: usize,
     pub block: BlockReason,
     pub is_idle: bool,

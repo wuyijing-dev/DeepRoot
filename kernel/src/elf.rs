@@ -44,7 +44,9 @@ struct Elf64Phdr {
 #[derive(Clone, Copy, Debug)]
 pub struct LoadedElf {
     pub entry: usize,
+    #[allow(dead_code)]
     pub load_base: usize,
+    #[allow(dead_code)]
     pub load_end: usize,
 }
 

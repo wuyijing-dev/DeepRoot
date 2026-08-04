@@ -5,5 +5,5 @@
 mod space;
 mod task;
 
-pub use space::{CapError, CapSlot, CapSpace, ProvenanceHop, CAP_SLOTS, PROVENANCE_DEPTH};
-pub use task::{TaskId, TaskTable, MAX_TASKS};
+pub use space::{CapError, CapSpace};
+pub use task::{TaskId, TaskTable};

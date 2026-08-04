@@ -9,6 +9,7 @@ pub const CAP_SLOTS: usize = 32;
 pub const PROVENANCE_DEPTH: usize = 4;
 
 #[derive(Clone, Copy, Debug)]
+#[allow(dead_code)]
 pub struct ProvenanceHop {
     pub parent: u16,
     pub reason: CapReason,
@@ -21,7 +22,9 @@ pub struct CapSlot {
     pub rights: u32,
     pub badge: u64,
     /// Direct parent slot for revoke subtree walks (`u16::MAX` = root).
+    #[allow(dead_code)]
     pub parent: u16,
+    #[allow(dead_code)]
     pub provenance: [Option<ProvenanceHop>; PROVENANCE_DEPTH],
 }
 
@@ -37,6 +40,7 @@ impl CapSlot {
         }
     }
 
+    #[allow(dead_code)]
     pub fn to_view(&self) -> CapView {
         let (reason, parent) = match self.provenance[0] {
             Some(h) => (h.reason as u16, h.parent),
@@ -57,6 +61,7 @@ impl CapSlot {
 #[derive(Debug, PartialEq, Eq)]
 pub enum CapError {
     NoSpace,
+    #[allow(dead_code)]
     BadIndex,
     BadRights,
     NotLive,
@@ -78,10 +83,12 @@ impl CapSpace {
         self.slots.get(index).filter(|s| s.live)
     }
 
+    #[allow(dead_code)]
     pub fn view(&self, index: usize) -> Option<CapView> {
         self.get(index).map(CapSlot::to_view)
     }
 
+    #[allow(dead_code)]
     pub fn live_count(&self) -> usize {
         self.slots.iter().filter(|s| s.live).count()
     }
@@ -129,6 +136,7 @@ impl CapSpace {
     /*
      * mint_root - create a root capability (no parent)
      */
+    #[allow(dead_code)]
     pub fn mint_root(
         &mut self,
         rights_mask: u32,
@@ -293,6 +301,7 @@ impl CapSpace {
     /*
      * has_rights - true if slot is live and contains all bits in @need
      */
+    #[allow(dead_code)]
     pub fn has_rights(&self, index: usize, need: u32) -> bool {
         self.get(index)
             .map(|s| s.rights & need == need)
