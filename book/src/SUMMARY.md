@@ -72,6 +72,9 @@
   - [1.8.1 解析器与 history](path/shell18/01-parser-history.md)
   - [1.8.2 env / cd / 后台](path/shell18/02-env-cd-bg.md)
   - [1.8.3 管道与重定向](path/shell18/03-pipe-redir.md)
+- [1.9 文件系统加深](path/13-fs19.md)
+  - [1.9.1 VFS 树与路径](path/fs19/01-vfs-tree.md)
+  - [1.9.2 syscall 与 shell 内建](path/fs19/02-syscalls-shell.md)
 
 # 动手玩
 

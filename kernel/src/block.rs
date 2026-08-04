@@ -138,13 +138,13 @@ fn format_drfs() {
     let files: &[(&str, &[u8])] = &[
         (
             "block.txt",
-            b"DeepRoot 1.6.1 - DRFS on virtio-blk; board DT is platform/qemu-virt/deeproot.dts.\n",
+            b"DeepRoot 1.9.0 - DRFS on virtio-blk; dirs live in the in-RAM VFS (mkdir).\n",
         ),
         (
             "from-block",
             b"cat from-block  # path served via block::read\n",
         ),
-        ("blk-version", b"1.6.1\n"),
+        ("blk-version", b"1.9.0\n"),
     ];
 
     put_bytes(0, MAGIC);

@@ -13,6 +13,7 @@ mod elf;
 mod fdt;
 mod fs;
 mod ipc;
+mod vfs;
 mod ledger;
 mod mm;
 mod sbi;
@@ -69,6 +70,7 @@ pub extern "C" fn kernel_main(hartid: usize, dtb_pa: usize) -> ! {
     smp::boot_secondaries(fdt::cpu_count().max(2));
 
     block::init();
+    fs::init();
     timer::init(hartid);
     sbi::enable_supervisor_soft_irq();
     servers::bring_up();

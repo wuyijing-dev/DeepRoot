@@ -1,29 +1,26 @@
-//! Teaching ramfs (1.3) + block-backed text + scratch overlay (1.8).
+//! Teaching filesystem facade (1.3–1.9).
 //!
-//! Embedded ELFs still come from `kernel/build.rs` via `include_bytes!`.
-//! Text files may also live on the DRFS image in `block` (ramdisk stand-in).
-//! Shell `ls` / `cat` see both; `run` / `SYS_EXEC` only load ELF from embed.
-//! `SYS_FS_WRITE` creates/updates small scratch text files in RAM.
-
-use core::cell::UnsafeCell;
-use core::sync::atomic::{AtomicUsize, Ordering};
+//! Layers:
+//! - Embed ramfs ELFs/text (build-time) — root names only
+//! - In-RAM VFS tree (1.9) — directories + nested files / scratch
+//! - Block DRFS (1.6) — flat on-disk text at root
 
 use crate::block;
 use crate::println;
-use crate::sync::SpinLock;
+use crate::vfs::{self, Kind, ROOT};
+
+static HELLO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-hello"));
+static BADAPPLE_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-badapple"));
 
 struct File {
     name: &'static str,
     data: &'static [u8],
 }
 
-static HELLO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-hello"));
-static BADAPPLE_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-badapple"));
-
 static FILES: &[File] = &[
     File {
         name: "readme.txt",
-        data: b"DeepRoot ramfs - text + ELF. Try: run hello / cat block.txt\n",
+        data: b"DeepRoot 1.9 - dirs via mkdir; try: mkdir demo; cd demo; echo hi > a.txt\n",
     },
     File {
         name: "hello.txt",
@@ -31,7 +28,7 @@ static FILES: &[File] = &[
     },
     File {
         name: "version",
-        data: b"1.8.0\n",
+        data: b"1.9.0\n",
     },
     File {
         name: "hello",
@@ -43,62 +40,37 @@ static FILES: &[File] = &[
     },
 ];
 
-const MAX_SCRATCH: usize = 8;
-const SCRATCH_NAME: usize = 24;
-const SCRATCH_DATA: usize = 256;
-
-struct Scratch {
-    used: bool,
-    name_len: usize,
-    name: [u8; SCRATCH_NAME],
-    data_len: usize,
-    data: [u8; SCRATCH_DATA],
+pub fn init() {
+    vfs::init();
+    println!("vfs: in-RAM tree ready (mkdir / nested files)");
 }
 
-impl Scratch {
-    const fn empty() -> Self {
-        Self {
-            used: false,
-            name_len: 0,
-            name: [0; SCRATCH_NAME],
-            data_len: 0,
-            data: [0; SCRATCH_DATA],
-        }
-    }
-
-    fn name_str(&self) -> &str {
-        core::str::from_utf8(&self.name[..self.name_len]).unwrap_or("")
+fn basename<'a>(path: &'a str) -> &'a str {
+    let p = path.trim_matches('/');
+    match p.rfind('/') {
+        Some(i) => &p[i + 1..],
+        None => p,
     }
 }
 
-struct ScratchTable {
-    slots: [Scratch; MAX_SCRATCH],
-}
-
-struct ScratchCell(UnsafeCell<ScratchTable>);
-unsafe impl Sync for ScratchCell {}
-
-static SCRATCH_LOCK: SpinLock = SpinLock::new();
-static SCRATCHES: ScratchCell = ScratchCell(UnsafeCell::new(ScratchTable {
-    slots: [const { Scratch::empty() }; MAX_SCRATCH],
-}));
-static SCRATCH_COUNT: AtomicUsize = AtomicUsize::new(0);
-
-fn scratches() -> &'static mut ScratchTable {
-    unsafe { &mut *SCRATCHES.0.get() }
-}
-
-fn normalize(path: &str) -> &str {
-    path.trim_start_matches('/')
+fn is_root_level(path: &str) -> bool {
+    let p = path.trim_start_matches('/');
+    !p.is_empty() && !p.contains('/')
 }
 
 /*
- * lookup - resolve an embedded ramfs path to (name, bytes)
- *
- * Used by SYS_EXEC. Block-backed / scratch text files are not returned here.
+ * lookup - embed ELF/text by root basename (SYS_EXEC)
  */
 pub fn lookup(path: &str) -> Option<(&'static str, &'static [u8])> {
-    let name = normalize(path);
+    let name = basename(path);
+    if name.is_empty() {
+        return None;
+    }
+    /* Only allow embed at root path like "hello" or "/hello". */
+    let rest = path.trim_start_matches('/');
+    if rest.contains('/') {
+        return None;
+    }
     for f in FILES {
         if f.name == name {
             return Some((f.name, f.data));
@@ -107,96 +79,119 @@ pub fn lookup(path: &str) -> Option<(&'static str, &'static [u8])> {
     None
 }
 
-fn scratch_find(name: &str) -> Option<usize> {
-    let t = scratches();
-    t.slots.iter().position(|s| s.used && s.name_str() == name)
+pub fn mkdir(cwd: usize, path: &str) -> bool {
+    if path.is_empty() || path == "/" {
+        return false;
+    }
+    /* Refuse clobbering embed names at root. */
+    if is_root_level(path) && lookup(path).is_some() {
+        return false;
+    }
+    vfs::mkdir(cwd, path)
+}
+
+pub fn rmdir(cwd: usize, path: &str) -> bool {
+    vfs::rmdir(cwd, path)
+}
+
+pub fn unlink(cwd: usize, path: &str) -> bool {
+    if lookup(path).is_some() {
+        return false;
+    }
+    vfs::unlink(cwd, path)
+}
+
+pub fn chdir(cwd: usize, path: &str) -> Option<usize> {
+    if path.is_empty() {
+        return Some(ROOT);
+    }
+    vfs::chdir(cwd, path)
+}
+
+pub fn getcwd(cwd: usize, out: &mut [u8]) -> usize {
+    vfs::getcwd(cwd, out)
 }
 
 /*
- * write_scratch - create or overwrite a small text file for shell `>`
+ * write_path - create/overwrite a VFS file (supports nested paths)
  */
+pub fn write_path(cwd: usize, path: &str, data: &[u8]) -> bool {
+    if lookup(path).is_some() {
+        return false;
+    }
+    vfs::write_file(cwd, path, data)
+}
+
+/// Compat for 1.8 callers: write at cwd-relative path.
+#[allow(dead_code)]
 pub fn write_scratch(path: &str, data: &[u8]) -> bool {
-    let name = normalize(path);
-    if name.is_empty() || name.len() >= SCRATCH_NAME {
-        return false;
-    }
-    if name.contains('/') || name.contains("..") {
-        return false;
-    }
-    /* Do not clobber embedded ELF names. */
-    if lookup(name).is_some() {
-        return false;
-    }
-    let ncopy = data.len().min(SCRATCH_DATA);
-    let _g = SCRATCH_LOCK.lock();
-    let t = scratches();
-    let idx = if let Some(i) = scratch_find(name) {
-        i
-    } else {
-        match t.slots.iter().position(|s| !s.used) {
-            Some(i) => {
-                SCRATCH_COUNT.fetch_add(1, Ordering::Relaxed);
-                i
+    write_path(ROOT, path, data)
+}
+
+pub fn list_at(cwd: usize, path: Option<&str>) {
+    let dir = match path {
+        None | Some("") => cwd,
+        Some(p) => match vfs::resolve(cwd, p) {
+            Some((idx, Kind::Dir)) => idx,
+            Some((_, Kind::File)) => {
+                println!("fs: not a directory");
+                return;
             }
-            None => return false,
-        }
+            None => {
+                /* Allow listing "/" even if only embeds — use ROOT. */
+                if p == "/" {
+                    ROOT
+                } else {
+                    println!("fs: no such directory '{}'", p);
+                    return;
+                }
+            }
+        },
     };
-    let s = &mut t.slots[idx];
-    s.used = true;
-    s.name_len = name.len();
-    s.name[..name.len()].copy_from_slice(name.as_bytes());
-    s.data_len = ncopy;
-    s.data[..ncopy].copy_from_slice(&data[..ncopy]);
-    true
-}
 
-pub fn list() {
-    println!("fs: ramfs /");
-    for f in FILES {
-        let kind = if f.data.len() >= 4 && &f.data[..4] == b"\x7fELF" {
-            "elf"
-        } else {
-            "text"
-        };
-        println!("  {} ({} bytes, {})", f.name, f.data.len(), kind);
-    }
+    let mut label = [0u8; 96];
+    let ln = vfs::getcwd(dir, &mut label);
+    let label_s = core::str::from_utf8(&label[..ln]).unwrap_or("/?");
+    println!("fs: {}", label_s);
 
-    {
-        let _g = SCRATCH_LOCK.lock();
-        let t = scratches();
-        for s in t.slots.iter() {
-            if s.used {
-                println!(
-                    "  {} ({} bytes, text, scratch)",
-                    s.name_str(),
-                    s.data_len
-                );
+    if dir == ROOT {
+        for f in FILES {
+            let kind = if f.data.len() >= 4 && &f.data[..4] == b"\x7fELF" {
+                "elf"
+            } else {
+                "text"
+            };
+            println!("  {} ({} bytes, {}, embed)", f.name, f.data.len(), kind);
+        }
+        if block::ready() {
+            let n = block::file_count();
+            for i in 0..n {
+                if let Some(ent) = block::dirent(i) {
+                    let kind = if ent.is_text() { "text" } else { "bin" };
+                    println!(
+                        "  {} ({} bytes, {}, on-disk)",
+                        ent.name_str(),
+                        ent.length,
+                        kind
+                    );
+                }
             }
         }
     }
 
-    if !block::ready() {
-        return;
-    }
-    println!("fs: block / (DRFS)");
-    let n = block::file_count();
-    for i in 0..n {
-        if let Some(ent) = block::dirent(i) {
-            let kind = if ent.is_text() { "text" } else { "bin" };
-            println!(
-                "  {} ({} bytes, {}, on-disk)",
-                ent.name_str(),
-                ent.length,
-                kind
-            );
-        }
-    }
+    vfs::list_dir(dir, |name, kind, size| match kind {
+        Kind::Dir => println!("  {}/", name),
+        Kind::File => println!("  {} ({} bytes, vfs)", name, size),
+    });
 }
 
-pub fn cat(path: &str) -> bool {
-    let name = normalize(path);
+#[allow(dead_code)]
+pub fn list() {
+    list_at(ROOT, Some("/"));
+}
 
-    if let Some((fname, data)) = lookup(name) {
+pub fn cat_at(cwd: usize, path: &str) -> bool {
+    if let Some((fname, data)) = lookup(path) {
         if data.len() >= 4 && &data[..4] == b"\x7fELF" {
             println!(
                 "fs: '{}' is ELF ({} bytes) — use: run {}",
@@ -214,37 +209,43 @@ pub fn cat(path: &str) -> bool {
         return true;
     }
 
-    {
-        let _g = SCRATCH_LOCK.lock();
-        if let Some(i) = scratch_find(name) {
-            let s = &scratches().slots[i];
-            if let Ok(text) = core::str::from_utf8(&s.data[..s.data_len]) {
-                crate::console::_print(core::format_args!("{}", text));
+    let mut buf = [0u8; FILE_CAP];
+    if let Some(n) = vfs::read_file(cwd, path, &mut buf) {
+        if let Ok(s) = core::str::from_utf8(&buf[..n]) {
+            crate::console::_print(core::format_args!("{}", s));
+        }
+        return true;
+    }
+
+    /* DRFS only for root-level basenames. */
+    if is_root_level(path) {
+        let name = basename(path);
+        let mut bbuf = [0u8; 512];
+        match block::lookup(name, &mut bbuf) {
+            Some((nread, total, is_text)) => {
+                if !is_text {
+                    println!("fs: '{}' binary on block ({} bytes)", name, total);
+                    return true;
+                }
+                if let Ok(s) = core::str::from_utf8(&bbuf[..nread]) {
+                    crate::console::_print(core::format_args!("{}", s));
+                    if nread < total {
+                        println!("fs: … truncated ({} of {} bytes)", nread, total);
+                    }
+                }
+                return true;
             }
-            return true;
+            None => {}
         }
     }
 
-    let mut buf = [0u8; 512];
-    match block::lookup(name, &mut buf) {
-        Some((nread, total, is_text)) => {
-            if !is_text {
-                println!("fs: '{}' binary on block ({} bytes)", name, total);
-                return true;
-            }
-            if let Ok(s) = core::str::from_utf8(&buf[..nread]) {
-                crate::console::_print(core::format_args!("{}", s));
-                if nread < total {
-                    println!("fs: … truncated ({} of {} bytes)", nread, total);
-                }
-            } else {
-                println!("fs: '{}' non-utf8 on block ({} bytes)", name, total);
-            }
-            true
-        }
-        None => {
-            println!("fs: no such file '{}'", name);
-            false
-        }
-    }
+    println!("fs: no such file '{}'", path);
+    false
+}
+
+const FILE_CAP: usize = 256;
+
+#[allow(dead_code)]
+pub fn cat(path: &str) -> bool {
+    cat_at(ROOT, path)
 }

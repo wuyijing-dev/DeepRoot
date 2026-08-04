@@ -1,4 +1,4 @@
-1.8.0
+1.9.0
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -253,7 +253,7 @@
 #   W5  Smoke: documented command set + short script with a pipe example
 #
 # Releases:
-# 1.8.0   Richer shell + simple pipes/redirection ← current
+# 1.8.0   Richer shell + simple pipes/redirection
 # 1.8.y   Parser / builtin fixes only
 #
 # Out of scope for 1.8: POSIX conditionals/loops/functions; importing bash source.
@@ -273,7 +273,7 @@
 #   W5  Smoke + docs for the FS surface landed so far; more W* as needed in 1.9.y
 #
 # Releases:
-# 1.9.0   First FS-depth slice (paths + mkdir/list dirs or equivalent) — next
+# 1.9.0   First FS-depth slice (in-RAM VFS dirs + mkdir/cd + shell) ← current
 # 1.9.y   Continue FS depth / durability / fd polish without bumping to 1.10
 #
 # Out of scope for 1.9: full POSIX VFS, many FS types, networked FS, framebuffer.
@@ -361,8 +361,8 @@
 # [1.5]  FDT discovers platform devices (not only memory@reg)
 # [1.6]  virtio-blk behind teaching FS path
 # [1.7]  Multi-hart scheduling on QEMU virt
-# [1.8]  Richer native shell (argv/env/history/&/simple pipes) — no bash port ← current
-# [1.9]  Filesystem depth (dirs, durable writes, fds) — next; long 1.9.y
+# [1.8]  Richer native shell (argv/env/history/&/simple pipes) — no bash port
+# [1.9]  Filesystem depth (dirs, durable writes, fds) — current; long 1.9.y
 # [1.10] Loadable modules / dynamic servers
 # [1.11] More practical runtime utilities / I/O polish
 # [1.12] Framebuffer clear/draw + simple UI (deferred)

@@ -1,19 +1,21 @@
 # Shell 常用命令（详细手册）
 
 提示符：`deeproot>`  
-解析器在 `user/shell/src/main.rs`（**1.8**：引号、`$VAR`、history、`|` / `>` / `&`）。  
-完整说明见 [1.8 章](../path/12-shell18.md)。
+解析器在 `user/shell/src/main.rs`（**1.9**：目录 + kernel cwd；继承 1.8 引号/`$VAR`/history/`|`/`>`/`&`）。  
+目录说明见 [1.9 章](../path/13-fs19.md)；shell 语法见 [1.8 章](../path/12-shell18.md)。
 
 ## 1. 命令一览
 
 | 你输入 | 实际行为 | 底层 |
 |---|---|---|
 | `help` | 打印内置帮助 | 用户态 |
-| `ls` / `cat FILE` | 列目录 / 读文本（含 scratch） | `SYS_FS_LIST` / `CAT` |
+| `ls` / `ls DIR` | 列目录（embed + VFS + DRFS） | `SYS_FS_LIST` |
+| `cat FILE` | 读文本 | `SYS_FS_CAT` |
+| `mkdir` / `rmdir` / `rm` | 建/删目录、删 VFS 文件 | `SYS_FS_MKDIR`… |
 | `run ELF` / `hello` / `badapple` | 前台执行 ELF | `SYS_EXEC` + `WAIT` |
 | `echo ARGS` | 打印（支持 `$VAR`） | 用户态 |
 | `export K=V` / `env` | 环境变量 | shell 本地表 |
-| `pwd` / `cd DIR` | 打印/设置路径前缀 | shell 本地 cwd |
+| `pwd` / `cd DIR` | 打印/切换 **kernel cwd** | `SYS_GETCWD` / `CHDIR` |
 | `history` / ↑ | 历史 | 环形缓冲 + CSI |
 | `CMD &` | 后台 | `EXEC` 不 wait |
 | `A \| B` / `A > f` | 管道 / 重定向 | pipe + `FS_WRITE` |
@@ -42,10 +44,22 @@ deeproot> cat hello
 
 期望：
 
-- `ls` 先有 `fs: ramfs /`，再有 `fs: block /`（含 `block.txt` 等）  
-- `cat version` → `1.4.1`（embed）  
+- `ls` 打印当前目录（根上含 embed / VFS / DRFS 条目）  
+- `cat version` → `1.9.0`（embed）  
 - `cat block.txt` → 一段说明文字（DRFS / 块上）  
 - 对 `hello` 提示用 `run`，不要刷二进制  
+
+再试目录：
+
+```text
+deeproot> mkdir demo
+deeproot> cd demo
+deeproot> pwd
+deeproot> echo hi > note.txt
+deeproot> cat note.txt
+deeproot> cd /
+deeproot> ls demo
+```
 
 ### 练习 C：前台运行
 

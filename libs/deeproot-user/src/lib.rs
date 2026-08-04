@@ -46,6 +46,10 @@ pub mod sys {
         unsafe { ecall(SYS_FS_LIST, 0, 0, 0, 0) }
     }
 
+    pub fn fs_list_path(path: &[u8]) -> isize {
+        unsafe { ecall(SYS_FS_LIST, path.as_ptr() as usize, path.len(), 0, 0) }
+    }
+
     pub fn fs_cat(path: &[u8]) -> isize {
         unsafe { ecall(SYS_FS_CAT, path.as_ptr() as usize, path.len(), 0, 0) }
     }
@@ -60,6 +64,26 @@ pub mod sys {
                 data.len(),
             )
         }
+    }
+
+    pub fn fs_mkdir(path: &[u8]) -> isize {
+        unsafe { ecall(SYS_FS_MKDIR, path.as_ptr() as usize, path.len(), 0, 0) }
+    }
+
+    pub fn fs_rmdir(path: &[u8]) -> isize {
+        unsafe { ecall(SYS_FS_RMDIR, path.as_ptr() as usize, path.len(), 0, 0) }
+    }
+
+    pub fn fs_unlink(path: &[u8]) -> isize {
+        unsafe { ecall(SYS_FS_UNLINK, path.as_ptr() as usize, path.len(), 0, 0) }
+    }
+
+    pub fn chdir(path: &[u8]) -> isize {
+        unsafe { ecall(SYS_CHDIR, path.as_ptr() as usize, path.len(), 0, 0) }
+    }
+
+    pub fn getcwd(buf: &mut [u8]) -> isize {
+        unsafe { ecall(SYS_GETCWD, buf.as_mut_ptr() as usize, buf.len(), 0, 0) }
     }
 
     pub fn exec(path: &[u8]) -> isize {

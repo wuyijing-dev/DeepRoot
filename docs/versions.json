@@ -1,7 +1,11 @@
 [
   {
+    "version": "v1.9.0",
+    "label": "1.9.0（当前 · FS 目录）"
+  },
+  {
     "version": "v1.8.0",
-    "label": "1.8.0（当前 · 自研 shell+）"
+    "label": "1.8.0（自研 shell+）"
   },
   {
     "version": "v1.7.0",

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>仓库长什么样 - DeepRoot 学习笔记</title>
+        <title>1.9 文件系统加深 - DeepRoot 学习笔记</title>
 
 
         <!-- Custom HTML head -->
@@ -146,7 +146,7 @@
                         <a href="https://github.com/wuyijing-dev/DeepRoot" title="Git repository" aria-label="Git repository">
                             <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
                         </a>
-                        <a href="https://github.com/wuyijing-dev/DeepRoot/edit/main/book/src/intro/repo-map.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                        <a href="https://github.com/wuyijing-dev/DeepRoot/edit/main/book/src/path/13-fs19.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
                             <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
                         </a>
 
@@ -180,115 +180,59 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="仓库长什么样详细地图"><a class="header" href="#仓库长什么样详细地图">仓库长什么样（详细地图）</a></h1>
-<p>第一次打开仓库时，先建立「地图」，<strong>不要</strong>从头到尾通读所有 <code>.rs</code>。</p>
-<h2 id="1-顶层一览"><a class="header" href="#1-顶层一览">1. 顶层一览</a></h2>
-<pre><code class="language-text">DeepRoot/
-├── VERSION                 # 第一行=当前版本；下文=完整路线图
-├── README.md               # 给 GitHub 访客的简介
-├── LICENSE                 # Apache-2.0
-├── Cargo.toml              # workspace：列出 kernel / libs / user/*
-├── platform/               # 板级设备树源（qemu-virt/deeproot.dts）
-├── book/                   # 学习文档源码（mdBook）
-├── docs/                   # 构建后的静态站点（GitHub Pages → /docs）
-├── scripts/
-│   ├── run-qemu.sh         # 构建 DTB + 内核 + 启动 QEMU
-│   └── build-dtb.sh        # dtc：DTS → build/*.dtb
-├── kernel/                 # 微内核 crate（#![no_std]）
-│   ├── build.rs            # 编译并嵌入用户 ELF
-│   ├── linker.ld
-│   └── src/
-│       ├── main.rs         # kernel_main
-│       ├── boot.rs         # _start / _secondary_start
-│       ├── smp.rs          # HSM 拉核、online、IPI
-│       ├── sync.rs         # 自旋锁
-│       ├── fdt.rs          # FDT 遍历 → Platform
-│       ├── virtio_blk.rs   # legacy virtio-mmio 块驱动
-│       ├── sbi.rs          # 控制台 / 时钟 / HSM / IPI
-│       ├── trap.rs         # 陷阱与 syscall 入口
-│       ├── sched.rs        # 调度 + 大部分 syscall 实现
-│       ├── mm/             # 内存与页表
-│       ├── cap/            # 能力
-│       ├── ipc.rs / ledger.rs / elf.rs / fs.rs / block.rs …
-│       └── servers.rs      # 装载用户服务器并 enter_first
-├── libs/
-│   ├── deeproot-abi/       # syscall 号、错误码、IPC 结构（用户+内核共用）
-│   └── deeproot-user/      # 用户态 ecall 封装
-└── user/
-    ├── init/               # 根服务器：演示 IPC，再把舞台留给 shell
-    ├── console/            # 控制台服务
-    ├── ping/               # IPC ping/pong
-    ├── hello/              # 可 spawn / run 的最小程序
-    ├── shell/              # 交互 shell
-    └── badapple/           # 可选彩蛋（非主线）
-</code></pre>
-<h2 id="2-我想搞懂-x--打开这些文件"><a class="header" href="#2-我想搞懂-x--打开这些文件">2. 「我想搞懂 X → 打开这些文件」</a></h2>
+                        <h1 id="19-文件系统加深对齐-v190"><a class="header" href="#19-文件系统加深对齐-v190">1.9 文件系统加深（对齐 v1.9.0）</a></h1>
+<p>对齐：<strong>v1.9.0</strong>（系列会在 <code>1.9.y</code> 上停留较久）。</p>
+<p>当前推荐标签：<strong><code>v1.9.0</code></strong>。</p>
+<h2 id="这一站解决什么"><a class="header" href="#这一站解决什么">这一站解决什么？</a></h2>
+<p>1.8 之前的教学 FS 基本是<strong>扁平</strong>名字：embed 文件、DRFS 根目录条目、以及 1.8 的 scratch 写。<br><strong>1.9.0</strong> 先落地一层 <strong>in-RAM VFS 树</strong>：真正的目录结点、<code>mkdir</code> / <code>rmdir</code> / <code>rm</code>、以及与 shell 一致的 <strong>kernel cwd</strong>。</p>
+<p>后续 <code>1.9.y</code> 再慢慢做：更大的持久 DRFS、fd 表等——<strong>不要急着跳到 1.10</strong>。</p>
+<h2 id="分层读代码时心里要有图"><a class="header" href="#分层读代码时心里要有图">分层（读代码时心里要有图）</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>你想搞懂…</th><th>先打开</th></tr>
+<tr><th>层</th><th>职责（1.9.0）</th></tr>
 </thead>
 <tbody>
-<tr><td>开机入口</td><td><code>kernel/src/boot.rs</code>、<code>main.rs</code>、<code>sbi.rs</code>、<code>smp.rs</code></td></tr>
-<tr><td>页表 / 内存</td><td><code>kernel/src/mm/</code>（<code>memmap</code> → <code>frame</code> → <code>sv39</code>）</td></tr>
-<tr><td>设备树</td><td><code>platform/qemu-virt/deeproot.dts</code>、<code>kernel/src/fdt.rs</code></td></tr>
-<tr><td>能力</td><td><code>kernel/src/cap/</code>、<code>libs/deeproot-abi</code></td></tr>
-<tr><td>IPC / Ledger</td><td><code>kernel/src/ipc.rs</code>、<code>ledger.rs</code>、<code>user/init</code>、<code>user/ping</code></td></tr>
-<tr><td>调度与 syscall</td><td><code>kernel/src/sched.rs</code>、<code>trap.rs</code>、<code>sync.rs</code></td></tr>
-<tr><td>SMP</td><td><code>kernel/src/smp.rs</code>、<code>sched.rs</code>（<code>home_hart</code>）、<code>sbi.rs</code>（HSM/IPI）</td></tr>
-<tr><td>用户程序怎么进内核</td><td><code>libs/deeproot-user/src/lib.rs</code></td></tr>
-<tr><td>shell / ramfs</td><td><code>user/shell/</code>、<code>kernel/src/fs.rs</code>、<code>kernel/build.rs</code></td></tr>
-<tr><td>块 / virtio</td><td><code>kernel/src/block.rs</code>、<code>virtio_blk.rs</code></td></tr>
+<tr><td>Embed ramfs</td><td>根上的 ELF/文本（<code>hello</code>、<code>version</code>…）</td></tr>
+<tr><td><code>kernel/src/vfs.rs</code></td><td>用户创建的目录与嵌套文件（内存）</td></tr>
+<tr><td>DRFS / virtio-blk</td><td>根上的 on-disk 文本（仍扁平）</td></tr>
+<tr><td><code>kernel/src/fs.rs</code></td><td>统一 facade：<code>ls</code>/<code>cat</code>/<code>write</code>/<code>mkdir</code>…</td></tr>
 </tbody>
 </table>
 </div>
-<h2 id="3-构建时发生了什么必读"><a class="header" href="#3-构建时发生了什么必读">3. 构建时发生了什么？（必读）</a></h2>
-<pre><code class="language-text">./scripts/run-qemu.sh
-    → scripts/build-dtb.sh（dtc：deeproot.dts → .dtb）
-    → cargo build -p deeproot-kernel …
-        → kernel/build.rs 对每个 user 包再 cargo build
-        → 把 ELF 复制到 OUT_DIR
-        → fs.rs / servers.rs 里 include_bytes!
-    → qemu … -kernel … -dtb … -device virtio-blk-device …
+<h2 id="动手最短路径"><a class="header" href="#动手最短路径">动手最短路径</a></h2>
+<pre><code class="language-text">mkdir demo
+cd demo
+pwd
+echo hi &gt; a.txt
+cat a.txt
+ls
+cd /
+ls demo
+rmdir demo          # 非空会失败
+rm demo/a.txt
+rmdir demo
 </code></pre>
-<p>因此：</p>
+<h2 id="子页"><a class="header" href="#子页">子页</a></h2>
 <ul>
-<li><strong>改用户程序 ≈ 要重编内核</strong>（嵌入的字节才会变）</li>
-<li>ramfs 里的 <code>hello</code> <strong>不是</strong>你拷进虚拟磁盘的文件</li>
+<li><a href="fs19/01-vfs-tree.html">VFS 树与路径</a></li>
+<li><a href="fs19/02-syscalls-shell.html">syscall 与 shell 内建</a></li>
 </ul>
-<p>细节在 <a href="../path/08-fs.html">1.3 ramfs</a> 与 <a href="../hands-on/write-user-prog.html">写用户程序</a>。</p>
-<h2 id="4-文档目录怎么对应源码"><a class="header" href="#4-文档目录怎么对应源码">4. 文档目录怎么对应源码？</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>文档章节</th><th>主要源码</th></tr>
-</thead>
-<tbody>
-<tr><td>0.1</td><td><code>boot</code> / <code>sbi</code> / <code>console</code> / 早期 <code>trap</code></td></tr>
-<tr><td>0.2</td><td><code>mm/*</code></td></tr>
-<tr><td>0.3–0.4</td><td><code>cap/*</code>、<code>ipc</code>、<code>ledger</code></td></tr>
-<tr><td>0.5–0.6</td><td><code>servers</code>、<code>sched</code>、<code>timer</code>、<code>user/*</code></td></tr>
-<tr><td>1.0</td><td><code>deeproot-abi</code></td></tr>
-<tr><td>1.1</td><td><code>elf</code>、<code>AddrSpace</code>、<code>SYS_SPAWN</code></td></tr>
-<tr><td>1.2</td><td><code>user/shell</code>、<code>SYS_DEBUG_READ</code></td></tr>
-<tr><td>1.3</td><td><code>fs.rs</code>、<code>SYS_EXEC</code></td></tr>
-<tr><td>1.4</td><td><code>block.rs</code>（DRFS）</td></tr>
-<tr><td>1.5–1.6</td><td><code>platform/…/deeproot.dts</code>、<code>fdt.rs</code>、<code>virtio_blk.rs</code></td></tr>
-<tr><td>1.7</td><td><code>smp.rs</code>、<code>sync.rs</code>、每 hart <code>sched</code> / <code>trap</code> 栈</td></tr>
-</tbody>
-</table>
-</div>
-<p>下一章回主线：<a href="../path/overview.html">学习路线图</a>。若尚未开机，先去 <a href="first-boot.html">第一次启动</a>。</p>
+<h2 id="验收"><a class="header" href="#验收">验收</a></h2>
+<pre><code class="language-bash">git checkout v1.9.0
+./scripts/run-qemu.sh --smoke
+</code></pre>
+<p>smoke 会核对 <code>vfs: in-RAM tree ready</code> 与 <code>shell: DeepRoot shell 1.9 ready</code> 等标记。</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../intro/first-boot.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../path/shell18/03-pipe-redir.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../path/overview.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../path/fs19/01-vfs-tree.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -298,11 +242,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../intro/first-boot.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../path/shell18/03-pipe-redir.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../path/overview.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../path/fs19/01-vfs-tree.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e0be0be6.js";
+            window.path_to_searchindex_js = "../searchindex-d854b485.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-11dd4d79.js"></script>
+        <script src="../toc-48a07b87.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -224,7 +224,7 @@ U-mode（User）      ← init / shell / hello 在这里
 <p>代码入口可以先记：<code>kernel/src/ledger.rs</code>，启动时在 <code>kernel_main</code> 里就会 <code>LEDGER.record(Boot, …)</code>。</p>
 <h3 id="capability-provenance能力来源"><a class="header" href="#capability-provenance能力来源">Capability Provenance（能力来源）</a></h3>
 <p>每张「工作证」不只说你能干什么，还尽量记下<strong>它是怎么被开出来的</strong>（mint / derive …）。<br>学权限时，这比只看一个整数 flag 更有教学价值。</p>
-<h2 id="4-到-v180-你到底能得到什么"><a class="header" href="#4-到-v180-你到底能得到什么">4. 到 v1.8.0 你到底能得到什么？</a></h2>
+<h2 id="4-到-v190-你到底能得到什么"><a class="header" href="#4-到-v190-你到底能得到什么">4. 到 v1.9.0 你到底能得到什么？</a></h2>
 <p>已经齐的：</p>
 <ul>
 <li>QEMU 上可启动的 S-mode 内核</li>
@@ -233,19 +233,19 @@ U-mode（User）      ← init / shell / hello 在这里
 <li>多用户态 ELF（init / console / ping / shell / hello…）</li>
 <li>调度与时钟抢占；<strong>SMP（<code>-smp 2</code>）</strong></li>
 <li>交互 shell：<strong>argv / env / history / <code>&amp;</code> / <code>|</code> / <code>&gt;</code></strong></li>
-<li>ramfs + scratch 文本 + virtio-blk DRFS</li>
+<li>ramfs + <strong>in-RAM 目录树（mkdir/cd）</strong> + virtio-blk DRFS</li>
 <li><strong>自有设备树</strong> + FDT 发现</li>
 </ul>
 <p>刻意没有的（别失望，是范围控制）：</p>
 <ul>
 <li>Linux 应用二进制兼容</li>
 <li>完整桌面 / GPU 3D；bash/POSIX 脚本语言</li>
-<li>网络、多用户登录</li>
+<li>网络、多用户登录；完整 POSIX VFS</li>
 </ul>
 <h2 id="5-这份教程怎么用"><a class="header" href="#5-这份教程怎么用">5. 这份教程怎么用？</a></h2>
 <ol>
 <li>先按 <a href="first-boot.html">第一次启动</a> 跑通。</li>
-<li>再按 <a href="../path/overview.html">学习路线图</a> <strong>从 0.1 读到 1.8</strong>。</li>
+<li>再按 <a href="../path/overview.html">学习路线图</a> <strong>从 0.1 读到 1.9</strong>。</li>
 <li>想自己加程序 → <a href="../hands-on/write-user-prog.html">动手玩</a>。</li>
 </ol>
 <p>下一章：<a href="prerequisites.html">你需要准备什么</a>。</p>

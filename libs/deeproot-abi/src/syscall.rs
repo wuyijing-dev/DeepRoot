@@ -1,4 +1,4 @@
-//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.8.
+//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.9.
 //!
 //! 0..9 frozen at 1.0.0. New numbers are additive only.
 
@@ -21,9 +21,9 @@ pub const SYS_EXIT: usize = 9;
 pub const SYS_SPAWN: usize = 10;
 /// Blocking-ish read of one console byte; `-11` if none ready
 pub const SYS_DEBUG_READ: usize = 11;
-/// Print ramfs directory listing to console
+/// `a0`=path ptr, `a1`=len (0 = list cwd / root) — print directory listing
 pub const SYS_FS_LIST: usize = 12;
-/// `a0`=path ptr, `a1`=len — print file contents
+/// `a0`=path ptr, `a1`=len — print file contents (cwd-relative OK)
 pub const SYS_FS_CAT: usize = 13;
 /// `a0`=path ptr, `a1`=len — load ELF from ramfs and spawn
 pub const SYS_EXEC: usize = 14;
@@ -44,8 +44,21 @@ pub const SYS_PIPE_READ: usize = 19;
 pub const SYS_PIPE_WRITE: usize = 20;
 /// `a0`=sched id, `a1`=pipe id or `STDOUT_CONSOLE` — redirect DEBUG_WRITE
 pub const SYS_TASK_STDOUT: usize = 21;
-/// `a0`=path, `a1`=plen, `a2`=data, `a3`=dlen — write/create scratch text file
+/// `a0`=path, `a1`=plen, `a2`=data, `a3`=dlen — write/create VFS text file
 pub const SYS_FS_WRITE: usize = 22;
+
+/* ---- 1.9 directories / cwd ---- */
+
+/// `a0`=path, `a1`=len — create directory
+pub const SYS_FS_MKDIR: usize = 23;
+/// `a0`=path, `a1`=len — remove empty directory
+pub const SYS_FS_RMDIR: usize = 24;
+/// `a0`=path, `a1`=len — remove VFS file (not embed/DRFS)
+pub const SYS_FS_UNLINK: usize = 25;
+/// `a0`=path, `a1`=len — set task cwd
+pub const SYS_CHDIR: usize = 26;
+/// `a0`=buf, `a1`=buflen → bytes written (absolute path)
+pub const SYS_GETCWD: usize = 27;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

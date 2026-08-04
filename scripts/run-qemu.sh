@@ -59,7 +59,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
   set -e
   ok=1
     for needle in \
-    "DeepRoot microkernel 1.8.0" \
+    "DeepRoot microkernel 1.9.0" \
     "fdt: model \"DeepRoot QEMU virt\"" \
     "fdt: board deeproot,qemu-virt" \
     "fdt: cpu count=2" \
@@ -68,11 +68,12 @@ if [[ "${MODE}" == "--smoke" ]]; then
     "fdt: virtio-mmio count=" \
     "virtio-blk: ready" \
     "block: virtio-blk ready" \
+    "vfs: in-RAM tree ready" \
     "DRFS" \
     "canopy ready" \
     "ping: pong" \
     "hello: spawned ELF says hi" \
-    "shell: DeepRoot shell 1.8 ready" \
+    "shell: DeepRoot shell 1.9 ready" \
     "init: handing off to shell"
   do
     if ! grep -q "${needle}" "${LOG}"; then

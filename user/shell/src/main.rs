@@ -1,4 +1,4 @@
-//! shell — DeepRoot-native shell 1.8 (argv, history, env, cd, &, |, >).
+//! shell — DeepRoot-native shell 1.9 (dirs + kernel cwd; 1.8 argv/history/env/|/&).
 
 #![no_std]
 #![no_main]
@@ -173,27 +173,6 @@ fn trim(mut line: &[u8]) -> &[u8] {
         line = &line[..line.len() - 1];
     }
     line
-}
-
-fn path_join(cwd: &[u8], cwd_len: usize, rel: &[u8], out: &mut [u8]) -> usize {
-    let rel = trim(rel);
-    if rel.first() == Some(&b'/') {
-        let n = rel.len().min(out.len());
-        out[..n].copy_from_slice(&rel[..n]);
-        return n;
-    }
-    let mut n = 0usize;
-    if cwd_len > 0 && cwd_len < out.len() {
-        out[..cwd_len].copy_from_slice(&cwd[..cwd_len]);
-        n = cwd_len;
-        if n > 0 && out[n - 1] != b'/' && n < out.len() {
-            out[n] = b'/';
-            n += 1;
-        }
-    }
-    let take = rel.len().min(out.len().saturating_sub(n));
-    out[n..n + take].copy_from_slice(&rel[..take]);
-    n + take
 }
 
 /// Expand `$NAME` in place into `out` (best-effort, no nested).
@@ -473,14 +452,14 @@ fn run_exec(
 }
 
 fn help() {
-    let _ = sys::debug_write("DeepRoot shell 1.8 — builtins:\n");
-    let _ = sys::debug_write("  help / ls / cat FILE / run ELF / hello / badapple / exit\n");
+    let _ = sys::debug_write("DeepRoot shell 1.9 — builtins:\n");
+    let _ = sys::debug_write("  help / ls [DIR] / cat FILE / run ELF / hello / badapple / exit\n");
+    let _ = sys::debug_write("  mkdir DIR / rmdir DIR / rm FILE\n");
     let _ = sys::debug_write("  echo ARGS   pwd   cd DIR   env   export KEY=VAL   history\n");
     let _ = sys::debug_write("Operators:  |  pipe   > file   &  background\n");
     let _ = sys::debug_write("Quotes: \"...\" or '...';  $VAR expands in echo.\n");
     let _ = sys::debug_write("Examples:\n");
-    let _ = sys::debug_write("  echo hi > note.txt |  (write then) cat note.txt\n");
-    let _ = sys::debug_write("  echo a b | echo (prints via pipe buffer demo)\n");
+    let _ = sys::debug_write("  mkdir demo; cd demo; echo hi > a.txt; cat a.txt; cd /; ls\n");
     let _ = sys::debug_write("  run hello &\n");
 }
 
@@ -563,8 +542,6 @@ fn read_line(buf: &mut [u8], hist: &History) -> usize {
 fn run_stage(
     st: &Stage,
     env: &Env,
-    cwd: &[u8],
-    cwd_len: usize,
     bg: bool,
     infile: Option<&[u8]>,
     capture: bool,
@@ -584,18 +561,49 @@ fn run_stage(
         help();
         return 0;
     } else if cmd == b"ls" {
-        let _ = sys::fs_list();
+        if let Some(p) = st.argv.get(1) {
+            let _ = sys::fs_list_path(p);
+        } else {
+            let _ = sys::fs_list();
+        }
         return 0;
     } else if cmd == b"pwd" {
-        if cwd_len == 0 {
-            let _ = sys::debug_write("/\n");
-        } else {
-            let _ = sys::debug_write_bytes(&cwd[..cwd_len]);
+        let mut buf = [0u8; 96];
+        let n = sys::getcwd(&mut buf);
+        if n > 0 {
+            let _ = sys::debug_write_bytes(&buf[..n as usize]);
             let _ = sys::debug_write("\n");
         }
         return 0;
     } else if cmd == b"cd" {
-        return 0; /* handled by caller with &mut cwd */
+        return 0; /* handled by caller */
+    } else if cmd == b"mkdir" {
+        if let Some(p) = st.argv.get(1) {
+            if sys::fs_mkdir(p) < 0 {
+                let _ = sys::debug_write("shell: mkdir failed\n");
+            }
+        } else {
+            let _ = sys::debug_write("shell: mkdir <dir>\n");
+        }
+        return 0;
+    } else if cmd == b"rmdir" {
+        if let Some(p) = st.argv.get(1) {
+            if sys::fs_rmdir(p) < 0 {
+                let _ = sys::debug_write("shell: rmdir failed\n");
+            }
+        } else {
+            let _ = sys::debug_write("shell: rmdir <dir>\n");
+        }
+        return 0;
+    } else if cmd == b"rm" {
+        if let Some(p) = st.argv.get(1) {
+            if sys::fs_unlink(p) < 0 {
+                let _ = sys::debug_write("shell: rm failed\n");
+            }
+        } else {
+            let _ = sys::debug_write("shell: rm <file>\n");
+        }
+        return 0;
     } else if cmd == b"env" {
         env.list();
         return 0;
@@ -612,9 +620,7 @@ fn run_stage(
             return 0;
         }
         if let Some(p) = st.argv.get(1) {
-            let mut full = [0u8; 64];
-            let n = path_join(cwd, cwd_len, p, &mut full);
-            let _ = sys::fs_cat(&full[..n]);
+            let _ = sys::fs_cat(p);
         } else {
             let _ = sys::debug_write("shell: cat <file>\n");
         }
@@ -631,15 +637,14 @@ fn run_stage(
         } else {
             cmd
         };
-        let mut full = [0u8; 64];
-        let n = path_join(cwd, cwd_len, path, &mut full);
+        /* Embed ELFs live at root; pass basename / absolute as typed. */
         if capture || st.redir.is_some() {
             let pid = sys::pipe();
             if pid < 0 {
                 let _ = sys::debug_write("shell: pipe failed\n");
                 return 0;
             }
-            let _ = run_exec(&full[..n], bg, Some(pid as usize));
+            let _ = run_exec(path, bg, Some(pid as usize));
             if !bg {
                 plen = drain_pipe(pid as usize, &mut produced);
                 let _ = sys::pipe_close(pid as usize);
@@ -647,7 +652,7 @@ fn run_stage(
                 let _ = sys::pipe_close(pid as usize);
             }
         } else {
-            let _ = run_exec(&full[..n], bg, None);
+            let _ = run_exec(path, bg, None);
             return 0;
         }
     } else {
@@ -655,12 +660,10 @@ fn run_stage(
         return 0;
     }
 
-    /* Redir `>` takes produced bytes. */
+    /* Redir `>` takes produced bytes (cwd-relative path). */
     if let Some(rb) = st.redir {
         let path = &rb[..st.redir_len];
-        let mut full = [0u8; 64];
-        let n = path_join(cwd, cwd_len, path, &mut full);
-        if sys::fs_write(&full[..n], &produced[..plen]) < 0 {
+        if sys::fs_write(path, &produced[..plen]) < 0 {
             let _ = sys::debug_write("shell: write failed\n");
         }
         return 0;
@@ -681,15 +684,13 @@ fn run_stage(
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write(
-        "shell: DeepRoot shell 1.8 ready (help, |, >, &, env, history)\n",
+        "shell: DeepRoot shell 1.9 ready (help, mkdir, cd, |, >, &, env, history)\n",
     );
     let mut buf = [0u8; LINE_MAX];
     let mut hist = History::new();
     let mut env = Env::new();
     let _ = env.set(b"SHELL", b"deeproot");
-    let _ = env.set(b"VERSION", b"1.8.0");
-    let mut cwd = [0u8; 64];
-    let mut cwd_len = 0usize;
+    let _ = env.set(b"VERSION", b"1.9.0");
 
     loop {
         let _ = sys::debug_write("deeproot> ");
@@ -700,7 +701,7 @@ pub extern "C" fn main() {
         }
         hist.push(line);
 
-        /* One-shot builtins that need mut env/cwd before pipeline. */
+        /* One-shot builtins that need mut env before pipeline. */
         let mut argv0 = Argv::empty();
         if tokenize(line, &mut argv0) {
             if let Some(c) = argv0.get(0) {
@@ -715,23 +716,9 @@ pub extern "C" fn main() {
                     continue;
                 }
                 if c == b"cd" {
-                    if let Some(p) = argv0.get(1) {
-                        if p == b"/" || p == b"" {
-                            cwd_len = 0;
-                        } else if p == b".." {
-                            cwd_len = 0;
-                        } else {
-                            let mut tmp = [0u8; 64];
-                            let n = path_join(&cwd, cwd_len, p, &mut tmp);
-                            cwd[..n].copy_from_slice(&tmp[..n]);
-                            cwd_len = n;
-                            if cwd_len > 0 && cwd[0] == b'/' {
-                                cwd.copy_within(1..cwd_len, 0);
-                                cwd_len -= 1;
-                            }
-                        }
-                    } else {
-                        cwd_len = 0;
+                    let path = argv0.get(1).unwrap_or(b"/");
+                    if sys::chdir(path) < 0 {
+                        let _ = sys::debug_write("shell: cd failed\n");
                     }
                     continue;
                 }
@@ -765,8 +752,6 @@ pub extern "C" fn main() {
             let n = run_stage(
                 &stages[s],
                 &env,
-                &cwd,
-                cwd_len,
                 stage_bg,
                 infile,
                 capture,

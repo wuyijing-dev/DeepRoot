@@ -79,6 +79,8 @@ pub struct UserTask {
     pub home_hart: usize,
     /// If set, SYS_DEBUG_WRITE goes to this pipe id (1.8).
     pub stdout_pipe: Option<usize>,
+    /// VFS directory node for relative path ops (1.9).
+    pub cwd_node: usize,
 }
 
 impl UserTask {
@@ -95,6 +97,7 @@ impl UserTask {
             is_idle: false,
             home_hart: 0,
             stdout_pipe: None,
+            cwd_node: crate::vfs::ROOT,
         }
     }
 
@@ -310,6 +313,15 @@ fn spawn_inner(
     } else {
         alloc_home_hart()
     };
+    let cwd = {
+        let h = smp::hart_id().min(MAX_HARTS - 1);
+        let cur = s.current[h];
+        if cur < MAX_UTASKS && s.tasks[cur].state != TaskState::Empty {
+            s.tasks[cur].cwd_node
+        } else {
+            crate::vfs::ROOT
+        }
+    };
     s.tasks[idx] = UserTask {
         state: TaskState::Ready,
         name,
@@ -322,6 +334,7 @@ fn spawn_inner(
         is_idle,
         home_hart: home,
         stdout_pipe: None,
+        cwd_node: cwd,
     };
     /* Stay quiet on success — shell/fs exec should not flood the serial. */
     Some(idx)
@@ -648,6 +661,45 @@ pub fn syscall_yield() -> isize {
     0
 }
 
+fn current_sched_id() -> usize {
+    let s = inner();
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    s.current[h]
+}
+
+fn current_cwd_node() -> usize {
+    let _g = SCHED_LOCK.lock();
+    let s = inner();
+    let id = current_sched_id();
+    if id < MAX_UTASKS {
+        s.tasks[id].cwd_node
+    } else {
+        crate::vfs::ROOT
+    }
+}
+
+fn set_current_cwd_node(node: usize) {
+    let _g = SCHED_LOCK.lock();
+    let s = inner();
+    let id = current_sched_id();
+    if id < MAX_UTASKS {
+        s.tasks[id].cwd_node = node;
+    }
+}
+
+fn copy_user_path(ptr: usize, len: usize, buf: &mut [u8]) -> Result<&str, isize> {
+    use deeproot_abi::syscall::ERR_GENERIC;
+    if len > buf.len() {
+        return Err(ERR_GENERIC);
+    }
+    if len == 0 {
+        return Ok("");
+    }
+    let slice = unsafe { core::slice::from_raw_parts(ptr as *const u8, len) };
+    buf[..len].copy_from_slice(slice);
+    core::str::from_utf8(&buf[..len]).map_err(|_| ERR_GENERIC)
+}
+
 pub fn handle_syscall(
 
     tasks: &mut TaskTable,
@@ -856,25 +908,34 @@ pub fn handle_syscall(
             None => ERR_AGAIN,
         },
         SYS_FS_LIST => {
-            crate::fs::list();
+            let cwd = current_cwd_node();
+            let plen = a1 as usize;
+            if plen == 0 {
+                crate::fs::list_at(cwd, None);
+            } else {
+                let mut pbuf = [0u8; 96];
+                let path = match copy_user_path(a0 as usize, plen, &mut pbuf) {
+                    Ok(p) => p,
+                    Err(e) => return e,
+                };
+                crate::fs::list_at(cwd, Some(path));
+            }
             0
         }
         SYS_FS_CAT => {
-            let ptr = a0 as usize;
-            let len = a1 as usize;
-            if len > 64 {
+            let cwd = current_cwd_node();
+            let mut pbuf = [0u8; 96];
+            let path = match copy_user_path(a0 as usize, a1 as usize, &mut pbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            if path.is_empty() {
                 return ERR_GENERIC;
             }
-            let slice = unsafe { core::slice::from_raw_parts(ptr as *const u8, len) };
-            match core::str::from_utf8(slice) {
-                Ok(path) => {
-                    if crate::fs::cat(path) {
-                        0
-                    } else {
-                        ERR_GENERIC
-                    }
-                }
-                Err(_) => ERR_GENERIC,
+            if crate::fs::cat_at(cwd, path) {
+                0
+            } else {
+                ERR_GENERIC
             }
         }
         SYS_EXEC => {
@@ -973,24 +1034,87 @@ pub fn handle_syscall(
             0
         }
         SYS_FS_WRITE => {
-            let pptr = a0 as usize;
+            let cwd = current_cwd_node();
             let plen = a1 as usize;
-            let dptr = a2 as usize;
             let dlen = a3 as usize;
-            if plen == 0 || plen > 64 || dlen > 256 {
+            if plen == 0 || dlen > 256 {
                 return ERR_GENERIC;
             }
-            let path = unsafe { core::slice::from_raw_parts(pptr as *const u8, plen) };
-            let data = unsafe { core::slice::from_raw_parts(dptr as *const u8, dlen) };
-            let path = match core::str::from_utf8(path) {
+            let mut pbuf = [0u8; 96];
+            let path = match copy_user_path(a0 as usize, plen, &mut pbuf) {
                 Ok(p) => p,
-                Err(_) => return ERR_GENERIC,
+                Err(e) => return e,
             };
-            if crate::fs::write_scratch(path, data) {
+            let data = unsafe { core::slice::from_raw_parts(a2 as usize as *const u8, dlen) };
+            if crate::fs::write_path(cwd, path, data) {
                 dlen as isize
             } else {
                 ERR_GENERIC
             }
+        }
+        SYS_FS_MKDIR => {
+            let cwd = current_cwd_node();
+            let mut pbuf = [0u8; 96];
+            let path = match copy_user_path(a0 as usize, a1 as usize, &mut pbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            if crate::fs::mkdir(cwd, path) {
+                0
+            } else {
+                ERR_GENERIC
+            }
+        }
+        SYS_FS_RMDIR => {
+            let cwd = current_cwd_node();
+            let mut pbuf = [0u8; 96];
+            let path = match copy_user_path(a0 as usize, a1 as usize, &mut pbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            if crate::fs::rmdir(cwd, path) {
+                0
+            } else {
+                ERR_GENERIC
+            }
+        }
+        SYS_FS_UNLINK => {
+            let cwd = current_cwd_node();
+            let mut pbuf = [0u8; 96];
+            let path = match copy_user_path(a0 as usize, a1 as usize, &mut pbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            if crate::fs::unlink(cwd, path) {
+                0
+            } else {
+                ERR_GENERIC
+            }
+        }
+        SYS_CHDIR => {
+            let cwd = current_cwd_node();
+            let mut pbuf = [0u8; 96];
+            let path = match copy_user_path(a0 as usize, a1 as usize, &mut pbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            match crate::fs::chdir(cwd, path) {
+                Some(node) => {
+                    set_current_cwd_node(node);
+                    0
+                }
+                None => ERR_GENERIC,
+            }
+        }
+        SYS_GETCWD => {
+            let cwd = current_cwd_node();
+            let ptr = a0 as usize;
+            let len = a1 as usize;
+            if len == 0 || len > 256 {
+                return ERR_GENERIC;
+            }
+            let buf = unsafe { core::slice::from_raw_parts_mut(ptr as *mut u8, len) };
+            crate::fs::getcwd(cwd, buf) as isize
         }
         _ => ERR_NOSYS,
     }

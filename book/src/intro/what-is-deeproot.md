@@ -53,7 +53,7 @@ U-mode（User）      ← init / shell / hello 在这里
 每张「工作证」不只说你能干什么，还尽量记下**它是怎么被开出来的**（mint / derive …）。  
 学权限时，这比只看一个整数 flag 更有教学价值。
 
-## 4. 到 v1.8.0 你到底能得到什么？
+## 4. 到 v1.9.0 你到底能得到什么？
 
 已经齐的：
 
@@ -63,19 +63,19 @@ U-mode（User）      ← init / shell / hello 在这里
 - 多用户态 ELF（init / console / ping / shell / hello…）  
 - 调度与时钟抢占；**SMP（`-smp 2`）**  
 - 交互 shell：**argv / env / history / `&` / `|` / `>`**  
-- ramfs + scratch 文本 + virtio-blk DRFS  
+- ramfs + **in-RAM 目录树（mkdir/cd）** + virtio-blk DRFS  
 - **自有设备树** + FDT 发现  
 
 刻意没有的（别失望，是范围控制）：
 
 - Linux 应用二进制兼容  
 - 完整桌面 / GPU 3D；bash/POSIX 脚本语言  
-- 网络、多用户登录  
+- 网络、多用户登录；完整 POSIX VFS  
 
 ## 5. 这份教程怎么用？
 
 1. 先按 [第一次启动](first-boot.md) 跑通。  
-2. 再按 [学习路线图](../path/overview.md) **从 0.1 读到 1.8**。  
+2. 再按 [学习路线图](../path/overview.md) **从 0.1 读到 1.9**。  
 3. 想自己加程序 → [动手玩](../hands-on/write-user-prog.md)。
 
 下一章：[你需要准备什么](prerequisites.md)。
