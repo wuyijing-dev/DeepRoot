@@ -11,7 +11,7 @@
 #
 # First line above is the CURRENT release. Lines below are the full roadmap.
 #
-# Policy (1.x through 2.0):
+# Policy (1.x through ~3.0 display path):
 #   - DeepRoot-native capability ABI — NOT Linux/POSIX compatible.
 #   - Prefer additive syscalls; note any calling-convention break in the series.
 #   - **Slow the version clock:** do NOT mint a new PATCHLEVEL for every feature
@@ -20,10 +20,13 @@
 #     enough to teach” and the next theme is clearly different.
 #   - Do not mint a new SUBLEVEL for every commit; finish a chunk, then release.
 #   - Shell stays DeepRoot-native (learn from xv6/BusyBox structure; do NOT port bash).
-#   - After 1.8: prioritize **practical kernel/userspace** (FS depth, modules,
-#     drivers, I/O) before framebuffer / display. Graphics wait until ~1.14.
-#   - MAJOR 2.0 = platform integration release (DT/SMP/FS/modules + optional
-#     display when ready), not a desktop OS and not “version inflation.”
+#   - After 1.8: practical kernel/userspace (FS, modules, drivers, I/O) first.
+#     Graphics start ~1.14; a Wayland-*inspired* stack is much later (~2.x–3.0).
+#   - **Wayland stance:** learn concepts (surface, buffer, seat, compositor IPC).
+#     Do NOT ship Linux libwayland / weston binary compat. Closest teaching goal
+#     is a DeepRoot compositor + small clients that *feel* like using Wayland.
+#   - MAJOR 2.0 = platform integration (no full desktop). MAJOR 3.0 = first
+#     “use the display protocol like Wayland labs” milestone — do not rush.
 #
 
 # =====================================================================
@@ -322,7 +325,8 @@
 # Releases:
 # 1.11.0  Durable DRFS create/append (or equivalent) usable from shell
 # 1.11.1  Minimal fd table + open/read/write
-# 1.11.y  Truncate/seek/poll polish; more DRFS robustness
+# 1.11.2  Seek / truncate; redirect polish
+# 1.11.y  More DRFS robustness; teach “file as teaching object”
 #
 # Out of scope for 1.11: full POSIX VFS, many FS types, networked FS, framebuffer.
 
@@ -340,7 +344,8 @@
 # Releases:
 # 1.12.0  Better console I/O path (virtio-console or equivalent)
 # 1.12.1  sleep/time + ledger/cap inspect from shell
-# 1.12.y  More utilities / I/O polish
+# 1.12.2  hexdump / stat / more ramfs tools
+# 1.12.y  Utility polish
 #
 # Out of scope for 1.12: framebuffer UI, networking stack, POSIX login.
 
@@ -364,41 +369,204 @@
 # Out of scope for 1.13: desktop session manager, Linux dbus ABI, framebuffer.
 
 # ---------------------------------------------------------------------
-# 1.14.x  Framebuffer simple UI (deferred — far after practical path)
-# Goal: clear screen, pixels/rects, simple menu or graphical terminal on QEMU.
-# Only after 1.10–1.13 practical / driver / FS / I/O work is solid enough to teach.
+# 1.14.x  IPC / memory grants that graphics will need later
+# Goal: before pixels: share pages between tasks with caps (buffer transfer
+#       foundation). Still no display requirement.
 # ---------------------------------------------------------------------
 #
-# Work to land before tagging 1.14.0:
-#   W1  Enable ramfb / simple-framebuffer (FDT hint already exists); map FB
-#   W2  Userspace helpers: clear, put_pixel, fill_rect
-#   W3  Simple menu or graphical terminal (serial shell remains primary)
-#   W4  Smoke: log or scripted proof of FB writes (no full WM)
+# Suggested staging:
+#   W1  Grant / map shared frames between two user tasks (cap-mediated)
+#   W2  Unmap / revoke path; provenance records for shared maps
+#   W3  Small demo: producer fills page, consumer reads via grant
+#   W4  Smoke + docs: “this is how a compositor will get buffers later”
 #
 # Releases:
-# 1.14.0  Framebuffer drawing + simple UI demo
-# 1.14.y  Display path fixes only
+# 1.14.0  Shared-memory grant between tasks
+# 1.14.1  Revoke / unmap + ledger visibility
+# 1.14.y  Grant polish (size limits, multi-page)
 #
-# Out of scope for 1.14: window manager, icons desktop, GPU 3D, IME.
+# Out of scope for 1.14: framebuffer attach, GPU, Linux dma-buf ABI.
+
+# ---------------------------------------------------------------------
+# 1.15.x  Framebuffer pixels (first display — still not a WM)
+# Goal: clear screen, put_pixel / fill_rect, simple menu or graphical
+#       terminal on QEMU ramfb. Serial shell stays primary.
+# ---------------------------------------------------------------------
+#
+# Suggested staging:
+#   W1  Enable ramfb / simple-framebuffer (FDT hint exists); map FB
+#   W2  Userspace helpers: clear, put_pixel, fill_rect
+#   W3  Simple menu or graphical terminal demo
+#   W4  Smoke: scripted proof of FB writes
+#
+# Releases:
+# 1.15.0  Framebuffer map + draw primitives
+# 1.15.1  Simple menu / graphical terminal demo
+# 1.15.y  Display path fixes only
+#
+# Out of scope for 1.15: compositor, multi-window, GPU 3D, IME, Wayland.
+
+# ---------------------------------------------------------------------
+# 1.16.x  Input seat (keyboard / pointer)
+# Goal: virtio-input or equivalent; events to a userspace input server;
+#       shell or FB demo can react (focus still trivial).
+# ---------------------------------------------------------------------
+#
+# Suggested staging:
+#   W1  Probe virtio-input (or UART keys) via FDT + driver module path
+#   W2  Input server: queue key/pointer events; clients subscribe by cap
+#   W3  Wire FB demo or shell to consume one event stream
+#   W4  Smoke: keypress appears in log / moves a cursor on FB
+#
+# Releases:
+# 1.16.0  Input driver + event queue server
+# 1.16.1  Pointer + keyboard to one demo client
+# 1.16.y  Seat polish (modifiers, absolute vs relative)
+#
+# Out of scope for 1.16: libinput, XKB full layouts, multi-seat desktop.
+
+# ---------------------------------------------------------------------
+# 1.17.x  Output + buffer attach (pre-compositor)
+# Goal: treat FB as an “output”; clients attach shared buffers (from 1.14)
+#       and damage/flush regions — still single client or kernel blit.
+# ---------------------------------------------------------------------
+#
+# Suggested staging:
+#   W1  Output object: size, format (e.g. XRGB8888), one primary output
+#   W2  Attach shared buffer to output; flush / damage rectangle
+#   W3  Double-buffer swap helper; vsync optional (busy wait / timer)
+#   W4  Smoke: client paints off-screen buffer then flushes to FB
+#
+# Releases:
+# 1.17.0  Output + buffer attach / flush
+# 1.17.1  Double-buffer path
+# 1.17.y  Format / damage polish
+#
+# Out of scope for 1.17: multi-output, hardware plane, Wayland wire format.
+
+# ---------------------------------------------------------------------
+# 1.18.x  Tiny compositor (multi-surface, still DeepRoot-native)
+# Goal: one compositor server owns the FB; ≥2 client surfaces; stack /
+#       position; input focus to top surface. Concepts like Wayland —
+#       not the Wayland wire protocol.
+# ---------------------------------------------------------------------
+#
+# Suggested staging:
+#   W1  Surface create/destroy; role = toplevel only
+#   W2  Compositor scene: z-order, position; compose to FB
+#   W3  Seat focus follows click or shell command
+#   W4  Smoke: two clients, overlapping rects, focus switch
+#
+# Releases:
+# 1.18.0  Compositor + two surfaces + compose
+# 1.18.1  Pointer focus / click-to-raise
+# 1.18.y  Resize / damage-region compose polish
+#
+# Out of scope for 1.18: xdg-shell, decorations toolkit, GPU accel, IME.
+
+# ---------------------------------------------------------------------
+# 1.19.x  DeepRoot display protocol (Wayland-inspired messages)
+# Goal: stable *DeepRoot* IPC messages for wl-like objects: display,
+#       registry, compositor, surface, shm/buffer, seat, output —
+#       documented for teaching. Still not libwayland-compatible.
+# ---------------------------------------------------------------------
+#
+# Suggested staging:
+#   W1  Spec chapter: object IDs, opcodes, cap handoff for buffers/seats
+#   W2  Implement registry + bind; compositor/surface/shm on that wire
+#   W3  Port 1.18 clients onto the protocol (drop ad-hoc IPC)
+#   W4  Smoke: protocol dump in Root Ledger or debug tool
+#
+# Releases:
+# 1.19.0  Protocol v0 + compositor speaking it
+# 1.19.1  shm pool / buffer objects on the protocol
+# 1.19.2  seat / pointer / keyboard objects
+# 1.19.y  Protocol freeze for teaching; errata only
+#
+# Out of scope for 1.19: XML wayland.xml import, Linux socket + SCM_RIGHTS,
+#   running upstream weston / gtk Wayland backends unmodified.
+
+# ---------------------------------------------------------------------
+# 1.20.x  Teaching clients that “feel like” Wayland apps
+# Goal: small toolkit-ish helpers (window, draw text/rect, handle input)
+#       so labs write clients against 1.19 much like Wayland tutorials —
+#       still DeepRoot ELF + DeepRoot protocol.
+# ---------------------------------------------------------------------
+#
+# Suggested staging:
+#   W1  Client helper crate: connect, create surface, attach shm, commit
+#   W2  Demo: terminal-in-a-window or paint app
+#   W3  Second demo: clock / bouncing box sharing the compositor
+#   W4  Book labs: “write a surface client” walkthrough
+#
+# Releases:
+# 1.20.0  Client helper + one windowed demo
+# 1.20.1  Second concurrent client demo
+# 1.20.y  Helper polish / more lab exercises
+#
+# Out of scope for 1.20: GTK/Qt ports, EGL/GLES, full desktop session.
 
 # =====================================================================
-# 2.0 — platform integration release (when ready — do not rush)
+# 2.0 — platform integration (still pre–“Wayland lab complete”)
 # =====================================================================
 #
-# 2.0.0  Integrate teaching defaults: DT + virtio block + SMP + richer shell
-#        + FS depth + modules/drivers + practical I/O (+ framebuffer if 1.14
-#        landed). Docs / smoke.
+# 2.0.0  Integrate teaching defaults through at least: DT + virtio-blk + SMP
+#        + shell + FS depth + modules/drivers + practical I/O + shared grants
+#        + FB (+ input/compositor slices if already landed). Docs / smoke.
+#        Does **not** require full 1.19–1.20 protocol maturity.
 # 2.0.y  Integration and doc fixes only after the jump.
 #
-# MAJOR 2 means a deliberate platform milestone, not “we shipped many 1.x tags.”
-# Syscalls stay additive when possible; document any ABI note in this file.
+# MAJOR 2 = deliberate platform milestone, not desktop OS, not version inflation.
 #
 # Out of scope for 2.0:
 #   full desktop WM, Linux userspace binary compat, production networking,
-#   multi-user login, porting bash / full POSIX sh.
+#   multi-user login, porting bash, shipping real Wayland compositors.
+
+# ---------------------------------------------------------------------
+# 2.1.x  Session / launch ergonomics for graphical labs
+# Goal: start compositor + demos without hand-typing every modload;
+#       optional “graphical lab” init profile alongside serial shell.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 2.1.0  Init profile: compositor + input + one demo surface
+# 2.1.y  Launch / teardown polish
+#
+# Out of scope for 2.1: display manager login UI, multi-user seats.
+
+# ---------------------------------------------------------------------
+# 2.2.x  Protocol hardening toward “Wayland-like daily lab”
+# Goal: sync/frame callbacks, leave/enter, simple clipboard or DnD stub,
+#       better damage; docs map DeepRoot opcodes ↔ Wayland concepts.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 2.2.0  Frame callback / enter-leave
+# 2.2.1  Concept map doc (DeepRoot ↔ Wayland vocabulary)
+# 2.2.y  Clipboard or DnD stub (best-effort)
+#
+# Out of scope for 2.2: xdg-decoration, screencopy, DMA-BUF import from Linux.
 
 # =====================================================================
-# Checklist through 2.0
+# 3.0 — closest teaching milestone to “using Wayland”
+# =====================================================================
+#
+# 3.0.0  Declared when: DeepRoot compositor protocol is teachable end-to-end
+#        (registry → surface → shm buffer → seat → commit → on-screen),
+#        ≥2 concurrent clients, book lab “write a windowed app”, and a
+#        short guide “how this maps to Wayland mentally.”
+#        Still NOT Linux Wayland ABI / not running stock weston clients.
+# 3.0.y  Lab and protocol errata only.
+#
+# After 3.0 (backlog, not scheduled): optional protocol bridges, GPU,
+#   richer toolkit — only if they stay DeepRoot-native and useful to teach.
+#
+# Out of scope forever unless explicitly reopened:
+#   claiming “we run Wayland”; linking libwayland-client unmodified;
+#   desktop Linux distribution goals.
+
+# =====================================================================
+# Checklist through 3.0 (display / Wayland-inspired path)
 # =====================================================================
 # [1.1]  Runtime spawn of a DeepRoot ELF into its own task/AS
 # [1.2]  Human types at a prompt; shell spawns programs over serial
@@ -413,6 +581,15 @@
 # [1.11] FS durability + minimal fd table
 # [1.12] Practical I/O and shell utilities
 # [1.13] Service naming / discovery + runtime polish
-# [1.14] Framebuffer clear/draw + simple UI (deferred, after 1.13)
-# [2.0]  Integrated release of the above (when themes are ready)
-# Native capability microkernel throughout — learn from other OS, do not clone Linux.
+# [1.14] Shared-memory grants (buffer foundation)
+# [1.15] Framebuffer pixels / simple UI
+# [1.16] Input seat (keyboard / pointer)
+# [1.17] Output + buffer attach / flush
+# [1.18] Tiny multi-surface compositor
+# [1.19] DeepRoot display protocol (Wayland-inspired, not ABI-compatible)
+# [1.20] Teaching clients that feel like Wayland apps
+# [2.0]  Platform integration of the practical + early display stack
+# [2.1]  Graphical lab session / launch profile
+# [2.2]  Protocol hardening + concept map to Wayland
+# [3.0]  Closest “use it like Wayland” teaching milestone (DeepRoot-native)
+# Native capability microkernel throughout — learn from Wayland, do not clone it.

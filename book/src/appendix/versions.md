@@ -42,10 +42,14 @@ git checkout v1.10.0
 | 1.11 | FS 持久化 + 最小 fd |
 | 1.12 | 实用 I/O 与 shell 工具 |
 | 1.13 | 服务命名 / 发现 |
-| 1.14 | Framebuffer（再延后） |
-| 2.0 | 集成发布（不赶） |
+| 1.14 | 共享内存 grant（缓冲基础） |
+| 1.15 | Framebuffer 像素 |
+| 1.16–1.18 | 输入 → output/buffer → 小合成器 |
+| 1.19–1.20 | DeepRoot 显示协议 + 教学客户端（Wayland **启发**） |
+| 2.0–2.2 | 平台集成 → 图形实验会话 → 协议打磨 |
+| **3.0** | 最接近「像用 Wayland」的教学里程碑（仍非 Linux Wayland ABI） |
 
-当前 **current** 见 `VERSION` 第一行（约 `1.10.y`）。framebuffer 排到 **1.14**。
+当前 **current** 见 `VERSION` 第一行。完整分期与 out-of-scope 以根目录 `VERSION` 为准。
 
 ## 4. 和 GitHub Releases
 

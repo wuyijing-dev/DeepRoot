@@ -66,6 +66,6 @@ MAJOR.PATCHLEVEL.SUBLEVEL
 ## 4. 一句话心态
 
 先求「跑起来、看见现象」，再求「为什么这样设计」。  
-1.10 起可玩动态服务器；framebuffer 延后（见 `VERSION` 与 [下一步](../appendix/next.md)）。
+1.10 起可玩动态服务器；显示与 Wayland 启发路径见 `VERSION` / [下一步](../appendix/next.md)（约 **3.0**）。
 
 下一章：[0.1 启动与串口](01-boot.md)。
