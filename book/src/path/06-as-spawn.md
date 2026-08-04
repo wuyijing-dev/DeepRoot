@@ -1,5 +1,12 @@
 # 1.1 地址空间与 spawn（详细跟读）
 
+## 本章拆读顺序
+
+1. [1.1.1 per-task 页表](as-spawn/01-per-task-as.md)
+2. [1.1.2 `SYS_SPAWN` 控制流](as-spawn/02-sys-spawn.md)
+3. [1.1.3 跟读 `elf.rs`](as-spawn/03-elf-loader.md)
+4. [1.1.4 Zombie 与 `SYS_WAIT`](as-spawn/04-zombie-wait.md)
+
 ## 1. 为什么要「每任务一张页表」？
 
 若所有用户程序共用内核那套「大一统」映射，隔离很弱，一个程序乱写容易牵连别人。  

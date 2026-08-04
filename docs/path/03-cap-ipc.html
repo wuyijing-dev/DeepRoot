@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4a2f9423.js";
+            window.path_to_searchindex_js = "../searchindex-dd6493b0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-9b9500d6.js"></script>
+        <script src="../toc-d263d424.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,6 +182,15 @@
                     <main>
                         <h1 id="0304-能力与-ipc详细跟读"><a class="header" href="#0304-能力与-ipc详细跟读">0.3–0.4 能力与 IPC（详细跟读）</a></h1>
 <p>本章是 DeepRoot 最「微内核味道」的部分：权限用票（capability），协作用消息（IPC），过程可记账（Ledger）。</p>
+<h2 id="本章拆读顺序"><a class="header" href="#本章拆读顺序">本章拆读顺序</a></h2>
+<p>如果你想按“像书一样”的顺序读，请接着看这些子章节：</p>
+<ol>
+<li><a href="cap-ipc/01-cap-model.html">0.3.1 Capability 模型</a></li>
+<li><a href="cap-ipc/02-boot-cspace.html">0.3.2 启动时的 CSpace 安装</a></li>
+<li><a href="cap-ipc/03-ipc-call-flow.html">0.4.1 call / recv / reply</a></li>
+<li><a href="cap-ipc/04-ledger.html">0.4.2 Root Ledger 怎么看</a></li>
+<li><a href="cap-ipc/05-ipc-sched.html">0.4.3 IPC 与调度状态切换</a></li>
+</ol>
 <h2 id="1-capability把权限当成票"><a class="header" href="#1-capability把权限当成票">1. Capability：把权限当成票</a></h2>
 <h3 id="11-为什么不用uid0-全能"><a class="header" href="#11-为什么不用uid0-全能">1.1 为什么不用「UID=0 全能」？</a></h3>
 <p>教学微内核更想演示：</p>
@@ -273,11 +282,11 @@ LEDGER.record(Boot, ...);
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../path/02-mm.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../path/mm/04-elf-preview.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../path/04-user-sched.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../path/cap-ipc/01-cap-model.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -287,11 +296,11 @@ LEDGER.record(Boot, ...);
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../path/02-mm.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../path/mm/04-elf-preview.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../path/04-user-sched.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../path/cap-ipc/01-cap-model.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

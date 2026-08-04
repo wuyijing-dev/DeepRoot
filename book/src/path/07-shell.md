@@ -2,6 +2,12 @@
 
 shell 是你最常触摸的用户程序。把它读懂，你就打通了「串口字节 → 解析 → syscall」整条链。
 
+## 本章拆读顺序
+
+1. [1.2.1 shell 主循环](shell/01-main-loop.md)
+2. [1.2.2 `read_line` 与共享串口](shell/02-read-line.md)
+3. [1.2.3 `run_path` 与前台等待](shell/03-run-path.md)
+
 ## 1. 主循环结构（`user/shell/src/main.rs`）
 
 伪代码：

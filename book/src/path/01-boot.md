@@ -2,6 +2,14 @@
 
 本章带你从「按下运行脚本」走到 `kernel_main`，并搞清字是怎么出现在屏幕上的。
 
+## 本章拆读顺序
+
+1. [0.1.1 从 QEMU 到 `_start`](boot/01-boot-path.md)
+2. [0.1.2 跟读 `boot.rs`](boot/02-boot-rs.md)
+3. [0.1.3 跟读 `kernel_main`](boot/03-kernel-main.md)
+4. [0.1.4 SBI 控制台](boot/04-sbi-console.md)
+5. [0.1.5 early trap 与 `stvec`](boot/05-early-trap.md)
+
 ## 1. 上电之后谁先跑？
 
 在 QEMU `virt` + `-bios default` 时：

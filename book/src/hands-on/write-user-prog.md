@@ -3,6 +3,13 @@
 目标：新增一个可 `run` 的 ELF，例如打印 `echo: …` 的小程序 `echo`。  
 做完后你应彻底理解：**用户包 → build.rs → ramfs → shell**。
 
+## 本章拆读顺序
+
+1. [步骤 1：复制 hello 模板](write-user-prog/01-clone-template.md)
+2. [步骤 2：注册到 workspace 与 build](write-user-prog/02-register-build.md)
+3. [步骤 3：挂进 ramfs 与 shell](write-user-prog/03-ramfs-shell.md)
+4. [步骤 4：构建、运行、调试](write-user-prog/04-build-debug.md)
+
 下面以包名 `deeproot-echo`、ramfs 名 `echo` 为例。
 
 ## 0. 前置

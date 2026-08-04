@@ -3,6 +3,13 @@
 ABI = Application Binary Interface：用户程序与内核之间的「接线标准」。  
 1.0 把底座钉住；1.1–1.4 只**追加**新号码。
 
+## 本章拆读顺序
+
+1. [1.0.1 寄存器调用约定](abi/01-registers.md)
+2. [1.0.2 错误码与核心 syscall](abi/02-errors-core-syscalls.md)
+3. [1.0.3 `trap.rs` 如何解码 ecall](abi/03-trap-decode.md)
+4. [1.0.4 四个 syscall 实战跟读](abi/04-guided-syscalls.md)
+
 ## 1. 调用约定（RISC-V 用户态）
 
 | 寄存器 | 用途 |

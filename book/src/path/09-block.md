@@ -1,5 +1,11 @@
 # 1.4 块设备教学替身（详细说明）
 
+## 本章拆读顺序
+
+1. [1.4.1 为什么先做替身](block/01-why-standin.md)
+2. [1.4.2 跟读 `block.rs`](block/02-read-block-rs.md)
+3. [1.4.3 以后怎么走向 virtio-blk](block/03-next-step-virtio.md)
+
 ## 1. 这一章要解决什么心理预期？
 
 很多人看到路线图写「块设备」，期待立刻：

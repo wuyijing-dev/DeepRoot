@@ -2,6 +2,14 @@
 
 到了这一段，DeepRoot 不再是「内核独唱」，而是一台小剧场：多个 U-mode 演员 + 内核导演（调度器）。
 
+## 本章拆读顺序
+
+1. [0.5.1 用户程序最小骨架](user-sched/01-user-runtime.md)
+2. [0.5.2 `servers::bring_up` 跟读](user-sched/02-bring-up.md)
+3. [0.6.1 TaskState 与 BlockReason](user-sched/03-task-states.md)
+4. [0.6.2 timer / preempt](user-sched/04-timer-preempt.md)
+5. [0.6.3 syscall 返回值到底写给谁](user-sched/05-syscall-return.md)
+
 ## 1. 用户程序的最小骨架
 
 打开任意 `user/*/src/main.rs`，顶部几乎都有同样的故事：

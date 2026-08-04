@@ -2,6 +2,16 @@
 
 本章是 DeepRoot 最「微内核味道」的部分：权限用票（capability），协作用消息（IPC），过程可记账（Ledger）。
 
+## 本章拆读顺序
+
+如果你想按“像书一样”的顺序读，请接着看这些子章节：
+
+1. [0.3.1 Capability 模型](cap-ipc/01-cap-model.md)
+2. [0.3.2 启动时的 CSpace 安装](cap-ipc/02-boot-cspace.md)
+3. [0.4.1 call / recv / reply](cap-ipc/03-ipc-call-flow.md)
+4. [0.4.2 Root Ledger 怎么看](cap-ipc/04-ledger.md)
+5. [0.4.3 IPC 与调度状态切换](cap-ipc/05-ipc-sched.md)
+
 ## 1. Capability：把权限当成票
 
 ### 1.1 为什么不用「UID=0 全能」？
