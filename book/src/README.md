@@ -1,5 +1,45 @@
 # DeepRoot 学习笔记
 
+> 版本选择：下拉框会跳转到 `docs/<tag>/` 下对应版本的教程站点（例如 `v1.4.0`）。
+
+<div style="margin: 0.6rem 0; padding: 0.6rem; border: 1px solid #ddd; border-radius: 8px;">
+  <div style="margin-bottom: 0.4rem; font-weight: 600;">选择版本</div>
+  <select id="drp-version-select" style="min-width: 12rem; padding: 0.35rem 0.5rem;"></select>
+</div>
+
+<script>
+(function () {
+  const select = document.getElementById('drp-version-select');
+  if (!select) return;
+
+  // 站点固定部署在 /DeepRoot/（见 docs/book.toml 的 site-url）
+  fetch('/DeepRoot/versions.json')
+    .then(r => r.json())
+    .then(list => {
+      select.innerHTML = '';
+      for (const item of list) {
+        const opt = document.createElement('option');
+        opt.value = item.version;
+        opt.textContent = item.label || item.version;
+        select.appendChild(opt);
+      }
+
+      // 当前页面在 /DeepRoot/<version>/ 下时，尝试选中对应版本；否则默认选第一个。
+      const m = location.pathname.match(/\/DeepRoot\/([^/]+)\//);
+      const current = m ? m[1] : null;
+      if (current) select.value = current;
+
+      select.addEventListener('change', () => {
+        const v = select.value;
+        location.href = '/DeepRoot/' + v + '/';
+      });
+    })
+    .catch(() => {
+      // 不影响正文：如果 versions.json 没加载到，就保持空选择框。
+    });
+})();
+</script>
+
 欢迎。这份文档写给**第一次接触微内核 / RISC-V / `no_std` Rust** 的读者。
 
 你不需要已经写过操作系统。你只需要：

@@ -1,0 +1,44 @@
+# Build & publish versioned mdBook outputs on git tags.
+#
+# Assumption:
+# - GitHub Pages source is "main /docs".
+# - Each tag build publishes to "docs/<tag>/" so users can switch versions by URL.
+#
+name: docs-tag-versioned
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mdBook
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSL "https://github.com/rust-lang/mdBook/releases/download/v0.4.43/mdbook-v0.4.43-x86_64-unknown-linux-gnu.tar.gz" \
+            | tar -xz -C "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Build book (tag source)
+        run: mdbook build
+        working-directory: book
+
+      - name: Deploy versioned site into docs/<tag>/
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./book/book
+          publish_branch: main
+          destination_dir: docs/${{ github.ref_name }}
+          commit_message: "docs: publish mdBook for ${{ github.ref_name }}"
+          force_orphan: false
+
