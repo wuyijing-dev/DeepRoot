@@ -73,7 +73,8 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 - `ledger::init`：给之后的 boot/trap/IPC 记录打底
 - `trap::init`：先挂陷阱入口，否则后续 ecall/缺页只能进入固件的“黑盒”
 - `mm::init`：准备 Sv39 页表环境（不然用户态 ELF 没法被正确映射）
-- `block::init`：1.4 教学块层 ready，并格式化 DRFS（1.4.1 起 shell 可读块上文本）
+- `fdt::probe`：解析自有 DTB（1.5 / 1.6.1）  
+- `block::init`：优先 virtio-blk 上的 DRFS；失败才 ramdisk  
 - `servers::bring_up`：装入多个 U-mode ELF 并把控制权交给调度器；这一步通常“不返回”
 
 ### 3.1 为什么 `servers::bring_up()` 放在最后？
@@ -176,9 +177,9 @@ QEMU virt guest
 2. 确认顺序符合你的预期。  
 3. 故意把 `sbi::console_getchar` 的 EID 改错，跑 shell——观察是否「一回车就 unknown」（学完 shell 章再做）。
 
-额外建议：先别改代码，直接用脚本给的 smoke 目标“对照验收”。`scripts/run-qemu.sh --smoke` 里会检查一组关键字符串（适用于当前 `VERSION`，如 1.4.1）：
+额外建议：先别改代码，直接用脚本给的 smoke 目标“对照验收”。`scripts/run-qemu.sh --smoke` 里会检查一组关键字符串（适用于当前 `VERSION`，如 **1.6.1**）：
 
-`DeepRoot microkernel 1.4.1` / `canopy ready` / `ping: pong` / `hello: spawned ELF says hi` / `shell: DeepRoot shell ready` / `block: ramdisk ready` / `DRFS` / `init: handing off to shell`。
+`DeepRoot microkernel 1.6.1` / `fdt: model "DeepRoot QEMU virt"` / `fdt: board deeproot,qemu-virt` / `virtio-blk: ready` / `block: virtio-blk ready` / `DRFS` / `canopy ready` / `ping: pong` / `hello: spawned ELF says hi` / `shell: DeepRoot shell ready` / `init: handing off to shell`。
 
 你可以把这些字符串当成“里程碑坐标”：某一项缺失，通常就意味着启动链路在对应阶段还没成功走完。
 

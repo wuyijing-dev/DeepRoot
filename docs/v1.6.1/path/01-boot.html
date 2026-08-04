@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f9a18a48.js";
+            window.path_to_searchindex_js = "../searchindex-aa065fd8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b6d20683.js"></script>
@@ -235,7 +235,8 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li><code>ledger::init</code>：给之后的 boot/trap/IPC 记录打底</li>
 <li><code>trap::init</code>：先挂陷阱入口，否则后续 ecall/缺页只能进入固件的“黑盒”</li>
 <li><code>mm::init</code>：准备 Sv39 页表环境（不然用户态 ELF 没法被正确映射）</li>
-<li><code>block::init</code>：1.4 教学块层 ready，并格式化 DRFS（1.4.1 起 shell 可读块上文本）</li>
+<li><code>fdt::probe</code>：解析自有 DTB（1.5 / 1.6.1）</li>
+<li><code>block::init</code>：优先 virtio-blk 上的 DRFS；失败才 ramdisk</li>
 <li><code>servers::bring_up</code>：装入多个 U-mode ELF 并把控制权交给调度器；这一步通常“不返回”</li>
 </ul>
 <h3 id="31-为什么-serversbring_up-放在最后"><a class="header" href="#31-为什么-serversbring_up-放在最后">3.1 为什么 <code>servers::bring_up()</code> 放在最后？</a></h3>
@@ -311,8 +312,8 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li>确认顺序符合你的预期。</li>
 <li>故意把 <code>sbi::console_getchar</code> 的 EID 改错，跑 shell——观察是否「一回车就 unknown」（学完 shell 章再做）。</li>
 </ol>
-<p>额外建议：先别改代码，直接用脚本给的 smoke 目标“对照验收”。<code>scripts/run-qemu.sh --smoke</code> 里会检查一组关键字符串（适用于当前 <code>VERSION</code>，如 1.4.1）：</p>
-<p><code>DeepRoot microkernel 1.4.1</code> / <code>canopy ready</code> / <code>ping: pong</code> / <code>hello: spawned ELF says hi</code> / <code>shell: DeepRoot shell ready</code> / <code>block: ramdisk ready</code> / <code>DRFS</code> / <code>init: handing off to shell</code>。</p>
+<p>额外建议：先别改代码，直接用脚本给的 smoke 目标“对照验收”。<code>scripts/run-qemu.sh --smoke</code> 里会检查一组关键字符串（适用于当前 <code>VERSION</code>，如 <strong>1.6.1</strong>）：</p>
+<p><code>DeepRoot microkernel 1.6.1</code> / <code>fdt: model "DeepRoot QEMU virt"</code> / <code>fdt: board deeproot,qemu-virt</code> / <code>virtio-blk: ready</code> / <code>block: virtio-blk ready</code> / <code>DRFS</code> / <code>canopy ready</code> / <code>ping: pong</code> / <code>hello: spawned ELF says hi</code> / <code>shell: DeepRoot shell ready</code> / <code>init: handing off to shell</code>。</p>
 <p>你可以把这些字符串当成“里程碑坐标”：某一项缺失，通常就意味着启动链路在对应阶段还没成功走完。</p>
 <h3 id="61-我建议你学会的分段排错法"><a class="header" href="#61-我建议你学会的分段排错法">6.1 我建议你学会的“分段排错法”</a></h3>
 <p>如果系统没有完全起来，不要一把抓全部日志。<br>按阶段切：</p>

@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f9a18a48.js";
+            window.path_to_searchindex_js = "searchindex-aa065fd8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b6d20683.js"></script>
@@ -780,7 +780,8 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li><code>ledger::init</code>：给之后的 boot/trap/IPC 记录打底</li>
 <li><code>trap::init</code>：先挂陷阱入口，否则后续 ecall/缺页只能进入固件的“黑盒”</li>
 <li><code>mm::init</code>：准备 Sv39 页表环境（不然用户态 ELF 没法被正确映射）</li>
-<li><code>block::init</code>：1.4 教学块层 ready，并格式化 DRFS（1.4.1 起 shell 可读块上文本）</li>
+<li><code>fdt::probe</code>：解析自有 DTB（1.5 / 1.6.1）</li>
+<li><code>block::init</code>：优先 virtio-blk 上的 DRFS；失败才 ramdisk</li>
 <li><code>servers::bring_up</code>：装入多个 U-mode ELF 并把控制权交给调度器；这一步通常“不返回”</li>
 </ul>
 <h3 id="31-为什么-serversbring_up-放在最后"><a class="header" href="#31-为什么-serversbring_up-放在最后">3.1 为什么 <code>servers::bring_up()</code> 放在最后？</a></h3>
@@ -856,8 +857,8 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li>确认顺序符合你的预期。</li>
 <li>故意把 <code>sbi::console_getchar</code> 的 EID 改错，跑 shell——观察是否「一回车就 unknown」（学完 shell 章再做）。</li>
 </ol>
-<p>额外建议：先别改代码，直接用脚本给的 smoke 目标“对照验收”。<code>scripts/run-qemu.sh --smoke</code> 里会检查一组关键字符串（适用于当前 <code>VERSION</code>，如 1.4.1）：</p>
-<p><code>DeepRoot microkernel 1.4.1</code> / <code>canopy ready</code> / <code>ping: pong</code> / <code>hello: spawned ELF says hi</code> / <code>shell: DeepRoot shell ready</code> / <code>block: ramdisk ready</code> / <code>DRFS</code> / <code>init: handing off to shell</code>。</p>
+<p>额外建议：先别改代码，直接用脚本给的 smoke 目标“对照验收”。<code>scripts/run-qemu.sh --smoke</code> 里会检查一组关键字符串（适用于当前 <code>VERSION</code>，如 <strong>1.6.1</strong>）：</p>
+<p><code>DeepRoot microkernel 1.6.1</code> / <code>fdt: model "DeepRoot QEMU virt"</code> / <code>fdt: board deeproot,qemu-virt</code> / <code>virtio-blk: ready</code> / <code>block: virtio-blk ready</code> / <code>DRFS</code> / <code>canopy ready</code> / <code>ping: pong</code> / <code>hello: spawned ELF says hi</code> / <code>shell: DeepRoot shell ready</code> / <code>init: handing off to shell</code>。</p>
 <p>你可以把这些字符串当成“里程碑坐标”：某一项缺失，通常就意味着启动链路在对应阶段还没成功走完。</p>
 <h3 id="61-我建议你学会的分段排错法"><a class="header" href="#61-我建议你学会的分段排错法">6.1 我建议你学会的“分段排错法”</a></h3>
 <p>如果系统没有完全起来，不要一把抓全部日志。<br>按阶段切：</p>
@@ -3706,6 +3707,11 @@ deeproot&gt; run echo
 <pre><code class="language-bash">sudo apt-get install -y qemu-system-misc
 </code></pre>
 <p>确认：<code>which qemu-system-riscv64</code>。</p>
+<h3 id="q-build-dtb-missing-dtc"><a class="header" href="#q-build-dtb-missing-dtc">Q: <code>build-dtb: missing dtc</code></a></h3>
+<pre><code class="language-bash">sudo apt-get install -y device-tree-compiler
+./scripts/build-dtb.sh
+</code></pre>
+<p>详见 <a href="#自有设备树platformqemu-virtdeeprootdts">自有设备树</a>。</p>
 <h3 id="q-第一次编译特别慢--磁盘很大"><a class="header" href="#q-第一次编译特别慢--磁盘很大">Q: 第一次编译特别慢 / 磁盘很大</a></h3>
 <p>正常。<code>kernel/build.rs</code> 会再编多个 <code>user/*</code>，输出在 <code>target/</code> 与 <code>target/user-build/</code>。</p>
 <h3 id="q-我改了-usershellqemu-里没变化"><a class="header" href="#q-我改了-usershellqemu-里没变化">Q: 我改了 <code>user/shell</code>，QEMU 里没变化</a></h3>
@@ -3715,18 +3721,35 @@ deeproot&gt; run echo
 <li>仍不行：<code>cargo clean -p deeproot-kernel</code> 后再跑</li>
 <li>确认你没有在跑另一个旧的 QEMU 窗口</li>
 </ol>
+<h3 id="q-failed-to-get-write-lock磁盘镜像"><a class="header" href="#q-failed-to-get-write-lock磁盘镜像">Q: <code>Failed to get "write" lock</code>（磁盘镜像）</a></h3>
+<p>另一个 QEMU 还占着 <code>build/deeproot-disk.img</code>。先关掉旧实例：</p>
+<pre><code class="language-bash">killall qemu-system-riscv64
+</code></pre>
 <h2 id="启动与-qemu"><a class="header" href="#启动与-qemu">启动与 QEMU</a></h2>
 <h3 id="q-只有-opensbi-横幅没有-deeproot"><a class="header" href="#q-只有-opensbi-横幅没有-deeproot">Q: 只有 OpenSBI 横幅，没有 DeepRoot</a></h3>
-<p>内核可能没加载成功：检查脚本里 <code>-kernel</code> 路径、链接地址、是否编的是 release 目标产物。</p>
+<p>内核可能没加载成功：检查脚本里 <code>-kernel</code> 路径、链接地址、是否编的是 release 目标产物。自定义 <code>-dtb</code> 若与硬件严重不符，也可能导致固件/内核起不来——先确认用的是仓库里的 <code>platform/qemu-virt/deeproot.dts</code>。</p>
 <h3 id="q-有内核横幅没有-deeproot"><a class="header" href="#q-有内核横幅没有-deeproot">Q: 有内核横幅，没有 <code>deeproot&gt;</code></a></h3>
 <p>往上翻找 <code>KERNEL PANIC</code>、<code>page fault</code>、<code>trap</code>。<br>常见：某个用户 ELF 损坏、页表问题、任务立刻 fault。</p>
+<h3 id="q-日志里没有-fdt-model-deeproot-qemu-virt"><a class="header" href="#q-日志里没有-fdt-model-deeproot-qemu-virt">Q: 日志里没有 <code>fdt: model "DeepRoot QEMU virt"</code></a></h3>
+<ul>
+<li>标签是否 ≥ <strong>v1.6.1</strong></li>
+<li><code>run-qemu.sh</code> 是否传了 <code>-dtb build/deeproot-qemu-virt.dtb</code></li>
+<li><code>build-dtb.sh</code> 是否成功</li>
+</ul>
+<p>见 <a href="#1516-设备树与-virtio-blk对齐-v161">1.5–1.6 章</a>。</p>
+<h3 id="q-virtio-blk-no-block-device--回退-ramdisk"><a class="header" href="#q-virtio-blk-no-block-device--回退-ramdisk">Q: <code>virtio-blk: no block device</code> / 回退 ramdisk</a></h3>
+<ul>
+<li>QEMU 是否带了 <code>-device virtio-blk-device,…</code></li>
+<li>DTB 里是否有 <code>virtio,mmio</code> 节点</li>
+<li>MMIO 是否已 <code>map_mmio_range</code>（开 Sv39 之后）</li>
+</ul>
+<p>交互仍可能进 shell；<code>--smoke</code> 则会失败（要求 virtio 成功）。</p>
 <h3 id="q-怎么退出-qemu"><a class="header" href="#q-怎么退出-qemu">Q: 怎么退出 QEMU？</a></h3>
 <p><code>Ctrl-A</code>，松开，再按 <code>X</code>。<br>无效时另开终端：</p>
-<pre><code class="language-bash">pkill -f qemu-system-riscv64
+<pre><code class="language-bash">killall qemu-system-riscv64
 </code></pre>
-<p>注意要带 <code>-f</code>，且模式匹配完整命令行。</p>
 <h3 id="q---smoke-失败但交互能进-shell"><a class="header" href="#q---smoke-失败但交互能进-shell">Q: <code>--smoke</code> 失败但交互能进 shell</a></h3>
-<p>看 smoke 脚本在 <code>grep</code> 哪些字符串；可能日志文案变了。先读 <code>scripts/run-qemu.sh</code>。</p>
+<p>看 smoke 脚本在 <code>grep</code> 哪些字符串；可能日志文案变了。先读 <code>scripts/run-qemu.sh</code>（当前应对齐 <strong>1.6.1</strong>）。</p>
 <h2 id="shell-输入"><a class="header" href="#shell-输入">Shell 输入</a></h2>
 <h3 id="q-完全不能输入--无回显"><a class="header" href="#q-完全不能输入--无回显">Q: 完全不能输入 / 无回显</a></h3>
 <ul>
@@ -3748,7 +3771,9 @@ deeproot&gt; run echo
 <h3 id="q-这能跑-linux-程序吗"><a class="header" href="#q-这能跑-linux-程序吗">Q: 这能跑 Linux 程序吗？</a></h3>
 <p>不能。ABI 是 DeepRoot-native，不是 Linux syscall。</p>
 <h3 id="q-ramfs-的文件在磁盘上吗"><a class="header" href="#q-ramfs-的文件在磁盘上吗">Q: ramfs 的文件在磁盘上吗？</a></h3>
-<p>不在。它们是构建期 <code>include_bytes!</code> 嵌进内核的。块层 <code>DISK</code> 是另一回事，见 <a href="#14-块设备教学替身详细说明">1.4</a>。</p>
+<p><strong>embed ramfs</strong>：不在盘上，是构建期 <code>include_bytes!</code> 嵌进内核的。<br><strong>块上 DRFS</strong>（<code>block.txt</code> 等）：在 <code>build/deeproot-disk.img</code>（经 virtio-blk），见 <a href="#virtio-blk-与-drfs-后端">1.6</a>。</p>
+<h3 id="q-设备树是-qemu-自动生成的吗"><a class="header" href="#q-设备树是-qemu-自动生成的吗">Q: 设备树是 QEMU 自动生成的吗？</a></h3>
+<p><strong>1.6.1</strong> 起否。真源是 <code>platform/qemu-virt/deeproot.dts</code>，经 <code>dtc</code> 与 <code>-dtb</code> 交给 OpenSBI。见 <a href="#自有设备树platformqemu-virtdeeprootdts">自有设备树</a>。</p>
 <h3 id="q-bad-apple-算教学内容吗"><a class="header" href="#q-bad-apple-算教学内容吗">Q: Bad Apple 算教学内容吗？</a></h3>
 <p>不算主线。最多当「大 ELF + 实时 syscall」压力测试。</p>
 <h2 id="文档站点"><a class="header" href="#文档站点">文档站点</a></h2>
