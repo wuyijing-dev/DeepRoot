@@ -1,11 +1,16 @@
-//! Teaching ramfs (1.3) + block-backed text files (1.4.1).
+//! Teaching ramfs (1.3) + block-backed text + scratch overlay (1.8).
 //!
 //! Embedded ELFs still come from `kernel/build.rs` via `include_bytes!`.
 //! Text files may also live on the DRFS image in `block` (ramdisk stand-in).
 //! Shell `ls` / `cat` see both; `run` / `SYS_EXEC` only load ELF from embed.
+//! `SYS_FS_WRITE` creates/updates small scratch text files in RAM.
+
+use core::cell::UnsafeCell;
+use core::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::block;
 use crate::println;
+use crate::sync::SpinLock;
 
 struct File {
     name: &'static str,
@@ -26,7 +31,7 @@ static FILES: &[File] = &[
     },
     File {
         name: "version",
-        data: b"1.6.1\n",
+        data: b"1.8.0\n",
     },
     File {
         name: "hello",
@@ -38,6 +43,51 @@ static FILES: &[File] = &[
     },
 ];
 
+const MAX_SCRATCH: usize = 8;
+const SCRATCH_NAME: usize = 24;
+const SCRATCH_DATA: usize = 256;
+
+struct Scratch {
+    used: bool,
+    name_len: usize,
+    name: [u8; SCRATCH_NAME],
+    data_len: usize,
+    data: [u8; SCRATCH_DATA],
+}
+
+impl Scratch {
+    const fn empty() -> Self {
+        Self {
+            used: false,
+            name_len: 0,
+            name: [0; SCRATCH_NAME],
+            data_len: 0,
+            data: [0; SCRATCH_DATA],
+        }
+    }
+
+    fn name_str(&self) -> &str {
+        core::str::from_utf8(&self.name[..self.name_len]).unwrap_or("")
+    }
+}
+
+struct ScratchTable {
+    slots: [Scratch; MAX_SCRATCH],
+}
+
+struct ScratchCell(UnsafeCell<ScratchTable>);
+unsafe impl Sync for ScratchCell {}
+
+static SCRATCH_LOCK: SpinLock = SpinLock::new();
+static SCRATCHES: ScratchCell = ScratchCell(UnsafeCell::new(ScratchTable {
+    slots: [const { Scratch::empty() }; MAX_SCRATCH],
+}));
+static SCRATCH_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+fn scratches() -> &'static mut ScratchTable {
+    unsafe { &mut *SCRATCHES.0.get() }
+}
+
 fn normalize(path: &str) -> &str {
     path.trim_start_matches('/')
 }
@@ -45,7 +95,7 @@ fn normalize(path: &str) -> &str {
 /*
  * lookup - resolve an embedded ramfs path to (name, bytes)
  *
- * Used by SYS_EXEC. Block-backed text files are not returned here.
+ * Used by SYS_EXEC. Block-backed / scratch text files are not returned here.
  */
 pub fn lookup(path: &str) -> Option<(&'static str, &'static [u8])> {
     let name = normalize(path);
@@ -55,6 +105,49 @@ pub fn lookup(path: &str) -> Option<(&'static str, &'static [u8])> {
         }
     }
     None
+}
+
+fn scratch_find(name: &str) -> Option<usize> {
+    let t = scratches();
+    t.slots.iter().position(|s| s.used && s.name_str() == name)
+}
+
+/*
+ * write_scratch - create or overwrite a small text file for shell `>`
+ */
+pub fn write_scratch(path: &str, data: &[u8]) -> bool {
+    let name = normalize(path);
+    if name.is_empty() || name.len() >= SCRATCH_NAME {
+        return false;
+    }
+    if name.contains('/') || name.contains("..") {
+        return false;
+    }
+    /* Do not clobber embedded ELF names. */
+    if lookup(name).is_some() {
+        return false;
+    }
+    let ncopy = data.len().min(SCRATCH_DATA);
+    let _g = SCRATCH_LOCK.lock();
+    let t = scratches();
+    let idx = if let Some(i) = scratch_find(name) {
+        i
+    } else {
+        match t.slots.iter().position(|s| !s.used) {
+            Some(i) => {
+                SCRATCH_COUNT.fetch_add(1, Ordering::Relaxed);
+                i
+            }
+            None => return false,
+        }
+    };
+    let s = &mut t.slots[idx];
+    s.used = true;
+    s.name_len = name.len();
+    s.name[..name.len()].copy_from_slice(name.as_bytes());
+    s.data_len = ncopy;
+    s.data[..ncopy].copy_from_slice(&data[..ncopy]);
+    true
 }
 
 pub fn list() {
@@ -68,10 +161,24 @@ pub fn list() {
         println!("  {} ({} bytes, {})", f.name, f.data.len(), kind);
     }
 
+    {
+        let _g = SCRATCH_LOCK.lock();
+        let t = scratches();
+        for s in t.slots.iter() {
+            if s.used {
+                println!(
+                    "  {} ({} bytes, text, scratch)",
+                    s.name_str(),
+                    s.data_len
+                );
+            }
+        }
+    }
+
     if !block::ready() {
         return;
     }
-    println!("fs: block / (DRFS on ramdisk)");
+    println!("fs: block / (DRFS)");
     let n = block::file_count();
     for i in 0..n {
         if let Some(ent) = block::dirent(i) {
@@ -107,7 +214,17 @@ pub fn cat(path: &str) -> bool {
         return true;
     }
 
-    /* Fall through to block-backed DRFS text files. */
+    {
+        let _g = SCRATCH_LOCK.lock();
+        if let Some(i) = scratch_find(name) {
+            let s = &scratches().slots[i];
+            if let Ok(text) = core::str::from_utf8(&s.data[..s.data_len]) {
+                crate::console::_print(core::format_args!("{}", text));
+            }
+            return true;
+        }
+    }
+
     let mut buf = [0u8; 512];
     match block::lookup(name, &mut buf) {
         Some((nread, total, is_text)) => {

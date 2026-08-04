@@ -8,13 +8,13 @@ MAJOR.PATCHLEVEL.SUBLEVEL
 
 | 段 | 含义 | 初学者怎么用 |
 |---|---|---|
-| MAJOR | ABI 大断裂或平台跃迁（2.0 = DT/SMP/显示集成） | 文档基线在 **1.x**，当前推荐 **v1.7.0** |
-| PATCHLEVEL | **一类用户可见能力** | 按 0.1 → … → 1.7 读文档 |
-| SUBLEVEL | 系列内修复与打磨 | 1.7.0 = SMP 首发 |
+| MAJOR | ABI 大断裂或平台跃迁（2.0 = DT/SMP/显示集成） | 文档基线在 **1.x**，当前推荐 **v1.8.0** |
+| PATCHLEVEL | **一类用户可见能力** | 按 0.1 → … → 1.8 读文档 |
+| SUBLEVEL | 系列内修复与打磨 | 1.8.0 = 自研 shell+ |
 
 完整注释清单在仓库根目录 [`VERSION`](https://github.com/wuyijing-dev/DeepRoot/blob/main/VERSION)。
 
-## 1. 总览图（到 1.7）
+## 1. 总览图（到 1.8）
 
 ```text
 0.1  启动、串口、trap、Ledger 雏形
@@ -32,6 +32,7 @@ MAJOR.PATCHLEVEL.SUBLEVEL
 1.5  FDT 平台发现（fdt.rs）
 1.6  virtio-blk + DRFS；1.6.1 自有 deeproot.dts
 1.7  SMP：HSM 二级核、每 hart RQ、锁与 IPI
+1.8  自研 shell：argv/env/history/&/|/\>
 ```
 
 ## 2. 每段你「应该看见」什么
@@ -49,19 +50,20 @@ MAJOR.PATCHLEVEL.SUBLEVEL
 | 1.4 | `DRFS`；`cat block.txt` 有内容 |
 | 1.5–1.6 | `fdt: board deeproot,qemu-virt`；`virtio-blk: ready` |
 | **1.7** | `smp: 2 hart(s) online`；两条 `timer: hart=` / `idle hart=` |
+| **1.8** | `shell: DeepRoot shell 1.8 ready`；`help` 含 \| / > / & |
 
 ## 3. 推荐学习节奏
 
 1. **第 0 天**：只做 [第一次启动](../intro/first-boot.md)，不改代码。  
-2. **然后**：按章节顺序读到 **1.7**；每章至少做一半「动手验证」。  
+2. **然后**：按章节顺序读到 **1.8**；每章至少做一半「动手验证」。  
 3. **卡壳时**：先查 [常见问题](../hands-on/faq.md)。  
 4. **想创造时**：完成 1.3 后再做 [自己写用户程序](../hands-on/write-user-prog.md)。
 
-请固定 **`v1.7.0`**（或页首选择器打开对应冻结快照），否则日志和截图对不上。
+请固定 **`v1.8.0`**（或页首选择器打开对应冻结快照），否则日志和截图对不上。
 
 ## 4. 一句话心态
 
 先求「跑起来、看见现象」，再求「为什么这样设计」。  
-1.7 之后还有更丰富 shell / 简易图形（见 `VERSION` 与 [下一步](../appendix/next.md)）。
+1.8 之后还有简易图形（1.9）与 2.0 集成（见 `VERSION` 与 [下一步](../appendix/next.md)）。
 
 下一章：[0.1 启动与串口](01-boot.md)。

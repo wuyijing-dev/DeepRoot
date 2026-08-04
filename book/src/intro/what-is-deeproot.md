@@ -53,7 +53,7 @@ U-mode（User）      ← init / shell / hello 在这里
 每张「工作证」不只说你能干什么，还尽量记下**它是怎么被开出来的**（mint / derive …）。  
 学权限时，这比只看一个整数 flag 更有教学价值。
 
-## 4. 到 v1.7.0 你到底能得到什么？
+## 4. 到 v1.8.0 你到底能得到什么？
 
 已经齐的：
 
@@ -61,29 +61,21 @@ U-mode（User）      ← init / shell / hello 在这里
 - 物理内存管理 + Sv39  
 - 能力与同步 IPC  
 - 多用户态 ELF（init / console / ping / shell / hello…）  
-- 调度与时钟抢占  
-- 交互 shell：`ls` / `cat` / `run`  
-- ramfs（构建期嵌入的文件与 ELF）  
-- **自有设备树**（`platform/qemu-virt/deeproot.dts`）+ FDT 发现  
-- **virtio-blk** 上的 DRFS（`cat block.txt`）  
-- **SMP**：QEMU `-smp 2`，HSM 拉二级核，每 hart 运行队列 / idle / timer  
+- 调度与时钟抢占；**SMP（`-smp 2`）**  
+- 交互 shell：**argv / env / history / `&` / `|` / `>`**  
+- ramfs + scratch 文本 + virtio-blk DRFS  
+- **自有设备树** + FDT 发现  
 
 刻意没有的（别失望，是范围控制）：
 
 - Linux 应用二进制兼容  
-- 完整桌面 / GPU 3D  
-- 网络、多用户登录、移植 bash  
-- 「双核就一定更快」（教学负载下体感提升不是目标）  
+- 完整桌面 / GPU 3D；bash/POSIX 脚本语言  
+- 网络、多用户登录  
 
 ## 5. 这份教程怎么用？
 
 1. 先按 [第一次启动](first-boot.md) 跑通。  
-2. 再按 [学习路线图](../path/overview.md) **从 0.1 读到 1.7**；每一章都有：  
-   - 概念  
-   - 建议打开的源码  
-   - 逐步跟读  
-   - 动手验证  
-   - 易错点  
+2. 再按 [学习路线图](../path/overview.md) **从 0.1 读到 1.8**。  
 3. 想自己加程序 → [动手玩](../hands-on/write-user-prog.md)。
 
 下一章：[你需要准备什么](prerequisites.md)。

@@ -68,6 +68,10 @@
   - [1.7.1 HSM 拉起二级核](path/smp/01-hsm-bringup.md)
   - [1.7.2 每 hart 运行队列与 idle](path/smp/02-per-hart-rq.md)
   - [1.7.3 锁、IPI 与 `tp` 陷阱](path/smp/03-locks-ipi.md)
+- [1.8 更完善自研 shell](path/12-shell18.md)
+  - [1.8.1 解析器与 history](path/shell18/01-parser-history.md)
+  - [1.8.2 env / cd / 后台](path/shell18/02-env-cd-bg.md)
+  - [1.8.3 管道与重定向](path/shell18/03-pipe-redir.md)
 
 # 动手玩
 

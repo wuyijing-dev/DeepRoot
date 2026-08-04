@@ -1,4 +1,4 @@
-//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.4.
+//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.8.
 //!
 //! 0..9 frozen at 1.0.0. New numbers are additive only.
 
@@ -31,6 +31,24 @@ pub const SYS_EXEC: usize = 14;
 pub const SYS_TIME: usize = 15;
 /// `a0` = sched id from spawn/exec; 0 if exited+reaped, `-11` if still running
 pub const SYS_WAIT: usize = 16;
+
+/* ---- 1.8 pipe / redirect / mutable text ---- */
+
+/// Create a byte pipe → pipe id
+pub const SYS_PIPE: usize = 17;
+/// `a0`=pipe id — tear down
+pub const SYS_PIPE_CLOSE: usize = 18;
+/// `a0`=pipe, `a1`=buf, `a2`=len → bytes read (0 if empty)
+pub const SYS_PIPE_READ: usize = 19;
+/// `a0`=pipe, `a1`=buf, `a2`=len → bytes written
+pub const SYS_PIPE_WRITE: usize = 20;
+/// `a0`=sched id, `a1`=pipe id or `STDOUT_CONSOLE` — redirect DEBUG_WRITE
+pub const SYS_TASK_STDOUT: usize = 21;
+/// `a0`=path, `a1`=plen, `a2`=data, `a3`=dlen — write/create scratch text file
+pub const SYS_FS_WRITE: usize = 22;
+
+/// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
+pub const STDOUT_CONSOLE: usize = usize::MAX;
 
 /// QEMU virt / ACLINT mtime frequency used by `SYS_TIME`
 pub const TIME_HZ: u64 = 10_000_000;

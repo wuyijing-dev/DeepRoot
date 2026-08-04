@@ -50,14 +50,14 @@
 
 ## 文档对应哪个版本？
 
-**当前文档默认对齐：`v1.7.0`**（SMP 多 hart + 自有 DTS + virtio-blk）。  
+**当前文档默认对齐：`v1.8.0`**（自研 shell+ + SMP + virtio-blk）。  
 较早快照仍可通过页首选择器打开。
 
 请核对：
 
 - 仓库根目录 [`VERSION`](https://github.com/wuyijing-dev/DeepRoot/blob/main/VERSION) 第一行  
 - 启动横幅里的版本号  
-- （可选）`git checkout v1.7.0` 与文字严格对齐  
+- （可选）`git checkout v1.8.0` 与文字严格对齐  
 
 若你跟的是更新的 `main`，以仓库里的 `VERSION` 为准；用选择器切换冻结快照。
 
@@ -67,10 +67,11 @@
 2. [你需要准备什么](intro/prerequisites.md) — 装工具  
 3. [第一次启动](intro/first-boot.md) — **必须先跑通 QEMU**  
 4. [仓库长什么样](intro/repo-map.md) — 建立代码地图  
-5. [学习路线图](path/overview.md) 起，从 **0.1 读到 1.7**  
+5. [学习路线图](path/overview.md) 起，从 **0.1 读到 1.8**  
    - 每章固定结构：概念 → 源码跟读 → 动手验证 → 易错点  
    - **1.6** 重点：[设备树与 virtio-blk](path/10-fdt-virtio.md)  
-   - **1.7** 重点：[SMP 多 hart](path/11-smp.md)  
+   - **1.7** 重点：[SMP 多 hart](path/11-smp.md)
+   - **1.8** 重点：[更完善自研 shell](path/12-shell18.md)  
 6. 想创造时看 [动手玩](hands-on/shell-commands.md)
 
 ## 每一章你该怎么学？

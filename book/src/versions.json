@@ -1,7 +1,11 @@
 [
   {
+    "version": "v1.8.0",
+    "label": "1.8.0（当前 · 自研 shell+）"
+  },
+  {
     "version": "v1.7.0",
-    "label": "1.7.0（当前 · SMP）"
+    "label": "1.7.0（SMP）"
   },
   {
     "version": "v1.6.1",

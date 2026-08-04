@@ -70,5 +70,5 @@ TrapFrame 里有一份用户 `x[4]`（`tp`）。
 ## 7. 下一站
 
 - 巩固：回 [第一次启动](../../intro/first-boot.md) 对照 1.7 日志。  
-- 路线图：**1.8** 更完善自研 shell（见 `VERSION` / [下一步](../../appendix/next.md)）。  
+- 下一章：[1.8 更完善自研 shell](../12-shell18.md)。  
 - 玩命令：[Shell 常用命令](../../hands-on/shell-commands.md)。

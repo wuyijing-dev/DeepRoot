@@ -1,21 +1,23 @@
 # Shell 常用命令（详细手册）
 
 提示符：`deeproot>`  
-解析器在 `user/shell/src/main.rs`：非常朴素——**没有**引号、管道、变量、通配符。
+解析器在 `user/shell/src/main.rs`（**1.8**：引号、`$VAR`、history、`|` / `>` / `&`）。  
+完整说明见 [1.8 章](../path/12-shell18.md)。
 
 ## 1. 命令一览
 
 | 你输入 | 实际行为 | 底层 |
 |---|---|---|
-| `help` | 打印内置帮助文本 | 仅用户态字符串 |
-| `ls` | 列出 embed ramfs + 块上 DRFS | `SYS_FS_LIST` |
-| `cat <文件>` | 显示文本；ELF 则提示 `run` | `SYS_FS_CAT` |
-| `run <名字>` | 加载 ELF，前台等到退出 | `SYS_EXEC` + `SYS_WAIT` |
-| `hello` | 等同 `run hello` | 同上 |
-| `badapple` | 等同 `run badapple` | 同上（耗时长） |
-| `exit` | shell 退出 | `SYS_EXIT` |
-| （空行） | 再出提示符 | — |
-| 其它 | `shell: unknown - type: help` | — |
+| `help` | 打印内置帮助 | 用户态 |
+| `ls` / `cat FILE` | 列目录 / 读文本（含 scratch） | `SYS_FS_LIST` / `CAT` |
+| `run ELF` / `hello` / `badapple` | 前台执行 ELF | `SYS_EXEC` + `WAIT` |
+| `echo ARGS` | 打印（支持 `$VAR`） | 用户态 |
+| `export K=V` / `env` | 环境变量 | shell 本地表 |
+| `pwd` / `cd DIR` | 打印/设置路径前缀 | shell 本地 cwd |
+| `history` / ↑ | 历史 | 环形缓冲 + CSI |
+| `CMD &` | 后台 | `EXEC` 不 wait |
+| `A \| B` / `A > f` | 管道 / 重定向 | pipe + `FS_WRITE` |
+| `exit` | 退出 shell | `SYS_EXIT` |
 
 ## 2. 推荐练习顺序（请照做）
 

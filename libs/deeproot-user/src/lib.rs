@@ -26,6 +26,10 @@ pub mod sys {
         unsafe { ecall(SYS_DEBUG_WRITE, s.as_ptr() as usize, s.len(), 0, 0) }
     }
 
+    pub fn debug_write_bytes(buf: &[u8]) -> isize {
+        unsafe { ecall(SYS_DEBUG_WRITE, buf.as_ptr() as usize, buf.len(), 0, 0) }
+    }
+
     pub fn debug_read_byte() -> isize {
         unsafe { ecall(SYS_DEBUG_READ, 0, 0, 0, 0) }
     }
@@ -46,11 +50,22 @@ pub mod sys {
         unsafe { ecall(SYS_FS_CAT, path.as_ptr() as usize, path.len(), 0, 0) }
     }
 
+    pub fn fs_write(path: &[u8], data: &[u8]) -> isize {
+        unsafe {
+            ecall(
+                SYS_FS_WRITE,
+                path.as_ptr() as usize,
+                path.len(),
+                data.as_ptr() as usize,
+                data.len(),
+            )
+        }
+    }
+
     pub fn exec(path: &[u8]) -> isize {
         unsafe { ecall(SYS_EXEC, path.as_ptr() as usize, path.len(), 0, 0) }
     }
 
-    /// Monotonic milliseconds since boot.
     pub fn time_ms() -> u64 {
         let v = unsafe { ecall(SYS_TIME, 0, 0, 0, 0) };
         if v < 0 {
@@ -60,10 +75,31 @@ pub mod sys {
         }
     }
 
-    /// Poll whether sched task `id` has exited. Returns 0 (reaped), -11 (running), or error.
     pub fn wait(id: usize) -> isize {
         unsafe { ecall(SYS_WAIT, id, 0, 0, 0) }
     }
+
+    pub fn pipe() -> isize {
+        unsafe { ecall(SYS_PIPE, 0, 0, 0, 0) }
+    }
+
+    pub fn pipe_close(id: usize) -> isize {
+        unsafe { ecall(SYS_PIPE_CLOSE, id, 0, 0, 0) }
+    }
+
+    pub fn pipe_read(id: usize, buf: &mut [u8]) -> isize {
+        unsafe { ecall(SYS_PIPE_READ, id, buf.as_mut_ptr() as usize, buf.len(), 0) }
+    }
+
+    pub fn pipe_write(id: usize, buf: &[u8]) -> isize {
+        unsafe { ecall(SYS_PIPE_WRITE, id, buf.as_ptr() as usize, buf.len(), 0) }
+    }
+
+    pub fn task_stdout(task: usize, pipe_or_console: usize) -> isize {
+        unsafe { ecall(SYS_TASK_STDOUT, task, pipe_or_console, 0, 0) }
+    }
+
+    pub const STDOUT_CONSOLE: usize = deeproot_abi::syscall::STDOUT_CONSOLE;
 
     pub fn ipc_call(ep_slot: usize, label: u64, word0: u64) -> isize {
         unsafe { ecall(SYS_IPC_CALL, ep_slot, label as usize, word0 as usize, 0) }

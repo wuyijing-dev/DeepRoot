@@ -25,6 +25,7 @@ mod timer;
 mod trap;
 mod version;
 mod virtio_blk;
+mod pipe;
 
 use deeproot_abi::LedgerKind;
 use ledger::LEDGER;

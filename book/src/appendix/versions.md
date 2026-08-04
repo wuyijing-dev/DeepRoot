@@ -2,14 +2,14 @@
 
 ## 1. 文档对齐哪一版？
 
-本学习笔记默认对齐 **`v1.7.0`**（SMP 多 hart + 自有 DTS + virtio-blk）。  
+本学习笔记默认对齐 **`v1.8.0`**（自研 shell+ + SMP + virtio-blk）。  
 页首选择器还可打开 **`v1.6.1`** / **`v1.6.0`** / **`v1.4.1`** / **`v1.4.0`** 等冻结快照。
 
 核对三处：
 
 1. 仓库根 `VERSION` 第一行非注释内容  
 2. QEMU 横幅：`DeepRoot microkernel …`  
-3. Git 标签（若你按标签检出）：`git checkout v1.7.0`
+3. Git 标签（若你按标签检出）：`git checkout v1.8.0`
 
 ## 2. 标签怎么用？
 
@@ -35,10 +35,11 @@ git checkout v1.7.0
 | 0.1–0.6 | 启动 → 调度 |
 | 1.0–1.4 | ABI → shell → ramfs → 块替身 |
 | 1.5–1.6 | FDT → virtio-blk；1.6.1 自有 DTS |
-| **1.7** | 多 hart（SMP） |
-| 1.8+ | 更丰富 shell → 简易图形 → 2.0 |
+| 1.7 | 多 hart（SMP） |
+| **1.8** | 自研 shell（argv/env/\|/\>/&） |
+| 1.9+ | 简易图形 → 2.0 |
 
-当前 **current** 是 `1.7.0`。下一站见 `VERSION` 的 1.8+。
+当前 **current** 是 `1.8.0`。下一站见 `VERSION` 的 1.9+。
 
 ## 4. 和 GitHub Releases
 

@@ -77,6 +77,8 @@ pub struct UserTask {
     pub is_idle: bool,
     /// Home runqueue hart (1.7 per-hart RQ).
     pub home_hart: usize,
+    /// If set, SYS_DEBUG_WRITE goes to this pipe id (1.8).
+    pub stdout_pipe: Option<usize>,
 }
 
 impl UserTask {
@@ -92,6 +94,7 @@ impl UserTask {
             block: BlockReason::None,
             is_idle: false,
             home_hart: 0,
+            stdout_pipe: None,
         }
     }
 
@@ -318,6 +321,7 @@ fn spawn_inner(
         block: BlockReason::None,
         is_idle,
         home_hart: home,
+        stdout_pipe: None,
     };
     /* Stay quiet on success — shell/fs exec should not flood the serial. */
     Some(idx)
@@ -676,8 +680,19 @@ pub fn handle_syscall(
                 return ERR_GENERIC;
             }
             let slice = unsafe { core::slice::from_raw_parts(ptr as *const u8, len) };
-            crate::console::write_bytes(slice);
-            len as isize
+            let pipe = {
+                let _g = SCHED_LOCK.lock();
+                let s = inner();
+                let h = smp::hart_id().min(MAX_HARTS - 1);
+                let id = s.current[h];
+                s.tasks[id].stdout_pipe
+            };
+            if let Some(pid) = pipe {
+                crate::pipe::write(pid, slice) as isize
+            } else {
+                crate::console::write_bytes(slice);
+                len as isize
+            }
         }
         SYS_LEDGER_DUMP => {
             crate::ledger::LEDGER.dump_to_console();
@@ -912,6 +927,69 @@ pub fn handle_syscall(
                 }
                 TaskState::Empty => ERR_GENERIC,
                 _ => ERR_AGAIN,
+            }
+        }
+        SYS_PIPE => match crate::pipe::create() {
+            Some(id) => id as isize,
+            None => ERR_GENERIC,
+        },
+        SYS_PIPE_CLOSE => {
+            crate::pipe::close(a0 as usize);
+            0
+        }
+        SYS_PIPE_READ => {
+            let id = a0 as usize;
+            let ptr = a1 as usize;
+            let len = a2 as usize;
+            if len > 4096 {
+                return ERR_GENERIC;
+            }
+            let buf = unsafe { core::slice::from_raw_parts_mut(ptr as *mut u8, len) };
+            crate::pipe::read(id, buf) as isize
+        }
+        SYS_PIPE_WRITE => {
+            let id = a0 as usize;
+            let ptr = a1 as usize;
+            let len = a2 as usize;
+            if len > 4096 {
+                return ERR_GENERIC;
+            }
+            let buf = unsafe { core::slice::from_raw_parts(ptr as *const u8, len) };
+            crate::pipe::write(id, buf) as isize
+        }
+        SYS_TASK_STDOUT => {
+            let tid = a0 as usize;
+            let pipe = a1 as usize;
+            let _g = SCHED_LOCK.lock();
+            let s = inner();
+            if tid >= MAX_UTASKS || s.tasks[tid].state == TaskState::Empty {
+                return ERR_GENERIC;
+            }
+            if pipe == STDOUT_CONSOLE {
+                s.tasks[tid].stdout_pipe = None;
+            } else {
+                s.tasks[tid].stdout_pipe = Some(pipe);
+            }
+            0
+        }
+        SYS_FS_WRITE => {
+            let pptr = a0 as usize;
+            let plen = a1 as usize;
+            let dptr = a2 as usize;
+            let dlen = a3 as usize;
+            if plen == 0 || plen > 64 || dlen > 256 {
+                return ERR_GENERIC;
+            }
+            let path = unsafe { core::slice::from_raw_parts(pptr as *const u8, plen) };
+            let data = unsafe { core::slice::from_raw_parts(dptr as *const u8, dlen) };
+            let path = match core::str::from_utf8(path) {
+                Ok(p) => p,
+                Err(_) => return ERR_GENERIC,
+            };
+            if crate::fs::write_scratch(path, data) {
+                dlen as isize
+            } else {
+                ERR_GENERIC
             }
         }
         _ => ERR_NOSYS,

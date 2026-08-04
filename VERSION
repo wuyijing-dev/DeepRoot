@@ -1,4 +1,4 @@
-1.7.0
+1.8.0
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -229,7 +229,7 @@
 #   W4  Smoke: qemu -smp 2 shows both harts active; single-hart regression still passes
 #
 # Releases:
-# 1.7.0   Multi-hart scheduling usable on QEMU virt ← current
+# 1.7.0   Multi-hart scheduling usable on QEMU virt
 # 1.7.y   Locking / IPI / bring-up fixes only
 #
 # Out of scope for 1.7: production NUMA, hotplug, big.LITTLE affinity policies.
@@ -247,7 +247,7 @@
 #   W5  Smoke: documented command set + short script with a pipe example
 #
 # Releases:
-# 1.8.0   Richer shell + simple pipes/redirection
+# 1.8.0   Richer shell + simple pipes/redirection ← current
 # 1.8.y   Parser / builtin fixes only
 #
 # Out of scope for 1.8: POSIX conditionals/loops/functions; importing bash source.

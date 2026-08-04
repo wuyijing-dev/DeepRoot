@@ -113,7 +113,7 @@ pub fn bring_up() -> ! {
         id_shell,
         n_harts
     );
-    println!("servers: teaching path 1.1–1.7 (AS/spawn/shell/ramfs/FDT/virtio/SMP)");
+    println!("servers: teaching path 1.1–1.8 (AS/spawn/shell/ramfs/FDT/virtio/SMP/shell+)");
 
     trap::install_ctx(tasks, eps);
     trap::enable_user();
