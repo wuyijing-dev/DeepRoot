@@ -1,4 +1,4 @@
-//! Sv39 page tables + identity map (0.2.3 / 0.2.4) + user maps (0.5.x).
+//! Sv39 page tables: kernel identity template + per-task user roots (1.1).
 
 use core::cell::UnsafeCell;
 use core::sync::atomic::{AtomicUsize, Ordering};
@@ -48,6 +48,14 @@ impl PageTable {
     fn from_pa(pa: PhysAddr) -> &'static mut Self {
         unsafe { &mut *(pa.as_usize() as *mut Self) }
     }
+
+    fn zeroed(pa: PhysAddr) -> &'static mut Self {
+        let t = Self::from_pa(pa);
+        for e in t.entries.iter_mut() {
+            *e = Pte(0);
+        }
+        t
+    }
 }
 
 fn vpn(va: usize, level: usize) -> usize {
@@ -61,7 +69,7 @@ struct RootHolder {
 
 unsafe impl Sync for RootHolder {}
 
-static ROOT: RootHolder = RootHolder {
+static KERNEL_ROOT: RootHolder = RootHolder {
     pa: AtomicUsize::new(0),
     table: UnsafeCell::new(0),
 };
@@ -76,6 +84,8 @@ fn map_page(root: &mut PageTable, va: VirtAddr, pa: PhysAddr, flags: u64) {
         let pte = unsafe { &mut (*table).entries[idx] };
         if !pte.is_valid() {
             let frame = frame::alloc().expect("sv39: mid-level table");
+            let child = PageTable::zeroed(frame);
+            let _ = child;
             *pte = Pte::from_ppn_flags(frame.page_index(), Pte::V);
         }
         assert!(!pte.is_leaf(), "sv39: unexpected leaf at mid level");
@@ -89,7 +99,7 @@ fn map_page(root: &mut PageTable, va: VirtAddr, pa: PhysAddr, flags: u64) {
 
 pub fn init_identity(map: &MemoryMap) {
     let root_pa = frame::alloc().expect("sv39: root table");
-    let root = PageTable::from_pa(root_pa);
+    let root = PageTable::zeroed(root_pa);
 
     let mut pa = map.ram_start.as_usize();
     let end = map.ram_end.as_usize();
@@ -99,23 +109,42 @@ pub fn init_identity(map: &MemoryMap) {
         pa += PAGE_SIZE;
     }
 
-    ROOT.pa.store(root_pa.as_usize(), Ordering::Relaxed);
+    KERNEL_ROOT.pa.store(root_pa.as_usize(), Ordering::Relaxed);
     unsafe {
-        *ROOT.table.get() = root_pa.as_usize();
+        *KERNEL_ROOT.table.get() = root_pa.as_usize();
     }
     activate(root_pa);
 }
 
-fn root_mut() -> &'static mut PageTable {
-    let pa = ROOT.pa.load(Ordering::Relaxed);
-    assert!(pa != 0);
-    PageTable::from_pa(PhysAddr::new(pa))
+pub fn kernel_root_pa() -> PhysAddr {
+    PhysAddr::new(KERNEL_ROOT.pa.load(Ordering::Relaxed))
 }
 
 /*
- * map_user - map one user page VA→PA with U|perms
+ * clone_user_root - new root that shares kernel mid-levels (shallow copy)
+ *
+ * User VPN branches start empty and are filled by map_user_in.
  */
-pub fn map_user(va: usize, pa: PhysAddr, exec: bool, write: bool) {
+pub fn clone_user_root() -> Option<PhysAddr> {
+    let kpa = kernel_root_pa();
+    if kpa.as_usize() == 0 {
+        return None;
+    }
+    let new_pa = frame::alloc()?;
+    let src = PageTable::from_pa(kpa);
+    let dst = PageTable::from_pa(new_pa);
+    dst.entries = src.entries;
+    Some(new_pa)
+}
+
+fn root_from(pa: PhysAddr) -> &'static mut PageTable {
+    PageTable::from_pa(pa)
+}
+
+/*
+ * map_user_in - map one user page into @root_pa
+ */
+pub fn map_user_in(root_pa: PhysAddr, va: usize, pa: PhysAddr, exec: bool, write: bool) {
     let mut flags = Pte::R | Pte::U;
     if write {
         flags |= Pte::W;
@@ -123,13 +152,20 @@ pub fn map_user(va: usize, pa: PhysAddr, exec: bool, write: bool) {
     if exec {
         flags |= Pte::X;
     }
-    map_page(root_mut(), VirtAddr::new(va), pa, flags);
+    map_page(root_from(root_pa), VirtAddr::new(va), pa, flags);
+}
+
+/*
+ * map_user - map into the currently active kernel template (boot helpers)
+ */
+pub fn map_user(va: usize, pa: PhysAddr, exec: bool, write: bool) {
+    map_user_in(kernel_root_pa(), va, pa, exec, write);
     unsafe {
         core::arch::asm!("sfence.vma", options(nostack));
     }
 }
 
-fn activate(root_pa: PhysAddr) {
+pub fn activate(root_pa: PhysAddr) {
     let satp = (SATP_MODE_SV39 << 60) | root_pa.page_index();
     unsafe {
         core::arch::asm!(

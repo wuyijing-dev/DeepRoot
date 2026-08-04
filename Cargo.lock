@@ -4,19 +4,26 @@ version = 4
 
 [[package]]
 name = "deeproot-abi"
-version = "1.0.0"
+version = "1.4.0"
 
 [[package]]
 name = "deeproot-console"
-version = "1.0.0"
+version = "1.4.0"
 dependencies = [
  "deeproot-abi",
  "deeproot-user",
 ]
 
 [[package]]
+name = "deeproot-hello"
+version = "1.4.0"
+dependencies = [
+ "deeproot-user",
+]
+
+[[package]]
 name = "deeproot-init"
-version = "1.0.0"
+version = "1.4.0"
 dependencies = [
  "deeproot-abi",
  "deeproot-user",
@@ -24,22 +31,29 @@ dependencies = [
 
 [[package]]
 name = "deeproot-kernel"
-version = "1.0.0"
+version = "1.4.0"
 dependencies = [
  "deeproot-abi",
 ]
 
 [[package]]
 name = "deeproot-ping"
-version = "1.0.0"
+version = "1.4.0"
 dependencies = [
  "deeproot-abi",
  "deeproot-user",
 ]
 
 [[package]]
+name = "deeproot-shell"
+version = "1.4.0"
+dependencies = [
+ "deeproot-user",
+]
+
+[[package]]
 name = "deeproot-user"
-version = "1.0.0"
+version = "1.4.0"
 dependencies = [
  "deeproot-abi",
 ]

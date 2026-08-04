@@ -1,4 +1,4 @@
-//! init — root userspace server.
+//! init — root server: IPC demos then hand off to shell.
 
 #![no_std]
 #![no_main]
@@ -31,7 +31,6 @@ _start:
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write("init: root server online\n");
-    /* SYS_IPC_CALL blocks until the server replies. */
     let rc = sys::ipc_call(0, 0x5049, 1);
     let _ = sys::debug_write("init: ping call done\n");
     if rc >= 0 {
@@ -39,6 +38,13 @@ pub extern "C" fn main() {
     }
     let _ = sys::ipc_call(1, 0xC045, 0);
     let _ = sys::debug_write("init: console notified\n");
+    let hid = sys::spawn(0);
+    if hid >= 0 {
+        let _ = sys::debug_write("init: spawned hello ELF\n");
+    }
+    let _ = sys::yield_now();
+    let _ = sys::yield_now();
+    let _ = sys::debug_write("init: handing off to shell\n");
     sys::exit(0);
 }
 

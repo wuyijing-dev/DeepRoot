@@ -1,4 +1,4 @@
-1.0.0
+1.4.0
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -92,7 +92,7 @@
 # =====================================================================
 
 # ---------- 1.0.x Baseline ----------
-# 1.0.0   Stable ABI + server set (init / console / ping) ← current
+# 1.0.0   Stable ABI + server set (init / console / ping)
 # 1.0.y   Bugfixes only — no new feature series
 #
 # Acceptance today: QEMU smoke (banner, canopy, pong, init exit).
@@ -111,7 +111,7 @@
 #   W5  Smoke: init (or a tiny launcher) spawns a hello ELF and sees it exit
 #
 # Releases:
-# 1.1.0   Series usable: spawn ELF + isolated (or strongly separated) AS
+# 1.1.0   Series usable: spawn ELF + per-task AS
 # 1.1.y   Loader / spawn / AS bugfixes only
 #
 # Out of scope for 1.1: shell UI, filesystem paths to ELF, Linux ELF ABI quirks
@@ -155,7 +155,7 @@
 #   W6  Smoke: boot → shell → cat file → spawn ELF from ramfs
 #
 # Releases:
-# 1.3.0   ramfs + path spawn from shell
+# 1.3.0   ramfs ls/cat for shell
 # 1.3.y   FS protocol / ramfs / path fixes only
 #
 # Out of scope for 1.3: full Unix permissions model, many FS types, mmap files.
@@ -172,7 +172,7 @@
 #   W3  Smoke: boot from/with block-backed FS or read a file from virtio-blk
 #
 # Releases:
-# 1.4.0   Device-backed FS and/or console path usable
+# 1.4.0   Device-backed FS and/or console path usable ← current
 # 1.4.y   Driver / block FS polish only
 #
 # Out of scope for 1.4 (roadmap ends here):

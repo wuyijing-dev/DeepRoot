@@ -1,45 +1,34 @@
-//! User address space (0.2.5).
-//!
-//! Holds the root page-table PPN for a userspace AS. Full per-task tables
-//! are installed as servers map ELF / stacks.
-
-#![allow(dead_code)]
+//! Per-task address space (1.1).
 
 use super::layout::PhysAddr;
 use super::sv39;
 
-/// Userspace address space (root PPN + metadata).
+/// Userspace address space rooted at a Sv39 page-table.
 pub struct AddrSpace {
-    pub root_ppn: usize,
+    pub root_pa: PhysAddr,
 }
 
 impl AddrSpace {
     /*
-     * create - allocate an empty root page table for a future user task
-     *
-     * Returns None if the frame allocator is exhausted.
+     * create - clone kernel template root for a new task
      */
     pub fn create() -> Option<Self> {
-        let root = super::frame::alloc()?;
-        Some(Self {
-            root_ppn: root.page_index(),
-        })
+        let root_pa = sv39::clone_user_root()?;
+        Some(Self { root_pa })
     }
 
-    /*
-     * destroy - free the root frame (does not walk children yet)
-     *
-     * Stub: leaking mid-level tables is intentional until 0.5.x.
-     */
-    pub fn destroy(self) {
-        super::frame::free(PhysAddr::new(self.root_ppn << 12));
+    pub fn root_ppn(&self) -> usize {
+        self.root_pa.page_index()
     }
 
-    pub fn root_pa(&self) -> PhysAddr {
-        PhysAddr::new(self.root_ppn << 12)
+    pub fn activate(&self) {
+        sv39::activate(self.root_pa);
+    }
+
+    pub fn map_user(&self, va: usize, pa: PhysAddr, exec: bool, write: bool) {
+        sv39::map_user_in(self.root_pa, va, pa, exec, write);
     }
 }
 
-/* Re-export fault hint so trap can stay thin. */
 #[allow(unused_imports)]
 pub use sv39::page_fault_hint;

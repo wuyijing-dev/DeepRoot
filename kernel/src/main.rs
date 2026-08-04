@@ -6,9 +6,11 @@
 extern crate alloc;
 
 mod boot;
+mod block;
 mod cap;
 mod console;
 mod elf;
+mod fs;
 mod ipc;
 mod ledger;
 mod mm;
@@ -38,6 +40,7 @@ pub extern "C" fn kernel_main(hartid: usize, dtb_pa: usize) -> ! {
     LEDGER.record(LedgerKind::Trap, 0, 0, 1);
 
     mm::init(hartid, dtb_pa);
+    block::init();
     timer::init(hartid);
     servers::bring_up();
 }

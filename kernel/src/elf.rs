@@ -160,3 +160,104 @@ pub fn load(name: &str, bytes: &[u8]) -> Option<LoadedElf> {
         load_end,
     })
 }
+
+/*
+ * load_into - like load, but map pages into @aspace
+ */
+pub fn load_into(
+    aspace: &crate::mm::aspace::AddrSpace,
+    name: &str,
+    bytes: &[u8],
+) -> Option<LoadedElf> {
+    if bytes.len() < core::mem::size_of::<Elf64Ehdr>() || &bytes[0..4] != b"\x7fELF" {
+        println!("elf: {} bad header", name);
+        return None;
+    }
+    let ehdr = unsafe { &*(bytes.as_ptr() as *const Elf64Ehdr) };
+    if ehdr.e_type != ET_EXEC || ehdr.e_machine != EM_RISCV {
+        println!("elf: {} not RISC-V ET_EXEC", name);
+        return None;
+    }
+
+    let mut pages: [Option<PageSlot>; MAX_PAGES] = [None; MAX_PAGES];
+    let mut load_base = usize::MAX;
+    let mut load_end = 0usize;
+
+    for i in 0..ehdr.e_phnum as usize {
+        let off = ehdr.e_phoff as usize + i * ehdr.e_phentsize as usize;
+        if off + core::mem::size_of::<Elf64Phdr>() > bytes.len() {
+            return None;
+        }
+        let ph = unsafe { &*(bytes.as_ptr().add(off) as *const Elf64Phdr) };
+        if ph.p_type != PT_LOAD || ph.p_memsz == 0 {
+            continue;
+        }
+
+        let va = ph.p_vaddr as usize;
+        let memsz = ph.p_memsz as usize;
+        let filesz = ph.p_filesz as usize;
+        let file_off = ph.p_offset as usize;
+        let exec = ph.p_flags & PF_X != 0;
+        let write = ph.p_flags & PF_W != 0;
+
+        let start = va & !(PAGE_SIZE - 1);
+        let end = (va + memsz + PAGE_SIZE - 1) & !(PAGE_SIZE - 1);
+        load_base = load_base.min(start);
+        load_end = load_end.max(end);
+
+        let mut page_va = start;
+        while page_va < end {
+            let slot_idx = match pages.iter().position(|s| s.as_ref().map(|p| p.va) == Some(page_va))
+            {
+                Some(i) => i,
+                None => {
+                    let free = pages.iter().position(|s| s.is_none())?;
+                    let pa = frame::alloc()?;
+                    pages[free] = Some(PageSlot {
+                        va: page_va,
+                        pa,
+                        exec: false,
+                        write: false,
+                    });
+                    free
+                }
+            };
+            let slot = pages[slot_idx].as_mut().unwrap();
+            slot.exec |= exec;
+            slot.write |= write;
+            let pa = slot.pa;
+
+            for j in 0..PAGE_SIZE {
+                let vaddr = page_va + j;
+                if vaddr >= va && vaddr < va + filesz {
+                    let src = file_off + (vaddr - va);
+                    if src < bytes.len() {
+                        unsafe {
+                            *((pa.as_usize() + j) as *mut u8) = bytes[src];
+                        }
+                    }
+                }
+            }
+            page_va += PAGE_SIZE;
+        }
+    }
+
+    if load_base == usize::MAX {
+        println!("elf: {} has no PT_LOAD", name);
+        return None;
+    }
+
+    for slot in pages.iter().flatten() {
+        aspace.map_user(slot.va, slot.pa, slot.exec, slot.write);
+    }
+
+    println!(
+        "elf: loaded {} into as entry={:#x} span={:#x}..{:#x}",
+        name, ehdr.e_entry, load_base, load_end
+    );
+    Some(LoadedElf {
+        entry: ehdr.e_entry as usize,
+        load_base,
+        load_end,
+    })
+}

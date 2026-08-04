@@ -18,6 +18,8 @@ fn main() {
         ("deeproot-init", "deeproot-init", "user/init"),
         ("deeproot-console", "deeproot-console", "user/console"),
         ("deeproot-ping", "deeproot-ping", "user/ping"),
+        ("deeproot-hello", "deeproot-hello", "user/hello"),
+        ("deeproot-shell", "deeproot-shell", "user/shell"),
     ] {
         println!("cargo:rerun-if-changed=../{}/src/main.rs", src_dir);
         println!("cargo:rerun-if-changed=../{}/linker.ld", src_dir);

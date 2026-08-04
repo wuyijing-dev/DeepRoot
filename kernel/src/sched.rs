@@ -5,6 +5,7 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::cap::{TaskId, TaskTable};
 use crate::ipc::EndpointTable;
+use crate::mm::aspace::AddrSpace;
 use crate::mm::frame;
 use crate::mm::layout::{PhysAddr, PAGE_SIZE};
 use crate::mm::sv39;
@@ -17,6 +18,9 @@ pub const KSTACK_PAGES: usize = 2;
 
 const IDLE_VA: usize = 0x1300_0000;
 const IDLE_STACK: usize = 0x1310_0000;
+/// Dynamic spawn stack bases: 0x15000000 + id * 0x01000000
+const SPAWN_STACK_BASE: usize = 0x1500_0000;
+const SPAWN_STACK_STRIDE: usize = 0x0100_0000;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -60,9 +64,10 @@ pub struct UserTask {
     pub tf: TrapFrame,
     #[allow(dead_code)]
     pub stack_top: usize,
-    /// Dedicated kernel stack top (reserved for multi-hart / nested IRQ).
     #[allow(dead_code)]
     pub kstack_top: usize,
+    /// Sv39 root physical address (0 = unset).
+    pub root_pa: usize,
     pub block: BlockReason,
     pub is_idle: bool,
 }
@@ -76,8 +81,15 @@ impl UserTask {
             tf: TrapFrame::zero(),
             stack_top: 0,
             kstack_top: 0,
+            root_pa: 0,
             block: BlockReason::None,
             is_idle: false,
+        }
+    }
+
+    fn activate_as(&self) {
+        if self.root_pa != 0 {
+            sv39::activate(PhysAddr::new(self.root_pa));
         }
     }
 }
@@ -196,15 +208,16 @@ fn alloc_kstack() -> Option<usize> {
 }
 
 /*
- * spawn - create a U-mode task around a loaded ELF entry
+ * spawn_as - create a U-mode task in @aspace (ELF already mapped there)
  */
-pub fn spawn(
+pub fn spawn_as(
     name: &'static str,
     entry: usize,
     stack_va_base: usize,
     cap_task: TaskId,
+    aspace: AddrSpace,
 ) -> Option<usize> {
-    spawn_inner(name, entry, stack_va_base, cap_task, false)
+    spawn_inner(name, entry, stack_va_base, cap_task, false, aspace)
 }
 
 fn spawn_inner(
@@ -213,15 +226,17 @@ fn spawn_inner(
     stack_va_base: usize,
     cap_task: TaskId,
     is_idle: bool,
+    aspace: AddrSpace,
 ) -> Option<usize> {
     let s = inner();
     let idx = s.tasks.iter().position(|t| t.state == TaskState::Empty)?;
     for i in 0..USER_STACK_PAGES {
         let frame = frame::alloc()?;
-        sv39::map_user(stack_va_base + i * PAGE_SIZE, frame, false, true);
+        aspace.map_user(stack_va_base + i * PAGE_SIZE, frame, false, true);
     }
     let stack_top = stack_va_base + USER_STACK_PAGES * PAGE_SIZE;
     let kstack_top = alloc_kstack().unwrap_or(0);
+    let root_pa = aspace.root_pa.as_usize();
 
     const SSTATUS_SPIE: usize = 1 << 5;
     const SSTATUS_SUM: usize = 1 << 18;
@@ -238,6 +253,7 @@ fn spawn_inner(
         tf,
         stack_top,
         kstack_top,
+        root_pa,
         block: BlockReason::None,
         is_idle,
     };
@@ -245,22 +261,22 @@ fn spawn_inner(
         s.idle_id = Some(idx);
     }
     println!(
-        "sched: spawn {} id={} entry={:#x} sp={:#x} kstack={:#x} idle={}",
-        name, idx, entry, stack_top, kstack_top, is_idle
+        "sched: spawn {} id={} entry={:#x} sp={:#x} root={:#x} idle={}",
+        name, idx, entry, stack_top, root_pa, is_idle
     );
     Some(idx)
 }
 
 /*
- * spawn_idle - map a tiny U-mode yield loop and park it as the idle thread
+ * spawn_idle - map a tiny U-mode yield loop into its own AS
  */
 pub fn spawn_idle(cap_task: TaskId) -> Option<usize> {
+    let aspace = AddrSpace::create()?;
     let page = frame::alloc()?;
-    /* Position-independent loop: li a7, SYS_YIELD; ecall; j start */
     let code: [u32; 3] = [
         0x0080_0893, /* addi a7, x0, 8 */
         0x0000_0073, /* ecall */
-        0xff9f_f06f, /* jal x0, -8 → addi */
+        0xff9f_f06f, /* jal x0, -8 */
     ];
     unsafe {
         let dst = page.as_usize() as *mut u32;
@@ -268,8 +284,26 @@ pub fn spawn_idle(cap_task: TaskId) -> Option<usize> {
             dst.add(i).write(*w);
         }
     }
-    sv39::map_user(IDLE_VA, page, true, false);
-    spawn_inner("idle", IDLE_VA, IDLE_STACK, cap_task, true)
+    aspace.map_user(IDLE_VA, page, true, false);
+    spawn_inner("idle", IDLE_VA, IDLE_STACK, cap_task, true, aspace)
+}
+
+/*
+ * spawn_elf_bytes - runtime spawn from an ELF image (1.1 SYS_SPAWN)
+ */
+pub fn spawn_elf_bytes(
+    name: &'static str,
+    bytes: &[u8],
+    stack_va_base: usize,
+    cap_task: TaskId,
+) -> Option<usize> {
+    let aspace = AddrSpace::create()?;
+    let loaded = crate::elf::load_into(&aspace, name, bytes)?;
+    spawn_inner(name, loaded.entry, stack_va_base, cap_task, false, aspace)
+}
+
+pub fn next_spawn_stack_base(sched_id: usize) -> usize {
+    SPAWN_STACK_BASE + sched_id * SPAWN_STACK_STRIDE
 }
 
 pub fn mark_zombie(code: usize) {
@@ -365,15 +399,12 @@ pub fn yield_now() -> bool {
     let cur = s.current;
     if let Some(next) = pick_next(cur) {
         if s.tasks[cur].state == TaskState::Running {
-            if !s.tasks[cur].is_idle {
-                s.tasks[cur].state = TaskState::Ready;
-            } else {
-                s.tasks[cur].state = TaskState::Ready;
-            }
+            s.tasks[cur].state = TaskState::Ready;
         }
         s.current = next;
         s.tasks[next].state = TaskState::Running;
         set_current_tf(&mut s.tasks[next].tf as *mut TrapFrame);
+        s.tasks[next].activate_as();
         return true;
     }
     false
@@ -401,6 +432,7 @@ pub fn enter_first(id: usize) -> ! {
     s.current = id;
     s.tasks[id].state = TaskState::Running;
     set_current_tf(&mut s.tasks[id].tf as *mut TrapFrame);
+    s.tasks[id].activate_as();
     timer::note_preempt_ready();
     restore_user();
 }
@@ -420,6 +452,7 @@ pub fn restore_user() -> ! {
             crate::sbi::hart_suspend_idle();
         }
     }
+    s.tasks[id].activate_as();
     set_current_tf(&mut s.tasks[id].tf as *mut TrapFrame);
     let tf = current_tf_ptr();
     unsafe {
@@ -652,6 +685,54 @@ pub fn handle_syscall(
                     }
                     Err(_) => ERR_GENERIC,
                 },
+                Err(_) => ERR_GENERIC,
+            }
+        }
+        SYS_SPAWN => {
+            let blob = a0 as usize;
+            let bytes: &[u8] = match blob {
+                0 => crate::servers::HELLO_ELF,
+                _ => return ERR_GENERIC,
+            };
+            let cap = match tasks.spawn("spawned") {
+                Some(t) => t,
+                None => return ERR_GENERIC,
+            };
+            /* Reserve sched slot id for stack placement. */
+            let s = inner();
+            let slot = match s.tasks.iter().position(|t| t.state == TaskState::Empty) {
+                Some(i) => i,
+                None => return ERR_GENERIC,
+            };
+            let stack = next_spawn_stack_base(slot);
+            match spawn_elf_bytes("hello", bytes, stack, cap) {
+                Some(id) => id as isize,
+                None => ERR_GENERIC,
+            }
+        }
+        SYS_DEBUG_READ => match crate::sbi::console_getchar() {
+            Some(b) => b as isize,
+            None => ERR_AGAIN,
+        },
+        SYS_FS_LIST => {
+            crate::fs::list();
+            0
+        }
+        SYS_FS_CAT => {
+            let ptr = a0 as usize;
+            let len = a1 as usize;
+            if len > 64 {
+                return ERR_GENERIC;
+            }
+            let slice = unsafe { core::slice::from_raw_parts(ptr as *const u8, len) };
+            match core::str::from_utf8(slice) {
+                Ok(path) => {
+                    if crate::fs::cat(path) {
+                        0
+                    } else {
+                        ERR_GENERIC
+                    }
+                }
                 Err(_) => ERR_GENERIC,
             }
         }

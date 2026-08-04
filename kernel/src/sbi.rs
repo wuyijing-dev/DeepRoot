@@ -13,6 +13,7 @@ const SBI_EXT_HSM: usize = 0x48534D; /* "HSM" */
 
 const SBI_DBCN_CONSOLE_WRITE_BYTE: usize = 2;
 const SBI_LEGACY_CONSOLE_PUTCHAR: usize = 0;
+const SBI_LEGACY_CONSOLE_GETCHAR: usize = 1;
 const SBI_HSM_HART_STOP: usize = 1;
 
 #[repr(C)]
@@ -63,6 +64,20 @@ pub fn console_putchar(c: u8) {
             0,
             0,
         );
+    }
+}
+
+/*
+ * console_getchar - poll one byte from the console (legacy SBI)
+ *
+ * Returns None when no character is available.
+ */
+pub fn console_getchar() -> Option<u8> {
+    let r = sbi_call(SBI_EXT_LEGACY_CONSOLE, SBI_LEGACY_CONSOLE_GETCHAR, 0, 0, 0);
+    if r.error == 0 && r.value >= 0 && r.value <= 255 {
+        Some(r.value as u8)
+    } else {
+        None
     }
 }
 

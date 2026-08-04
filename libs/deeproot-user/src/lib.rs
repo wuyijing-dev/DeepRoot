@@ -26,15 +26,26 @@ pub mod sys {
         unsafe { ecall(SYS_DEBUG_WRITE, s.as_ptr() as usize, s.len(), 0, 0) }
     }
 
+    pub fn debug_read_byte() -> isize {
+        unsafe { ecall(SYS_DEBUG_READ, 0, 0, 0, 0) }
+    }
+
     pub fn yield_now() -> isize {
         unsafe { ecall(SYS_YIELD, 0, 0, 0, 0) }
     }
 
-    pub fn ledger_dump() -> isize {
-        unsafe { ecall(SYS_LEDGER_DUMP, 0, 0, 0, 0) }
+    pub fn spawn(blob_id: usize) -> isize {
+        unsafe { ecall(SYS_SPAWN, blob_id, 0, 0, 0) }
     }
 
-    /// Blocking IPC call; returns the reply label.
+    pub fn fs_list() -> isize {
+        unsafe { ecall(SYS_FS_LIST, 0, 0, 0, 0) }
+    }
+
+    pub fn fs_cat(path: &[u8]) -> isize {
+        unsafe { ecall(SYS_FS_CAT, path.as_ptr() as usize, path.len(), 0, 0) }
+    }
+
     pub fn ipc_call(ep_slot: usize, label: u64, word0: u64) -> isize {
         unsafe { ecall(SYS_IPC_CALL, ep_slot, label as usize, word0 as usize, 0) }
     }
@@ -45,26 +56,6 @@ pub mod sys {
 
     pub fn ipc_reply(badge: u64, label: u64, word0: u64) -> isize {
         unsafe { ecall(SYS_IPC_REPLY, badge as usize, label as usize, word0 as usize, 0) }
-    }
-
-    pub fn cap_mint(parent: usize, rights: u32, cap_type: u8, badge: u64) -> isize {
-        unsafe {
-            ecall(
-                SYS_CAP_MINT,
-                parent,
-                rights as usize,
-                cap_type as usize,
-                badge as usize,
-            )
-        }
-    }
-
-    pub fn cap_derive(parent: usize, rights: u32, badge_mask: u64) -> isize {
-        unsafe { ecall(SYS_CAP_DERIVE, parent, rights as usize, badge_mask as usize, 0) }
-    }
-
-    pub fn cap_revoke(slot: usize) -> isize {
-        unsafe { ecall(SYS_CAP_REVOKE, slot, 0, 0, 0) }
     }
 
     pub fn exit(code: usize) -> ! {
