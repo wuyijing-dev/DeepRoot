@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = [
+    "kernel",
+    "libs/deeproot-abi",
+    "libs/deeproot-user",
+    "user/init",
+    "user/console",
+    "user/ping",
+]
+default-members = ["kernel"]
+
+[workspace.package]
+version = "0.5.5"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/wuyijing-dev/DeepRoot"
+authors = ["wuyijing-dev"]
+
+[workspace.dependencies]
+deeproot-abi = { path = "libs/deeproot-abi" }
+deeproot-user = { path = "libs/deeproot-user" }

@@ -1,0 +1,25 @@
+[package]
+name = "deeproot-kernel"
+description = "DeepRoot educational microkernel for RISC-V"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "deeproot-kernel"
+path = "src/main.rs"
+
+[features]
+default = ["lesson-boot", "lesson-mm", "lesson-cap", "lesson-ledger", "lesson-ipc", "lesson-servers"]
+# Lesson Gates — progressive unlock for worksheets
+lesson-boot = []
+lesson-mm = []
+lesson-cap = []
+lesson-ledger = []
+lesson-ipc = []
+lesson-servers = []
+
+[dependencies]
+deeproot-abi = { workspace = true }

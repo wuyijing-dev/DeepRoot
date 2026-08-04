@@ -1,0 +1,27 @@
+# Build artifacts
+/target/
+**/target/
+*.o
+*.elf
+*.bin
+*.img
+*.iso
+
+# Editor / IDE (including Cursor — never commit)
+.idea/
+.vscode/
+.cursor/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Secrets / local env
+.env
+.env.*
+*.pem
+
+# QEMU / debug
+*.qcow2
+gdb.txt
+serial.log

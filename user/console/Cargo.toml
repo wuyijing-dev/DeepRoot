@@ -1,0 +1,13 @@
+[package]
+name = "deeproot-console"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "deeproot-console"
+path = "src/main.rs"
+
+[dependencies]
+deeproot-user = { path = "../../libs/deeproot-user" }
+deeproot-abi = { workspace = true }
