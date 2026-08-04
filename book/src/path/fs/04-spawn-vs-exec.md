@@ -1,36 +1,24 @@
-# 1.3.4 `SYS_SPAWN` vs `SYS_EXEC`
+# `SYS_SPAWN` vs `SYS_EXEC`
 
-这一页只讲：**为什么既有 `spawn(blob_id)`，又有 `exec(path)`。**
+这一页只讲：**两种「跑起来一个 ELF」差在哪。**
 
-## 1. `SYS_SPAWN`
+## 1. 对照表
 
-- 参数是 blob id
-- 目前更像教学脚手架
-- 适合最小演示
+| | `SYS_SPAWN` | `SYS_EXEC` |
+|---|---|---|
+| 参数 | blob id（教学里常见 `0=hello`） | 路径字符串 |
+| 字节从哪来 | 内核里写死的映射（如 `HELLO_ELF`） | `fs::lookup`（**仅 embed**） |
+| 谁在用 | init 早期演示 | shell `run` / `hello` |
+| 扩展方式 | 每加程序改分支 | 往 `FILES` 加一项即可 |
 
-## 2. `SYS_EXEC`
+## 2. 为什么 shell 用 EXEC？
 
-- 参数是路径
-- 数据来自 ramfs
-- 更像真正操作系统里的“按名字运行”
+因为路径模型更接近「操作系统」：用户输入名字，内核解析，再装载。  
+blob id 适合启动早期、还没有路径概念时的脚手架。
 
-## 3. 心智模型
+## 3. 和块层的边界
 
-```text
-SPAWN = 内核内置演示入口
-EXEC  = 面向用户的路径执行接口
-```
+`SYS_EXEC` **不会**去 `block::lookup`。  
+块上文本用 `cat`；要执行的程序仍须挂进 embed ramfs（见 [自己写用户程序](../../hands-on/write-user-prog.md)）。
 
-## 4. 为什么两者都保留
-
-因为它们帮助你看到系统是怎样从：
-
-```text
-硬编码 demo
--> 像文件系统一样的执行接口
-```
-
-逐步长出来的。
-
-下一章：[1.4 块设备（教学替身）](../09-block.md)
-
+下一节建议：[Shell 常用命令](../../hands-on/shell-commands.md)

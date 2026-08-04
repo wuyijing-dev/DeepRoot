@@ -1,19 +1,20 @@
 # 下一步可以看什么
 
-你已经走完 DeepRoot **1.4.0** 教学主线。下面按「投入产出比」排序，任选。
+你已经走完 DeepRoot **1.4** 教学主线（当前推荐标签 **`v1.4.1`**）。下面按「投入产出比」排序，任选。
 
 ## 1. 巩固（强烈建议）
 
 - 不看文档，独立画出：`ecall` → `trap` → `handle_syscall` → `sret`  
 - 按 [自己写用户程序](../hands-on/write-user-prog.md) 做一个新 ELF  
+- 对照 `ls`：分清哪些文件来自 embed、哪些来自 DRFS  
 - 把 [名词表](glossary.md) 里仍模糊的词对照源码再读一遍  
 
 ## 2. 在仓库里继续挖（仍属 DeepRoot）
 
 | 方向 | 从哪开始 |
 |---|---|
-| 真·virtio-blk | `kernel/src/block.rs` + QEMU `-drive` / virtio 文档 |
-| 更像 OS 的 FS | 让文件数据来自块层，而不仅是 `include_bytes!` |
+| 真·virtio-blk | 换掉 `DISK[]` 后端；保留 DRFS / `fs` 路径 API |
+| 块上 ELF | 让 `SYS_EXEC` 也能从 DRFS 读 ELF（今天只 embed） |
 | 更丰富的 IPC | `ipc.rs`、cap grant、多客户共享服务 |
 | 多核 | `VERSION` 里 multi-hart 相关条目；今天仍以单 hart 为主 |
 
@@ -39,6 +40,4 @@
 
 ## 5. 参与项目
 
-仓库：https://github.com/wuyijing-dev/DeepRoot  
-
-提 Issue / PR 前：说明你基于的 `VERSION` 或 tag，附 QEMU 日志关键片段。
+远程：`git@github.com:wuyijing-dev/DeepRoot.git`。发 issue / PR 前先说明你对齐的标签（`v1.4.1` 等）。

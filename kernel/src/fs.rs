@@ -1,9 +1,10 @@
-//! Teaching ramfs (1.3) — text files + externally built ELFs.
+//! Teaching ramfs (1.3) + block-backed text files (1.4.1).
 //!
-//! User programs are compiled by `kernel/build.rs` into `OUT_DIR`, then
-//! embedded here with `include_bytes!`. Shell `run <name>` loads them via
-//! `SYS_EXEC` (path spawn), rather than hard-coded blob ids.
+//! Embedded ELFs still come from `kernel/build.rs` via `include_bytes!`.
+//! Text files may also live on the DRFS image in `block` (ramdisk stand-in).
+//! Shell `ls` / `cat` see both; `run` / `SYS_EXEC` only load ELF from embed.
 
+use crate::block;
 use crate::println;
 
 struct File {
@@ -11,16 +12,13 @@ struct File {
     data: &'static [u8],
 }
 
-/*
- * HELLO_ELF - RISC-V ET_EXEC built from user/hello (same image SYS_SPAWN 0 uses)
- */
 static HELLO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-hello"));
 static BADAPPLE_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-badapple"));
 
 static FILES: &[File] = &[
     File {
         name: "readme.txt",
-        data: b"DeepRoot ramfs - text + ELF. Try: run hello / run badapple\n",
+        data: b"DeepRoot ramfs - text + ELF. Try: run hello / cat block.txt\n",
     },
     File {
         name: "hello.txt",
@@ -28,7 +26,7 @@ static FILES: &[File] = &[
     },
     File {
         name: "version",
-        data: b"1.4.0\n",
+        data: b"1.4.1\n",
     },
     File {
         name: "hello",
@@ -45,7 +43,9 @@ fn normalize(path: &str) -> &str {
 }
 
 /*
- * lookup - resolve a ramfs path to (name, bytes)
+ * lookup - resolve an embedded ramfs path to (name, bytes)
+ *
+ * Used by SYS_EXEC. Block-backed text files are not returned here.
  */
 pub fn lookup(path: &str) -> Option<(&'static str, &'static [u8])> {
     let name = normalize(path);
@@ -67,24 +67,66 @@ pub fn list() {
         };
         println!("  {} ({} bytes, {})", f.name, f.data.len(), kind);
     }
+
+    if !block::ready() {
+        return;
+    }
+    println!("fs: block / (DRFS on ramdisk)");
+    let n = block::file_count();
+    for i in 0..n {
+        if let Some(ent) = block::dirent(i) {
+            let kind = if ent.is_text() { "text" } else { "bin" };
+            println!(
+                "  {} ({} bytes, {}, on-disk)",
+                ent.name_str(),
+                ent.length,
+                kind
+            );
+        }
+    }
 }
 
 pub fn cat(path: &str) -> bool {
-    match lookup(path) {
-        Some((name, data)) => {
-            if data.len() >= 4 && &data[..4] == b"\x7fELF" {
-                println!("fs: '{}' is ELF ({} bytes) — use: run {}", name, data.len(), name);
+    let name = normalize(path);
+
+    if let Some((fname, data)) = lookup(name) {
+        if data.len() >= 4 && &data[..4] == b"\x7fELF" {
+            println!(
+                "fs: '{}' is ELF ({} bytes) — use: run {}",
+                fname,
+                data.len(),
+                fname
+            );
+            return true;
+        }
+        if let Ok(s) = core::str::from_utf8(data) {
+            crate::console::_print(core::format_args!("{}", s));
+        } else {
+            println!("fs: '{}' binary ({} bytes)", fname, data.len());
+        }
+        return true;
+    }
+
+    /* Fall through to block-backed DRFS text files. */
+    let mut buf = [0u8; 512];
+    match block::lookup(name, &mut buf) {
+        Some((nread, total, is_text)) => {
+            if !is_text {
+                println!("fs: '{}' binary on block ({} bytes)", name, total);
                 return true;
             }
-            if let Ok(s) = core::str::from_utf8(data) {
+            if let Ok(s) = core::str::from_utf8(&buf[..nread]) {
                 crate::console::_print(core::format_args!("{}", s));
+                if nread < total {
+                    println!("fs: … truncated ({} of {} bytes)", nread, total);
+                }
             } else {
-                println!("fs: '{}' binary ({} bytes)", name, data.len());
+                println!("fs: '{}' non-utf8 on block ({} bytes)", name, total);
             }
             true
         }
         None => {
-            println!("fs: no such file '{}'", normalize(path));
+            println!("fs: no such file '{}'", name);
             false
         }
     }

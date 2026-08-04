@@ -31,7 +31,7 @@ sudo apt-get install -y qemu-system-misc
 ```bash
 git clone git@github.com:wuyijing-dev/DeepRoot.git
 cd DeepRoot
-git checkout v1.4.0   # 与本教程文字对齐；学新特性再回到 main
+git checkout v1.4.1   # 与本教程文字对齐；对照初版可用 v1.4.0
 ```
 
 ## 2. `run-qemu.sh` 实际做了什么？
@@ -72,12 +72,12 @@ git checkout v1.4.0   # 与本教程文字对齐；学新特性再回到 main
 ### 4.2 内核横幅
 
 ```text
-  DeepRoot microkernel 1.4.0
+  DeepRoot microkernel 1.4.1
   RISC-V S-mode · capability microkernel
   remote: git@github.com:wuyijing-dev/DeepRoot.git
 ```
 
-来自 `kernel_main` 里的 `println!`（`kernel/src/main.rs`）。  
+来自 `kernel_main` 里的 `println!`（`kernel/src/main.rs`）。版本号来自仓库根 `VERSION` 第一行。  
 若版本不是你以为的那个，检查 `VERSION` 第一行与 `git describe`。
 
 ### 4.3 trap / mm / block / timer
@@ -94,7 +94,7 @@ timer: hart=... slice=...
 
 - **stvec**：陷阱入口设好了  
 - **mm**：物理内存范围与页表启用  
-- **block**：教学 ramdisk 初始化  
+- **block**：教学 ramdisk + DRFS 镜像（日志里应含 `DRFS`）  
 - **timer**：时钟中断/时间片相关
 
 ### 4.4 加载用户 ELF + canopy

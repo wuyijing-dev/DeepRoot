@@ -40,5 +40,7 @@ jobs:
           publish_dir: ./book/book
           publish_branch: main
           destination_dir: docs
+          # Keep docs/v1.4.0/ etc. published by the tag workflow.
+          keep_files: true
           commit_message: "docs: publish mdBook site"
           force_orphan: false

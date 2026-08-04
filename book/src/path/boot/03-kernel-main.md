@@ -16,8 +16,9 @@ servers::bring_up
 ## 2. 为什么不能乱排
 
 - 没有 `trap::init`，后面 fault/ecall 没地方接
-- 没有 `mm::init`，用户 ELF 没法映射
-- 没有 `timer::init`，调度无法抢占
+- 没有 `mm::init`，用户 ELF 没法映射  
+- 没有 `block::init`，后面 shell 读不到 DRFS 文本（1.4.1）  
+- 没有 `timer::init`，调度无法抢占  
 - 一旦 `servers::bring_up` 开始，就进入多任务阶段
 
 ## 3. `servers::bring_up` 为什么放最后

@@ -42,12 +42,13 @@ if [[ "${MODE}" == "--smoke" ]]; then
   set -e
   ok=1
     for needle in \
-    "DeepRoot microkernel 1.4.0" \
+    "DeepRoot microkernel 1.4.1" \
     "canopy ready" \
     "ping: pong" \
     "hello: spawned ELF says hi" \
     "shell: DeepRoot shell ready" \
     "block: ramdisk ready" \
+    "DRFS" \
     "init: handing off to shell"
   do
     if ! grep -q "${needle}" "${LOG}"; then

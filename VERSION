@@ -1,4 +1,4 @@
-1.4.0
+1.4.1
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -172,8 +172,9 @@
 #   W3  Smoke: boot from/with block-backed FS or read a file from virtio-blk
 #
 # Releases:
-# 1.4.0   Device-backed FS and/or console path usable ← current
-# 1.4.y   Driver / block FS polish only
+# 1.4.0   Ramdisk block stand-in on boot path (DISK + read)
+# 1.4.1   DRFS image on ramdisk; shell ls/cat serve block text ← current
+# 1.4.y   Driver / virtio-blk polish only
 #
 # Out of scope for 1.4 (roadmap ends here):
 #   networking, SMP production, GPU, Linux syscall compat, multi-user login.

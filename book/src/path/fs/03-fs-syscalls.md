@@ -5,7 +5,7 @@
 ## 1. `FS_LIST`
 
 `ls` -> `SYS_FS_LIST` -> `fs::list()`  
-作用是把当前静态表直接打印出来。
+先打印 embed `FILES`，若块层 ready 再打印 `fs: block /` 下的 DRFS 目录。
 
 ## 2. `FS_CAT`
 
@@ -14,9 +14,9 @@
 内核会：
 
 1. 读 path 指针和长度
-2. 查 ramfs
-3. 如果是文本就打印
-4. 如果是 ELF 就提示你用 `run`
+2. 先查 embed ramfs
+3. 若未命中，再 `block::lookup`（DRFS 文本）
+4. 文本打印；ELF 提示用 `run`
 
 ## 3. `EXEC`
 

@@ -28,7 +28,7 @@ MAJOR.PATCHLEVEL.SUBLEVEL
 1.1  每任务地址空间 + SYS_SPAWN
 1.2  交互 shell（读串口、解析命令）
 1.3  ramfs + 按路径 SYS_EXEC
-1.4  块设备教学替身（ramdisk）
+1.4  块设备教学替身 → 1.4.1 DRFS（路径可读块上文本）
 ```
 
 ## 2. 每段你「应该看见」什么
@@ -45,7 +45,7 @@ MAJOR.PATCHLEVEL.SUBLEVEL
 | 1.1 | `spawn`/`run` 出来的 hello 有自己的地址空间 |
 | 1.2 | 你能在 `deeproot>` 打字 |
 | 1.3 | `ls`/`cat`/`run` 对应 ramfs |
-| 1.4 | 启动有 `block: ramdisk ready` |
+| 1.4 | 启动有 `block: ramdisk ready`…`DRFS`；`cat block.txt` 有内容 |
 
 ## 3. 推荐学习节奏
 
@@ -54,7 +54,7 @@ MAJOR.PATCHLEVEL.SUBLEVEL
 3. **卡壳时**：先查 [常见问题](../hands-on/faq.md)，再对照该章「易错点」。  
 4. **想创造时**：完成 1.3 后再做 [自己写用户程序](../hands-on/write-user-prog.md)。
 
-不要跳着改版本号学：请固定 `v1.4.0`（或文档声明的基线），否则日志和截图对不上。
+不要跳着改版本号学：请固定 `v1.4.1`（或用页首选择器打开冻结快照），否则日志和截图对不上。
 
 ## 4. 一句话心态
 

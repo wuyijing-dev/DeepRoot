@@ -1,32 +1,32 @@
-# 1.2.1 shell 主循环
+# shell 主循环
 
-这一页只讲：**shell 到底是怎样一行一行解释命令的。**
+这一页只讲：`user/shell` 启动后在干什么。
 
-## 1. 关键文件
+## 1. 就绪
 
-- `user/shell/src/main.rs`
-
-## 2. 主循环骨架
+打印类似：
 
 ```text
-打印 ready
-loop:
-  打印提示符
-  read_line
-  trim
-  匹配 help/ls/cat/run/...
+shell: DeepRoot shell ready ...
+deeproot>
 ```
 
-## 3. 为什么这页值得单独拆
+然后进入循环：读一行 → 解析 → 执行 → 再出提示符。
 
-因为 shell 的价值不只是“有几个命令”，而是它把：
+## 2. 命令分发（心智模型）
 
-- 串口输入
-- 用户态字符串处理
-- syscall 调用
-- 前台等待模型
+```text
+help / exit     → 纯用户态
+ls / cat        → SYS_FS_*
+run / hello …   → SYS_EXEC (+ WAIT)
+unknown         → 打一行提示
+```
 
-都串成了一条很短、但非常适合新手读的控制流。
+没有管道、没有变量、没有通配符——故意保持小。
 
-下一页：[1.2.2 `read_line` 与共享串口](02-read-line.md)
+## 3. 和内核日志抢串口
 
+shell 用 `SYS_DEBUG_WRITE`；内核 `println!` 也走 SBI。  
+同一条 UART 上，服务器日志可能插在你的输入中间——这是教学机的常态，不是输入坏了。
+
+下一页：[read_line 与共享串口](02-read-line.md)

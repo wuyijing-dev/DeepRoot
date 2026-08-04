@@ -1,34 +1,31 @@
-# 1.3.2 `build.rs` 如何产出嵌入字节
+# `build.rs` 如何产出嵌入字节
 
-这一页只讲：**为什么改了 `user/hello` 之后，要重编内核才会生效。**
+这一页只讲：**ELF 是怎么变成内核里的静态字节的。**
 
-## 1. 构建链
+## 1. 谁在编译用户程序？
 
-```text
-kernel/build.rs
-  -> cargo build user/*
-  -> 复制 ELF 到 OUT_DIR
-fs.rs / servers.rs
-  -> include_bytes!(OUT_DIR/...)
-```
+不是你手动 `cargo build -p deeproot-hello` 再拷进内核。  
+`kernel/build.rs` 在编内核时会再拉起 cargo，目标仍是 `riscv64gc-unknown-none-elf`，把产物拷到 `OUT_DIR`。
 
-## 2. 这意味着什么
+## 2. 内核怎么引用？
 
-ramfs 里的 `hello` 不是“运行时从磁盘找到的文件”，而是：
+`fs.rs`（以及早期的 `servers.rs` 路径）用：
 
 ```text
-构建期嵌进内核镜像的字节
+include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-hello"))
 ```
 
-所以你改了用户程序源码，却不重建内核，QEMU 里通常不会变。
+编译期把文件内容嵌进内核 ELF。所以：
 
-## 3. 新手最该记住的一句
+- 改用户程序 → 通常要触发 `build.rs` 重跑  
+- 第一次全量构建会慢，因为要编一串用户包  
 
-在当前教学树里：
+## 3. 和 DRFS 的分工（1.4.1）
 
-```text
-改用户程序 ≈ 也要重建内核
-```
+| | embed（本页） | block DRFS |
+|---|---|---|
+| 何时写入 | 编译期 | 运行时 `block::init` |
+| 典型内容 | ELF + 少量文本 | 教学文本文件 |
+| `run` | 可以 | 不可以（今天） |
 
-下一页：[1.3.3 `FS_LIST` / `FS_CAT` / `EXEC`](03-fs-syscalls.md)
-
+下一页：[FS_LIST / FS_CAT / EXEC](03-fs-syscalls.md)

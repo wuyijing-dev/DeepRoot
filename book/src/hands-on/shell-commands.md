@@ -8,7 +8,7 @@
 | 你输入 | 实际行为 | 底层 |
 |---|---|---|
 | `help` | 打印内置帮助文本 | 仅用户态字符串 |
-| `ls` | 列出 ramfs | `SYS_FS_LIST` |
+| `ls` | 列出 embed ramfs + 块上 DRFS | `SYS_FS_LIST` |
 | `cat <文件>` | 显示文本；ELF 则提示 `run` | `SYS_FS_CAT` |
 | `run <名字>` | 加载 ELF，前台等到退出 | `SYS_EXEC` + `SYS_WAIT` |
 | `hello` | 等同 `run hello` | 同上 |
@@ -33,10 +33,17 @@
 deeproot> ls
 deeproot> cat readme.txt
 deeproot> cat version
+deeproot> cat block.txt
+deeproot> cat from-block
 deeproot> cat hello
 ```
 
-期望：文本正常；对 `hello` 提示用 `run`，不要刷二进制。
+期望：
+
+- `ls` 先有 `fs: ramfs /`，再有 `fs: block /`（含 `block.txt` 等）  
+- `cat version` → `1.4.1`（embed）  
+- `cat block.txt` → 一段说明文字（DRFS / 块上）  
+- 对 `hello` 提示用 `run`，不要刷二进制  
 
 ### 练习 C：前台运行
 
@@ -111,8 +118,8 @@ else:
 
 | Linux 习惯 | DeepRoot shell |
 |---|---|
-| `ls /bin` | 只有内嵌 ramfs，无真实目录树 |
-| `./a.out` | 用 `run name`，name 来自 `FILES` |
+| `ls /bin` | embed 表 + DRFS 目录，无真实 Linux 目录树 |
+| `./a.out` | 用 `run name`；ELF 目前只来自 embed `FILES` |
 | `Ctrl-C` 杀进程 | 未实现；长任务用程序自己的退出键或重启 QEMU |
 | 管道 `\|` | 无 |
 
