@@ -11,11 +11,13 @@
 #
 # First line above is the CURRENT release. Lines below are the full roadmap.
 #
-# Policy (1.x through 1.4):
+# Policy (1.x through 2.0):
 #   - DeepRoot-native capability ABI — NOT Linux/POSIX compatible.
-#   - Additive syscalls only; do not plan past 1.4 in this file.
+#   - Prefer additive syscalls; note any calling-convention break in the series.
+#   - Roadmap in this file plans through 2.0 (DT, SMP, richer shell, framebuffer UI).
 #   - Do not mint a new SUBLEVEL for every commit; finish a chunk, then release.
-#   - Shell is a small DeepRoot-native ELF (learn from xv6/BusyBox; do not port bash).
+#   - Shell stays DeepRoot-native (learn from xv6/BusyBox structure; do NOT port bash).
+#   - MAJOR 2.0 = platform jump (DT/SMP/display integration), not a desktop OS.
 #
 
 # =====================================================================
@@ -174,16 +176,124 @@
 # Releases:
 # 1.4.0   Ramdisk block stand-in on boot path (DISK + read)
 # 1.4.1   DRFS image on ramdisk; shell ls/cat serve block text ← current
-# 1.4.y   Driver / virtio-blk polish only
+# 1.4.y   Small block/FS fixes only (virtio-blk proper → 1.6)
 #
-# Out of scope for 1.4 (roadmap ends here):
-#   networking, SMP production, GPU, Linux syscall compat, multi-user login.
+# Out of scope for 1.4:
+#   networking, SMP production, GPU desktop, Linux syscall compat, multi-user login.
+# Forward path continues in 1.5+ below (through 2.0).
+
+# ---------------------------------------------------------------------
+# 1.5.x  Device tree platform discovery
+# Goal: walk FDT for memory / UART / virtio / optional framebuffer; cut hardcodes.
+# Extends the 0.2 memory@reg stub in kernel/src/mm/memmap.rs.
+# ---------------------------------------------------------------------
+#
+# Work to land before tagging 1.5.0:
+#   W1  Shared FDT walker (compatible, reg, interrupts) — e.g. kernel/src/fdt.rs
+#   W2  Discover UART / virtio MMIO / memory; log nodes at boot
+#   W3  Optional: locate ramfb / simple-framebuffer for 1.9 prep
+#   W4  Smoke: boot with varied QEMU RAM/device flags without board #defines
+#
+# Releases:
+# 1.5.0   FDT-driven discovery for core platform devices
+# 1.5.y   Parser / binding fixes only
+#
+# Out of scope for 1.5: full Linux DT binding zoo, ACPI, multi-board product matrix.
+
+# ---------------------------------------------------------------------
+# 1.6.x  Block / console virtio polish (finish 1.4 intent)
+# Goal: real virtio-blk (or equivalent) behind existing FS/DRFS path APIs.
+# ---------------------------------------------------------------------
+#
+# Work to land before tagging 1.6.0:
+#   W1  virtio-blk (or equivalent) backend; keep DRFS or FS protocol stable
+#   W2  Optional virtio-console / cleaner UART ownership for console server
+#   W3  Smoke: ls/cat/run behave as in 1.4.1 with virtio-backed storage
+#
+# Releases:
+# 1.6.0   Device-backed block path usable for teaching FS
+# 1.6.y   Driver polish only
+#
+# Out of scope for 1.6: networked block, full VFS, many FS types.
+
+# ---------------------------------------------------------------------
+# 1.7.x  SMP (multi-hart)
+# Goal: schedule U-tasks on QEMU virt with >=2 harts; per-hart runqueues + IPI.
+# ---------------------------------------------------------------------
+#
+# Work to land before tagging 1.7.0:
+#   W1  Secondary hart bring-up (SBI HSM); per-hart idle / timer
+#   W2  Per-hart runqueues; locks on shared sched/mm/ipc (drop single-hart assumptions)
+#   W3  IPI wake; harden sync IPC for multi-hart rendezvous
+#   W4  Smoke: qemu -smp 2 shows both harts active; single-hart regression still passes
+#
+# Releases:
+# 1.7.0   Multi-hart scheduling usable on QEMU virt
+# 1.7.y   Locking / IPI / bring-up fixes only
+#
+# Out of scope for 1.7: production NUMA, hotplug, big.LITTLE affinity policies.
+
+# ---------------------------------------------------------------------
+# 1.8.x  Richer DeepRoot-native shell
+# Goal: self-written shell (extend user/shell); NOT a bash/dash/BusyBox port.
+# ---------------------------------------------------------------------
+#
+# Work to land before tagging 1.8.0:
+#   W1  Quotes / argv split; richer help; in-memory history
+#   W2  Environment variables; cd/pwd when FS cwd exists
+#   W3  Background & ; foreground wait unchanged for interactive run
+#   W4  Simple pipes | and redirections > < (needs minimal pipe/open primitives)
+#   W5  Smoke: documented command set + short script with a pipe example
+#
+# Releases:
+# 1.8.0   Richer shell + simple pipes/redirection
+# 1.8.y   Parser / builtin fixes only
+#
+# Out of scope for 1.8: POSIX conditionals/loops/functions; importing bash source.
+
+# ---------------------------------------------------------------------
+# 1.9.x  Framebuffer simple UI (not a desktop)
+# Goal: clear screen, pixels/rects, simple menu or graphical terminal on QEMU.
+# ---------------------------------------------------------------------
+#
+# Work to land before tagging 1.9.0:
+#   W1  Enable ramfb or virtio-gpu; map FB or grant via display server + caps
+#   W2  Userspace helpers: clear, put_pixel, fill_rect
+#   W3  Simple menu or graphical terminal (serial shell may remain)
+#   W4  Smoke: log or scripted proof of FB writes (no full WM)
+#
+# Releases:
+# 1.9.0   Framebuffer drawing + simple UI demo
+# 1.9.y   Display path fixes only
+#
+# Out of scope for 1.9: window manager, icons desktop, GPU 3D, IME.
 
 # =====================================================================
-# Checklist through 1.4
+# 2.0 — platform integration release
+# =====================================================================
+#
+# 2.0.0  Integrate 1.5–1.9 by default: DT + virtio block + SMP + richer shell
+#        + framebuffer UI. Docs baseline / versions.json / smoke for v2.0.0.
+# 2.0.y  Integration and doc fixes only after the jump.
+#
+# MAJOR 2 means platform capability jump (DT/SMP/display), not Linux compat.
+# Syscalls stay additive when possible; document any ABI note in this file.
+#
+# Out of scope for 2.0:
+#   full desktop WM, Linux userspace binary compat, production networking,
+#   multi-user login, porting bash / full POSIX sh.
+
+# =====================================================================
+# Checklist through 2.0
 # =====================================================================
 # [1.1]  Runtime spawn of a DeepRoot ELF into its own task/AS
 # [1.2]  Human types at a prompt; shell spawns programs over serial
 # [1.3]  Programs and data come from a FS server by path
-# [1.4]  Optional virtio-backed storage/console behind the same servers
+# [1.4]  Block stand-in + DRFS text via shell ls/cat
+# [1.5]  FDT discovers platform devices (not only memory@reg)
+# [1.6]  virtio-blk (or equiv.) behind teaching FS path
+# [1.7]  Multi-hart scheduling on QEMU virt
+# [1.8]  Richer native shell (argv/env/history/&/simple pipes) — no bash port
+# [1.9]  Framebuffer clear/draw + simple UI (not a desktop)
+# [2.0]  Integrated release of the above
 # Native capability microkernel throughout — learn from other OS, do not clone Linux.

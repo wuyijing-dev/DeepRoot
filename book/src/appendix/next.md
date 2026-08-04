@@ -1,6 +1,7 @@
 # 下一步可以看什么
 
-你已经走完 DeepRoot **1.4** 教学主线（当前推荐标签 **`v1.4.1`**）。下面按「投入产出比」排序，任选。
+你已经走完 DeepRoot **1.4** 教学主线（当前推荐标签 **`v1.4.1`**）。  
+仓库路线图已规划到 **2.0**（见根目录 `VERSION`）：设备树 → virtio 块 → SMP → 更完善的自研 shell → framebuffer 简易 UI。
 
 ## 1. 巩固（强烈建议）
 
@@ -9,16 +10,27 @@
 - 对照 `ls`：分清哪些文件来自 embed、哪些来自 DRFS  
 - 把 [名词表](glossary.md) 里仍模糊的词对照源码再读一遍  
 
-## 2. 在仓库里继续挖（仍属 DeepRoot）
+## 2. 官方下一站（1.5 → 2.0）
+
+按 `VERSION` 顺序推进（实现前请先读该文件里的 W1…验收条）：
+
+| 系列 | 用户可见目标 |
+|---|---|
+| **1.5** | FDT 发现 UART / virtio / memory（少硬编码） |
+| **1.6** | 真 virtio-blk（或等价）接在现有 FS/DRFS 路径后 |
+| **1.7** | QEMU `-smp 2` 多 hart 调度 |
+| **1.8** | **自研**更完善 shell（argv/环境/history/`&`/简单管道）；**不**移植 bash |
+| **1.9** | Framebuffer：清屏、画点/矩形、简单菜单或图形终端（不做桌面） |
+| **2.0.0** | 以上能力集成发布与文档基线 |
+
+本地实验也可从下表挑一块先挖（仍建议对齐系列边界再 bump `VERSION`）：
 
 | 方向 | 从哪开始 |
 |---|---|
-| 真·virtio-blk | 换掉 `DISK[]` 后端；保留 DRFS / `fs` 路径 API |
-| 块上 ELF | 让 `SYS_EXEC` 也能从 DRFS 读 ELF（今天只 embed） |
-| 更丰富的 IPC | `ipc.rs`、cap grant、多客户共享服务 |
-| 多核 | `VERSION` 里 multi-hart 相关条目；今天仍以单 hart 为主 |
-
-改之前先读 `VERSION`：哪些是已承诺范围，哪些是你自己的实验分支。
+| 设备树 | `kernel/src/mm/memmap.rs` 的 FDT 雏形 → 计划中的 `fdt` 模块 |
+| 真·virtio-blk | `kernel/src/block.rs`；保留路径 API |
+| 多核 | `timer` / `sched` / `ipc` 里的单 hart 假设 |
+| 图形 | QEMU ramfb / virtio-gpu（等 1.5/1.7 更稳再上更轻松） |
 
 ## 3. 对照其它教材（换口味）
 
@@ -34,10 +46,10 @@
 
 ## 4. 不建议的下一步
 
-- 一上来移植 bash / glibc  
+- 一上来移植 bash / glibc / 完整 POSIX sh  
 - 为了「像 Linux」强行加一堆 POSIX 皮  
-- 把 Bad Apple 当内核正确性证明  
+- 把 Bad Apple 或完整桌面 WM 当 2.0 必达项  
 
 ## 5. 参与项目
 
-远程：`git@github.com:wuyijing-dev/DeepRoot.git`。发 issue / PR 前先说明你对齐的标签（`v1.4.1` 等）。
+远程：`git@github.com:wuyijing-dev/DeepRoot.git`。发 issue / PR 前先说明你对齐的标签（`v1.4.1` 等）或目标系列（如 1.5）。

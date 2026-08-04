@@ -27,15 +27,29 @@ GitHub Pages 上：
 
 见 `VERSION` 文件头部注释：
 
-- **MAJOR**：ABI 断裂  
+- **MAJOR**：ABI 断裂或平台级跃迁（**2.0** = DT/SMP/显示等集成，不是桌面 OS）  
 - **PATCHLEVEL**：一个功能系列（文档按这个组织章节）  
 - **SUBLEVEL**：系列内修复与打磨  
 
-政策摘要（1.x–1.4）：
+政策摘要（1.x–2.0）：
 
 - DeepRoot-native ABI，**不是** Linux/POSIX  
-- syscall **只增不改号**（在冻结后）  
-- 不把 bash 搬进来；shell 保持很小  
+- syscall **尽量只增不改号**；若必须改约定，写进该系列说明  
+- shell **自研**扩展；学习 xv6/BusyBox 结构，**不**移植 bash  
+- 路线图规划到 **2.0**（详见 `VERSION` 正文 1.5–2.0 节）
+
+## 前方路线（摘要）
+
+| 标签目标 | 内容 |
+|---|---|
+| 1.5 | 设备树平台发现 |
+| 1.6 | virtio-blk 等块后端打磨 |
+| 1.7 | 多 hart（SMP） |
+| 1.8 | 更完善的自研 shell（含简单管道） |
+| 1.9 | Framebuffer 简易 UI（非桌面） |
+| 2.0.0 | 集成发布 |
+
+当前 **current** 仍是 `1.4.1`，直到开始做并发布 1.5。
 
 ## 建议的 Git 用法
 
@@ -47,7 +61,7 @@ git checkout v1.4.1
 # 对照块层替身初版
 git checkout v1.4.0
 
-# 看最新开发
+# 看最新开发（含 2.0 路线图注释）
 git checkout main
 ```
 
@@ -61,5 +75,6 @@ git checkout main
 - `v1.3.0` … ramfs / exec  
 - `v1.4.0` … 块层替身（ramdisk 初版）  
 - `v1.4.1` … DRFS 镜像；`ls`/`cat` 可读块上文本  
+- （规划）`v1.5.0` … `v2.0.0` — 见上文与 `VERSION`
 
 想对比某一系列引入了什么：`git log v1.4.0..v1.4.1 --oneline`。

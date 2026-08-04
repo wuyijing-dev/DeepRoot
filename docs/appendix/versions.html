@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7851d977.js";
+            window.path_to_searchindex_js = "../searchindex-6549b64e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-d263d424.js"></script>
@@ -201,16 +201,34 @@
 <h2 id="版本号怎么读"><a class="header" href="#版本号怎么读">版本号怎么读</a></h2>
 <p>见 <code>VERSION</code> 文件头部注释：</p>
 <ul>
-<li><strong>MAJOR</strong>：ABI 断裂</li>
+<li><strong>MAJOR</strong>：ABI 断裂或平台级跃迁（<strong>2.0</strong> = DT/SMP/显示等集成，不是桌面 OS）</li>
 <li><strong>PATCHLEVEL</strong>：一个功能系列（文档按这个组织章节）</li>
 <li><strong>SUBLEVEL</strong>：系列内修复与打磨</li>
 </ul>
-<p>政策摘要（1.x–1.4）：</p>
+<p>政策摘要（1.x–2.0）：</p>
 <ul>
 <li>DeepRoot-native ABI，<strong>不是</strong> Linux/POSIX</li>
-<li>syscall <strong>只增不改号</strong>（在冻结后）</li>
-<li>不把 bash 搬进来；shell 保持很小</li>
+<li>syscall <strong>尽量只增不改号</strong>；若必须改约定，写进该系列说明</li>
+<li>shell <strong>自研</strong>扩展；学习 xv6/BusyBox 结构，<strong>不</strong>移植 bash</li>
+<li>路线图规划到 <strong>2.0</strong>（详见 <code>VERSION</code> 正文 1.5–2.0 节）</li>
 </ul>
+<h2 id="前方路线摘要"><a class="header" href="#前方路线摘要">前方路线（摘要）</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>标签目标</th><th>内容</th></tr>
+</thead>
+<tbody>
+<tr><td>1.5</td><td>设备树平台发现</td></tr>
+<tr><td>1.6</td><td>virtio-blk 等块后端打磨</td></tr>
+<tr><td>1.7</td><td>多 hart（SMP）</td></tr>
+<tr><td>1.8</td><td>更完善的自研 shell（含简单管道）</td></tr>
+<tr><td>1.9</td><td>Framebuffer 简易 UI（非桌面）</td></tr>
+<tr><td>2.0.0</td><td>集成发布</td></tr>
+</tbody>
+</table>
+</div>
+<p>当前 <strong>current</strong> 仍是 <code>1.4.1</code>，直到开始做并发布 1.5。</p>
 <h2 id="建议的-git-用法"><a class="header" href="#建议的-git-用法">建议的 Git 用法</a></h2>
 <pre><code class="language-bash"># 跟着当前教程学（可复现）
 git fetch --tags
@@ -219,7 +237,7 @@ git checkout v1.4.1
 # 对照块层替身初版
 git checkout v1.4.0
 
-# 看最新开发
+# 看最新开发（含 2.0 路线图注释）
 git checkout main
 </code></pre>
 <h2 id="标签清单教学相关"><a class="header" href="#标签清单教学相关">标签清单（教学相关）</a></h2>
@@ -231,6 +249,7 @@ git checkout main
 <li><code>v1.3.0</code> … ramfs / exec</li>
 <li><code>v1.4.0</code> … 块层替身（ramdisk 初版）</li>
 <li><code>v1.4.1</code> … DRFS 镜像；<code>ls</code>/<code>cat</code> 可读块上文本</li>
+<li>（规划）<code>v1.5.0</code> … <code>v2.0.0</code> — 见上文与 <code>VERSION</code></li>
 </ul>
 <p>想对比某一系列引入了什么：<code>git log v1.4.0..v1.4.1 --oneline</code>。</p>
 
