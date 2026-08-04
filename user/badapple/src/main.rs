@@ -166,7 +166,7 @@ fn write_banner(hdr: &Header) {
     i = push_u32(&mut b, hdr.nframes, i);
     i = push_str(&mut b, i, b"  dur_s=");
     i = push_u32(&mut b, hdr.nframes / hdr.fps.max(1), i);
-    i = push_str(&mut b, i, b" (30fps timeline; q=quit)\n");
+    i = push_str(&mut b, i, b" (draw all frames; q=quit)\n");
     let _ = sys::debug_write(core::str::from_utf8(&b[..i]).unwrap_or("\n"));
 }
 
@@ -297,6 +297,11 @@ pub extern "C" fn main() {
     let mut drawn = 0usize;
     let status_every = if hdr.fps >= 15 { hdr.fps } else { 1 };
 
+    /*
+     * Draw every frame. If the serial console cannot keep 30fps, we run
+     * behind schedule but still show the full film (no catch-up skips).
+     * Wait only when ahead of the ideal timeline.
+     */
     for fi in 0..hdr.nframes {
         if quit_requested() {
             break;
@@ -304,12 +309,6 @@ pub extern "C" fn main() {
         if !decode_one(hdr.body, &mut off, plen, xor_buf, prev, cur) {
             let _ = sys::debug_write("badapple: decode error\n");
             break;
-        }
-
-        let elapsed = sys::time_ms().wrapping_sub(t0);
-        let target = ((elapsed * fps) / 1000) as usize;
-        if fi < target {
-            continue;
         }
 
         drawn += 1;
@@ -328,7 +327,10 @@ pub extern "C" fn main() {
         );
 
         let next_ms = t0.wrapping_add(((fi as u64 + 1) * 1000) / fps);
-        wait_until(next_ms);
+        let now = sys::time_ms();
+        if now < next_ms {
+            wait_until(next_ms);
+        }
     }
 
     /* Restore terminal. */
