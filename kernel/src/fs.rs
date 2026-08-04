@@ -1,17 +1,21 @@
-//! Teaching filesystem facade (1.3–1.9).
+//! Teaching filesystem facade (1.3–1.10).
 //!
 //! Layers:
 //! - Embed ramfs ELFs/text (build-time) — root names only
-//! - In-RAM VFS tree (1.9) — directories + nested files / scratch
+//! - In-RAM VFS tree (1.9+) — directories + files (FILE_MAX fits small ELFs)
 //! - Block DRFS (1.6) — flat on-disk text at root
+
+use core::cell::UnsafeCell;
 
 use crate::block;
 use crate::println;
-use crate::vfs::{self, Kind, ROOT};
+use crate::sync::SpinLock;
+use crate::vfs::{self, Kind, FILE_MAX, ROOT};
 
 static HELLO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-hello"));
 static BADAPPLE_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-badapple"));
 static MODDEMO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-moddemo"));
+static MODNOTE_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-modnote"));
 
 struct File {
     name: &'static str,
@@ -21,15 +25,15 @@ struct File {
 static FILES: &[File] = &[
     File {
         name: "readme.txt",
-        data: b"DeepRoot 1.10 - try: modload moddemo; modules; (init also loads it)\n",
+        data: b"DeepRoot 1.10.1 - cp modnote mynote; modload mynote 0xd002; modules\n",
     },
     File {
         name: "hello.txt",
-        data: b"ELF binary lives at /hello; shell: run hello\n",
+        data: b"ELF: /hello /moddemo /modnote - shell: modload PATH or cp then modload\n",
     },
     File {
         name: "version",
-        data: b"1.10.0\n",
+        data: b"1.10.1\n",
     },
     File {
         name: "hello",
@@ -43,11 +47,34 @@ static FILES: &[File] = &[
         name: "moddemo",
         data: MODDEMO_ELF,
     },
+    File {
+        name: "modnote",
+        data: MODNOTE_ELF,
+    },
 ];
+
+/// Scratch for loading a VFS ELF into SYS_SPAWN_SERVER (not embed).
+struct ElfScratch {
+    buf: [u8; FILE_MAX],
+    name: [u8; 28],
+    name_len: usize,
+    len: usize,
+}
+
+struct ScratchCell(UnsafeCell<ElfScratch>);
+unsafe impl Sync for ScratchCell {}
+
+static ELF_LOCK: SpinLock = SpinLock::new();
+static ELF_SCRATCH: ScratchCell = ScratchCell(UnsafeCell::new(ElfScratch {
+    buf: [0; FILE_MAX],
+    name: [0; 28],
+    name_len: 0,
+    len: 0,
+}));
 
 pub fn init() {
     vfs::init();
-    println!("vfs: in-RAM tree ready (mkdir / nested files)");
+    println!("vfs: in-RAM tree ready (mkdir / nested files / ELF-sized vfs)");
 }
 
 fn basename<'a>(path: &'a str) -> &'a str {
@@ -64,14 +91,13 @@ fn is_root_level(path: &str) -> bool {
 }
 
 /*
- * lookup - embed ELF/text by root basename (SYS_EXEC)
+ * lookup - embed ELF/text by root basename
  */
 pub fn lookup(path: &str) -> Option<(&'static str, &'static [u8])> {
     let name = basename(path);
     if name.is_empty() {
         return None;
     }
-    /* Only allow embed at root path like "hello" or "/hello". */
     let rest = path.trim_start_matches('/');
     if rest.contains('/') {
         return None;
@@ -84,11 +110,80 @@ pub fn lookup(path: &str) -> Option<(&'static str, &'static [u8])> {
     None
 }
 
+/*
+ * read_bytes - embed / VFS / DRFS into @out; returns byte count
+ */
+pub fn read_bytes(cwd: usize, path: &str, out: &mut [u8]) -> Option<usize> {
+    if let Some((_, data)) = lookup(path) {
+        let n = data.len().min(out.len());
+        out[..n].copy_from_slice(&data[..n]);
+        return Some(n);
+    }
+    if let Some(n) = vfs::read_file(cwd, path, out) {
+        return Some(n);
+    }
+    if is_root_level(path) {
+        let name = basename(path);
+        match block::lookup(name, out) {
+            Some((nread, _total, _is_text)) => return Some(nread),
+            None => {}
+        }
+    }
+    None
+}
+
+/*
+ * load_elf - resolve path to ELF bytes for spawn (embed or VFS copy in scratch)
+ *
+ * VFS copies use a single scratch; overwritten on the next load_elf.
+ */
+pub fn load_elf(cwd: usize, path: &str) -> Option<(&'static str, &'static [u8])> {
+    if let Some((name, data)) = lookup(path) {
+        if data.len() >= 4 && &data[..4] == b"\x7fELF" {
+            return Some((name, data));
+        }
+        return None;
+    }
+
+    let _g = ELF_LOCK.lock();
+    let sc = unsafe { &mut *ELF_SCRATCH.0.get() };
+    let n = read_bytes(cwd, path, &mut sc.buf)?;
+    if n < 4 || &sc.buf[..4] != b"\x7fELF" {
+        return None;
+    }
+    sc.len = n;
+    let bn = basename(path);
+    let nl = bn.len().min(sc.name.len());
+    sc.name[..nl].copy_from_slice(bn.as_bytes());
+    sc.name_len = nl;
+    let name = core::str::from_utf8(&sc.name[..sc.name_len]).unwrap_or("module");
+    let name_ptr = name as *const str;
+    let bytes = core::ptr::slice_from_raw_parts(sc.buf.as_ptr(), sc.len);
+    /* SAFETY: scratch only overwritten on the next load_elf. */
+    Some(unsafe { (&*name_ptr, &*bytes) })
+}
+
+/*
+ * copy_to_vfs - copy readable src (embed/VFS/DRFS) onto a VFS destination path
+ */
+pub fn copy_to_vfs(cwd: usize, src: &str, dst: &str) -> bool {
+    if lookup(dst).is_some() {
+        return false;
+    }
+    let mut buf = [0u8; FILE_MAX];
+    let Some(n) = read_bytes(cwd, src, &mut buf) else {
+        return false;
+    };
+    if n == 0 {
+        return false;
+    }
+    vfs::write_file(cwd, dst, &buf[..n])
+}
+
 pub fn mkdir(cwd: usize, path: &str) -> bool {
     if path.is_empty() || path == "/" {
         return false;
     }
-    /* Refuse clobbering embed names at root. */
     if is_root_level(path) && lookup(path).is_some() {
         return false;
     }
@@ -117,9 +212,6 @@ pub fn getcwd(cwd: usize, out: &mut [u8]) -> usize {
     vfs::getcwd(cwd, out)
 }
 
-/*
- * write_path - create/overwrite a VFS file (supports nested paths)
- */
 pub fn write_path(cwd: usize, path: &str, data: &[u8]) -> bool {
     if lookup(path).is_some() {
         return false;
@@ -127,7 +219,6 @@ pub fn write_path(cwd: usize, path: &str, data: &[u8]) -> bool {
     vfs::write_file(cwd, path, data)
 }
 
-/// Compat for 1.8 callers: write at cwd-relative path.
 #[allow(dead_code)]
 pub fn write_scratch(path: &str, data: &[u8]) -> bool {
     write_path(ROOT, path, data)
@@ -143,7 +234,6 @@ pub fn list_at(cwd: usize, path: Option<&str>) {
                 return;
             }
             None => {
-                /* Allow listing "/" even if only embeds — use ROOT. */
                 if p == "/" {
                     ROOT
                 } else {
@@ -199,9 +289,10 @@ pub fn cat_at(cwd: usize, path: &str) -> bool {
     if let Some((fname, data)) = lookup(path) {
         if data.len() >= 4 && &data[..4] == b"\x7fELF" {
             println!(
-                "fs: '{}' is ELF ({} bytes) — use: run {}",
+                "fs: '{}' is ELF ({} bytes) — use: run {} / modload {}",
                 fname,
                 data.len(),
+                fname,
                 fname
             );
             return true;
@@ -214,15 +305,18 @@ pub fn cat_at(cwd: usize, path: &str) -> bool {
         return true;
     }
 
-    let mut buf = [0u8; FILE_CAP];
+    let mut buf = [0u8; FILE_MAX];
     if let Some(n) = vfs::read_file(cwd, path, &mut buf) {
+        if n >= 4 && &buf[..4] == b"\x7fELF" {
+            println!("fs: VFS ELF ({} bytes) — use: modload {}", n, path);
+            return true;
+        }
         if let Ok(s) = core::str::from_utf8(&buf[..n]) {
             crate::console::_print(core::format_args!("{}", s));
         }
         return true;
     }
 
-    /* DRFS only for root-level basenames. */
     if is_root_level(path) {
         let name = basename(path);
         let mut bbuf = [0u8; 512];
@@ -247,8 +341,6 @@ pub fn cat_at(cwd: usize, path: &str) -> bool {
     println!("fs: no such file '{}'", path);
     false
 }
-
-const FILE_CAP: usize = 256;
 
 #[allow(dead_code)]
 pub fn cat(path: &str) -> bool {

@@ -59,7 +59,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
   set -e
   ok=1
     for needle in \
-    "DeepRoot microkernel 1.10.0" \
+    "DeepRoot microkernel 1.10.1" \
     "fdt: model \"DeepRoot QEMU virt\"" \
     "fdt: board deeproot,qemu-virt" \
     "fdt: cpu count=2" \
@@ -78,6 +78,12 @@ if [[ "${MODE}" == "--smoke" ]]; then
     "moddemo: pong" \
     "init: module loaded" \
     "init: module call ok" \
+    "init: cp modnote -> mynote ok" \
+    "module: loaded 'mynote'" \
+    "modnote: online" \
+    "modnote: noted" \
+    "init: vfs module loaded" \
+    "init: vfs module call ok" \
     "shell: DeepRoot shell 1.10 ready" \
     "init: handing off to shell"
   do

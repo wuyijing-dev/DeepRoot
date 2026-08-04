@@ -1037,7 +1037,7 @@ pub fn handle_syscall(
             let cwd = current_cwd_node();
             let plen = a1 as usize;
             let dlen = a3 as usize;
-            if plen == 0 || dlen > 256 {
+            if plen == 0 || dlen > crate::vfs::FILE_MAX {
                 return ERR_GENERIC;
             }
             let mut pbuf = [0u8; 96];
@@ -1118,6 +1118,7 @@ pub fn handle_syscall(
         }
         SYS_SPAWN_SERVER => {
             use deeproot_abi::rights;
+            let cwd = current_cwd_node();
             let mut pbuf = [0u8; 96];
             let path = match copy_user_path(a0 as usize, a1 as usize, &mut pbuf) {
                 Ok(p) => p,
@@ -1130,7 +1131,7 @@ pub fn handle_syscall(
             if badge == 0 {
                 return ERR_GENERIC;
             }
-            let (name, bytes) = match crate::fs::lookup(path) {
+            let (name, bytes) = match crate::fs::load_elf(cwd, path) {
                 Some(v) => v,
                 None => return ERR_GENERIC,
             };
@@ -1172,6 +1173,27 @@ pub fn handle_syscall(
         SYS_MODULE_LIST => {
             crate::module::list();
             0
+        }
+        SYS_FS_CP => {
+            let cwd = current_cwd_node();
+            let mut sbuf = [0u8; 96];
+            let mut dbuf = [0u8; 96];
+            let src = match copy_user_path(a0 as usize, a1 as usize, &mut sbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            let dst = match copy_user_path(a2 as usize, a3 as usize, &mut dbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            if src.is_empty() || dst.is_empty() {
+                return ERR_GENERIC;
+            }
+            if crate::fs::copy_to_vfs(cwd, src, dst) {
+                0
+            } else {
+                ERR_GENERIC
+            }
         }
         _ => ERR_NOSYS,
     }

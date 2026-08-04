@@ -66,6 +66,8 @@ pub const SYS_GETCWD: usize = 27;
 pub const SYS_SPAWN_SERVER: usize = 28;
 /// Print module registry to console
 pub const SYS_MODULE_LIST: usize = 29;
+/// `a0`=src, `a1`=slen, `a2`=dst, `a3`=dlen — copy file onto VFS path
+pub const SYS_FS_CP: usize = 30;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

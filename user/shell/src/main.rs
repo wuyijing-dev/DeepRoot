@@ -191,6 +191,44 @@ fn parse_u64(s: &[u8]) -> Option<u64> {
     Some(v)
 }
 
+
+fn path_basename(path: &[u8]) -> &[u8] {
+    match path.iter().rposition(|&b| b == b'/') {
+        Some(i) => &path[i + 1..],
+        None => path,
+    }
+}
+
+fn default_badge(path: &[u8]) -> u64 {
+    let b = path_basename(path);
+    if b == b"modnote" || b == b"mynote" {
+        0xD002
+    } else if b == b"moddemo" {
+        0xD001
+    } else {
+        0xD010
+    }
+}
+
+fn do_modload(path: &[u8], badge: u64) {
+    let slot = sys::spawn_server(path, badge);
+    if slot < 0 {
+        let _ = sys::debug_write("shell: modload failed (badge in use? try another badge)\n");
+        return;
+    }
+    let _ = sys::debug_write("shell: modload ok slot=");
+    write_u32(slot as u32);
+    let _ = sys::debug_write("\n");
+    let _ = sys::yield_now();
+    let _ = sys::yield_now();
+    let rc = sys::ipc_call(slot as usize, 0x4D44, 1);
+    if rc >= 0 {
+        let _ = sys::debug_write("shell: module call ok\n");
+    } else {
+        let _ = sys::debug_write("shell: module call failed\n");
+    }
+}
+
 fn trim(mut line: &[u8]) -> &[u8] {
     while matches!(line.first().copied(), Some(b' ' | b'\t')) {
         line = &line[1..];
@@ -485,14 +523,14 @@ fn run_exec(
 
 fn help() {
     let _ = sys::debug_write("DeepRoot shell 1.10 — builtins:\n");
-    let _ = sys::debug_write("  help / ls [DIR] / cat FILE / run ELF / hello / badapple / exit\n");
+    let _ = sys::debug_write("  help / ls [DIR] / cat FILE / cp SRC DST / run ELF / exit\n");
     let _ = sys::debug_write("  mkdir DIR / rmdir DIR / rm FILE\n");
-    let _ = sys::debug_write("  modload PATH [badge] / modules   (1.10 loadable server)\n");
+    let _ = sys::debug_write("  modload PATH [badge] / modules / moddemo / modnote\n");
     let _ = sys::debug_write("  echo ARGS   pwd   cd DIR   env   export KEY=VAL   history\n");
     let _ = sys::debug_write("Operators:  |  pipe   > file   &  background\n");
     let _ = sys::debug_write("Examples:\n");
-    let _ = sys::debug_write("  mkdir demo; cd demo; echo hi > a.txt; cat a.txt\n");
-    let _ = sys::debug_write("  modload moddemo; modules\n");
+    let _ = sys::debug_write("  cp modnote mynote; modload mynote 0xd002; modules\n");
+    let _ = sys::debug_write("  modnote\n");
 }
 
 fn read_line(buf: &mut [u8], hist: &History) -> usize {
@@ -639,29 +677,31 @@ fn run_stage(
     } else if cmd == b"modules" {
         let _ = sys::module_list();
         return 0;
-    } else if cmd == b"modload" {
-        let Some(p) = st.argv.get(1) else {
-            let _ = sys::debug_write("shell: modload <elf> [badge_hex]\n");
+    } else if cmd == b"cp" {
+        let (Some(src), Some(dst)) = (st.argv.get(1), st.argv.get(2)) else {
+            let _ = sys::debug_write("shell: cp <src> <dst>  (dst is a VFS path)\n");
             return 0;
         };
-        let mut badge: u64 = 0xD001;
+        if sys::fs_cp(src, dst) < 0 {
+            let _ = sys::debug_write("shell: cp failed\n");
+        }
+        return 0;
+    } else if cmd == b"moddemo" {
+        do_modload(b"moddemo", 0xD001);
+        return 0;
+    } else if cmd == b"modnote" {
+        do_modload(b"modnote", 0xD002);
+        return 0;
+    } else if cmd == b"modload" {
+        let Some(p) = st.argv.get(1) else {
+            let _ = sys::debug_write("shell: modload <elf|vfs-path> [badge_hex]\n");
+            return 0;
+        };
+        let mut badge = default_badge(p);
         if let Some(b) = st.argv.get(2) {
             badge = parse_u64(b).unwrap_or(badge);
         }
-        let slot = sys::spawn_server(p, badge);
-        if slot < 0 {
-            let _ = sys::debug_write("shell: modload failed\n");
-        } else {
-            let _ = sys::debug_write("shell: modload ok slot=");
-            write_u32(slot as u32);
-            let _ = sys::debug_write("\n");
-            let _ = sys::yield_now();
-            let _ = sys::yield_now();
-            let rc = sys::ipc_call(slot as usize, 0x4D44, 1);
-            if rc >= 0 {
-                let _ = sys::debug_write("shell: module call ok\n");
-            }
-        }
+        do_modload(p, badge);
         return 0;
     } else if cmd == b"env" {
         env.list();
@@ -743,13 +783,13 @@ fn run_stage(
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write(
-        "shell: DeepRoot shell 1.10 ready (help, modload, mkdir, |, >, &)\n",
+        "shell: DeepRoot shell 1.10 ready (help, cp, modload, modnote, mkdir)\n",
     );
     let mut buf = [0u8; LINE_MAX];
     let mut hist = History::new();
     let mut env = Env::new();
     let _ = env.set(b"SHELL", b"deeproot");
-    let _ = env.set(b"VERSION", b"1.10.0");
+    let _ = env.set(b"VERSION", b"1.10.1");
 
     loop {
         let _ = sys::debug_write("deeproot> ");

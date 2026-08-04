@@ -103,6 +103,18 @@ pub mod sys {
         unsafe { ecall(SYS_MODULE_LIST, 0, 0, 0, 0) }
     }
 
+    pub fn fs_cp(src: &[u8], dst: &[u8]) -> isize {
+        unsafe {
+            ecall(
+                SYS_FS_CP,
+                src.as_ptr() as usize,
+                src.len(),
+                dst.as_ptr() as usize,
+                dst.len(),
+            )
+        }
+    }
+
     pub fn exec(path: &[u8]) -> isize {
         unsafe { ecall(SYS_EXEC, path.as_ptr() as usize, path.len(), 0, 0) }
     }

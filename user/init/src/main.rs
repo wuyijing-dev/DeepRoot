@@ -30,6 +30,8 @@ _start:
 
 /// Must match user/moddemo and SYS_SPAWN_SERVER badge.
 const MODDEMO_BADGE: u64 = 0xD001;
+/// Must match user/modnote (1.10.1 VFS load demo).
+const MODNOTE_BADGE: u64 = 0xD002;
 
 #[no_mangle]
 pub extern "C" fn main() {
@@ -46,7 +48,7 @@ pub extern "C" fn main() {
         let _ = sys::debug_write("init: spawned hello ELF\n");
     }
 
-    /* 1.10: load optional server from path (not part of bring_up canopy). */
+    /* 1.10: load optional server from embed path (not part of bring_up canopy). */
     let slot = sys::spawn_server(b"moddemo", MODDEMO_BADGE);
     if slot >= 0 {
         let _ = sys::debug_write("init: module loaded\n");
@@ -60,6 +62,30 @@ pub extern "C" fn main() {
         }
     } else {
         let _ = sys::debug_write("init: module load failed\n");
+    }
+
+    /*
+     * 1.10.1: copy ELF into VFS, then SYS_SPAWN_SERVER from that file
+     * (not only embed basename).
+     */
+    if sys::fs_cp(b"modnote", b"mynote") >= 0 {
+        let _ = sys::debug_write("init: cp modnote -> mynote ok\n");
+        let nslot = sys::spawn_server(b"mynote", MODNOTE_BADGE);
+        if nslot >= 0 {
+            let _ = sys::debug_write("init: vfs module loaded\n");
+            let _ = sys::yield_now();
+            let _ = sys::yield_now();
+            let nrc = sys::ipc_call(nslot as usize, 0x4E4F, 1); /* 'NO' label */
+            if nrc >= 0 {
+                let _ = sys::debug_write("init: vfs module call ok\n");
+            } else {
+                let _ = sys::debug_write("init: vfs module call failed\n");
+            }
+        } else {
+            let _ = sys::debug_write("init: vfs module load failed\n");
+        }
+    } else {
+        let _ = sys::debug_write("init: cp modnote failed\n");
     }
 
     let _ = sys::yield_now();

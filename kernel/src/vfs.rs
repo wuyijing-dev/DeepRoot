@@ -10,7 +10,8 @@ use crate::sync::SpinLock;
 
 pub const MAX_NODES: usize = 48;
 pub const NAME_MAX: usize = 28;
-pub const FILE_MAX: usize = 256;
+/// Enough for small server ELFs (`moddemo` ~6KiB); text files use the same pool.
+pub const FILE_MAX: usize = 8192;
 pub const ROOT: usize = 0;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
