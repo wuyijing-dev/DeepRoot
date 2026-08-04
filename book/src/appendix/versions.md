@@ -38,12 +38,14 @@ git checkout v1.10.0
 | 1.7 | 多 hart（SMP） |
 | **1.8** | 自研 shell（argv/env/\|/>/&） |
 | 1.9 | 文件系统加深（长系列 `1.9.y`） |
-| 1.10 | 可加载模块 / 动态服务器 |
-| 1.11 | 实用运行时打磨 |
-| 1.12 | Framebuffer（延后） |
+| 1.10 | 可加载模块 / 动态服务器（含 userspace 驱动） |
+| 1.11 | FS 持久化 + 最小 fd |
+| 1.12 | 实用 I/O 与 shell 工具 |
+| 1.13 | 服务命名 / 发现 |
+| 1.14 | Framebuffer（再延后） |
 | 2.0 | 集成发布（不赶） |
 
-当前 **current** 是 `1.10.0`。系列内继续模块打磨见 `VERSION`；framebuffer 仍延后。
+当前 **current** 见 `VERSION` 第一行（约 `1.10.y`）。framebuffer 排到 **1.14**。
 
 ## 4. 和 GitHub Releases
 

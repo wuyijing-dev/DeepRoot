@@ -21,7 +21,7 @@
 #   - Do not mint a new SUBLEVEL for every commit; finish a chunk, then release.
 #   - Shell stays DeepRoot-native (learn from xv6/BusyBox structure; do NOT port bash).
 #   - After 1.8: prioritize **practical kernel/userspace** (FS depth, modules,
-#     servers) before framebuffer / display. Graphics are deferred.
+#     drivers, I/O) before framebuffer / display. Graphics wait until ~1.14.
 #   - MAJOR 2.0 = platform integration release (DT/SMP/FS/modules + optional
 #     display when ready), not a desktop OS and not “version inflation.”
 #
@@ -280,69 +280,114 @@
 # Out of scope for 1.9: full POSIX VFS, many FS types, networked FS, framebuffer.
 
 # ---------------------------------------------------------------------
-# 1.10.x  Loadable modules / dynamic servers
+# 1.10.x  Loadable modules / dynamic servers (+ userspace drivers)
 # Goal: load ELF modules or userspace servers after boot (not only build-time
 #       embed); registry + capability handoff. Still DeepRoot-native.
-# Prefer a thick 1.10.y series before 1.11.
+# Driver load belongs here (microkernel: userspace driver + device caps),
+# not a separate PATCHLEVEL and not Linux kmod-into-kernel.
 # ---------------------------------------------------------------------
 #
 # Suggested staging:
-#   W1  Module object format + in-kernel or init-driven loader for .so-like ELF
+#   W1  Module object format + in-kernel or init-driven loader for ET_EXEC ELF
 #   W2  Symbol / service registry; bring up one optional server from disk/ramfs
 #   W3  Unload or replace path (best-effort); provenance for caps from modules
 #   W4  Smoke: boot without module, then load one demo module and call it
+#   W5  Load ELF from VFS path (cp / FILE_MAX); more than one demo module
+#   W6  Device capability handoff on load (MMIO Frame / IRQ) for a real driver
+#   W7  Demo userspace driver bound to FDT virtio-mmio (probe + log / minimal I/O)
+#   W8  Smoke: canopy without that driver → modload → driver online markers
 #
 # Releases:
-# 1.10.0  First loadable module path (SYS_SPAWN_SERVER + /moddemo) ← current
-# 1.10.y  Loader / registry fixes and more demo modules
+# 1.10.0  First loadable module path (SYS_SPAWN_SERVER + /moddemo)
+# 1.10.1  Load ELF from VFS file (cp + FILE_MAX); second module /modnote
+# 1.10.2  Userspace driver load: mint MMIO (and later IRQ) caps into loaded ELF
+# 1.10.3  First bound demo driver (e.g. virtio-mmio probe) + smoke
+# 1.10.y  More drivers / unload / registry polish (stay on 1.10 until solid)
 #
-# Out of scope for 1.10: Linux kmod ABI, live kernel patching, signed modules.
+# Out of scope for 1.10: Linux kmod ABI, live kernel patching, signed modules,
+#   shipping Linux driver binaries, moving all in-kernel virtio-blk at once.
 
 # ---------------------------------------------------------------------
-# 1.11.x  More practical runtime (still pre-display)
-# Goal: fill gaps that make the system usable for teaching labs: e.g. better
-#       block/FS polish, virtio-console or input, structured logging, simple
-#       naming/service discovery, watchdog/time utilities — pick from backlog
-#       as needed; keep SUBLEVEL slow.
+# 1.11.x  FS durability + fd table (finish what 1.9 started)
+# Goal: durable writes on virtio-blk/DRFS, multi-extent or larger files,
+#       minimal open/read/write handles for shell redirect and programs.
 # ---------------------------------------------------------------------
 #
-# Backlog ideas (not a promise to ship all; choose and document per 1.11.y):
-#   - Virtio-console or richer UART path for shell I/O
-#   - Persistent config / seed files on DRFS
-#   - Cap/ledger dump tooling; debugfs-like inspect via shell
-#   - Simple timer/alarm or sleep builtin for scripts
-#   - Extra userspace utilities (cp, hexdump, …) as ramfs ELFs
+# Suggested staging:
+#   W1  Larger / multi-extent DRFS; create/append text & small binaries on disk
+#   W2  Persist VFS or selected paths across reboot (teaching image rules)
+#   W3  Minimal fd table: open / close / read / write syscalls
+#   W4  Shell `>` / programs use fds; smoke durable file survives QEMU restart
 #
 # Releases:
-# 1.11.0  First practical-runtime slice chosen from backlog
-# 1.11.y  More utilities / drivers / polish in the same series
+# 1.11.0  Durable DRFS create/append (or equivalent) usable from shell
+# 1.11.1  Minimal fd table + open/read/write
+# 1.11.y  Truncate/seek/poll polish; more DRFS robustness
 #
-# Out of scope for 1.11: framebuffer UI, networking stack, POSIX login.
+# Out of scope for 1.11: full POSIX VFS, many FS types, networked FS, framebuffer.
 
 # ---------------------------------------------------------------------
-# 1.12.x  Framebuffer simple UI (deferred — was formerly planned as 1.9)
+# 1.12.x  Practical I/O and shell utilities
+# Goal: make the serial lab usable day-to-day without graphics.
+# ---------------------------------------------------------------------
+#
+# Suggested staging:
+#   W1  Virtio-console or richer UART path for shell I/O
+#   W2  Sleep / time builtins; structured logging or ledger dump via shell
+#   W3  Extra userspace tools as ramfs ELFs (hexdump, stat, …)
+#   W4  Smoke: documented utility set + one scripted pipe/fd example
+#
+# Releases:
+# 1.12.0  Better console I/O path (virtio-console or equivalent)
+# 1.12.1  sleep/time + ledger/cap inspect from shell
+# 1.12.y  More utilities / I/O polish
+#
+# Out of scope for 1.12: framebuffer UI, networking stack, POSIX login.
+
+# ---------------------------------------------------------------------
+# 1.13.x  Service naming / discovery + runtime polish
+# Goal: find servers by name (not only hard-coded badges); config seeds;
+#       watchdog/timer utilities as needed for labs.
+# ---------------------------------------------------------------------
+#
+# Suggested staging:
+#   W1  Simple naming / service registry (DeepRoot-native, not D-Bus)
+#   W2  Persistent config / seed files on DRFS
+#   W3  Watchdog or alarm helpers; init brings optional servers by name
+#   W4  Smoke: look up a loaded module/driver by name and call it
+#
+# Releases:
+# 1.13.0  Name → endpoint (or badge) lookup for registered servers
+# 1.13.1  Config/seed on DRFS + init optional bring-up by name
+# 1.13.y  Discovery / init polish
+#
+# Out of scope for 1.13: desktop session manager, Linux dbus ABI, framebuffer.
+
+# ---------------------------------------------------------------------
+# 1.14.x  Framebuffer simple UI (deferred — far after practical path)
 # Goal: clear screen, pixels/rects, simple menu or graphical terminal on QEMU.
-# Only after 1.9–1.11 practical work is “good enough to teach.”
+# Only after 1.10–1.13 practical / driver / FS / I/O work is solid enough to teach.
 # ---------------------------------------------------------------------
 #
-# Work to land before tagging 1.12.0:
+# Work to land before tagging 1.14.0:
 #   W1  Enable ramfb / simple-framebuffer (FDT hint already exists); map FB
 #   W2  Userspace helpers: clear, put_pixel, fill_rect
-#   W3  Simple menu or graphical terminal (serial shell remains)
+#   W3  Simple menu or graphical terminal (serial shell remains primary)
 #   W4  Smoke: log or scripted proof of FB writes (no full WM)
 #
 # Releases:
-# 1.12.0  Framebuffer drawing + simple UI demo
-# 1.12.y  Display path fixes only
+# 1.14.0  Framebuffer drawing + simple UI demo
+# 1.14.y  Display path fixes only
 #
-# Out of scope for 1.12: window manager, icons desktop, GPU 3D, IME.
+# Out of scope for 1.14: window manager, icons desktop, GPU 3D, IME.
 
 # =====================================================================
 # 2.0 — platform integration release (when ready — do not rush)
 # =====================================================================
 #
 # 2.0.0  Integrate teaching defaults: DT + virtio block + SMP + richer shell
-#        + FS depth + modules (+ framebuffer if 1.12 landed). Docs / smoke.
+#        + FS depth + modules/drivers + practical I/O (+ framebuffer if 1.14
+#        landed). Docs / smoke.
 # 2.0.y  Integration and doc fixes only after the jump.
 #
 # MAJOR 2 means a deliberate platform milestone, not “we shipped many 1.x tags.”
@@ -363,9 +408,11 @@
 # [1.6]  virtio-blk behind teaching FS path
 # [1.7]  Multi-hart scheduling on QEMU virt
 # [1.8]  Richer native shell (argv/env/history/&/simple pipes) — no bash port
-# [1.9]  Filesystem depth (dirs, durable writes, fds) — long 1.9.y
-# [1.10] Loadable modules / dynamic servers ← current
-# [1.11] More practical runtime utilities / I/O polish
-# [1.12] Framebuffer clear/draw + simple UI (deferred)
+# [1.9]  Filesystem depth (dirs first; durable/fds continue in 1.11)
+# [1.10] Loadable modules / dynamic servers (+ userspace driver load) ← current
+# [1.11] FS durability + minimal fd table
+# [1.12] Practical I/O and shell utilities
+# [1.13] Service naming / discovery + runtime polish
+# [1.14] Framebuffer clear/draw + simple UI (deferred, after 1.13)
 # [2.0]  Integrated release of the above (when themes are ready)
 # Native capability microkernel throughout — learn from other OS, do not clone Linux.

@@ -35,7 +35,7 @@ Platform {
   memory: Option<Reg>      // /memory@…
   uart: Option<UartDev>    // ns16550a 等
   virtio[0..N]             // compatible = "virtio,mmio"
-  framebuffer: Option<…>   // 显示延后到 1.12；FDT 仍可先记下 hint
+  framebuffer: Option<…>   // 显示延后到 1.14；FDT 仍可先记下 hint
 }
 ```
 
