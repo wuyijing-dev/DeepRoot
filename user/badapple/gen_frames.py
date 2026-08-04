@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""gen_frames.py - BA02 4-bit xor+RLE with Bayer dither for finer ASCII."""
+"""gen_frames.py - BA02 4-bit xor+RLE @ 30fps (source rate) with Bayer dither."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ ROOT = Path(__file__).resolve().parent
 MP4 = ROOT / "badapple.mp4"
 OUT = ROOT / "frames.ba01"
 
-# Higher res + 16 gray levels; Bayer dither puts mid glyphs on edges.
-W, H, FPS, BITS = 96, 32, 8, 4
+# Match source 30fps; modest size so serial can keep up (less tear/flicker).
+W, H, FPS, BITS = 64, 20, 30, 4
 BAYER4 = [
     [0, 8, 2, 10],
     [12, 4, 14, 6],
@@ -92,6 +92,8 @@ def main() -> int:
         body += struct.pack("<H", len(enc))
         body += enc
         prev = packed
+        if (fi + 1) % 500 == 0:
+            print(f"  … {fi + 1}/{n}", flush=True)
     hdr = b"BA02" + bytes([W, H, FPS, BITS]) + struct.pack("<I", n)
     OUT.write_bytes(hdr + body)
     print(f"wrote {OUT} ({OUT.stat().st_size} bytes, {n} frames)")

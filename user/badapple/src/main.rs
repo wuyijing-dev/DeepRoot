@@ -1,9 +1,7 @@
-//! badapple — realtime ASCII from BA02 4-bit frames.
+//! badapple — realtime ASCII from BA02 4-bit frames @ source 30fps.
 //!
-//! Decode → map 16 gray levels to an ASCII ramp → one bulk console write.
-//! Timeline follows wall-clock (`SYS_TIME`): if serial is slow we **skip
-//! drawing** (still decode) so 1s wall ≈ 1s of source time at encoded fps.
-//! Press `q` to quit.
+//! Anti-flicker: hide cursor, optional sync dump, home+EL per row (no scroll),
+//! status line via CUP once per second. Wall-clock pacing with draw-skips.
 
 #![no_std]
 #![no_main]
@@ -36,12 +34,16 @@ _start:
 static FRAMES: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/frames.ba01"));
 const _: [(); 1] = [(); (FRAMES.len() > 10_000) as usize];
 
-const MAX_PIXELS: usize = 128 * 48;
+const MAX_PIXELS: usize = 80 * 24;
 const MAX_PACKED: usize = (MAX_PIXELS + 1) / 2;
-const MAX_FRAME_CHARS: usize = 8 + MAX_PIXELS + 128 + 64;
+const MAX_FRAME_CHARS: usize = 64 + MAX_PIXELS + 256;
 
-/// 16-level ramp: black → white (dense → blank).
 const RAMP: &[u8; 16] = b"@&#%*+=:;~-_,.  ";
+
+static mut PREV: [u8; MAX_PACKED] = [0; MAX_PACKED];
+static mut CUR: [u8; MAX_PACKED] = [0; MAX_PACKED];
+static mut XOR_BUF: [u8; MAX_PACKED] = [0; MAX_PACKED];
+static mut FRAME: [u8; MAX_FRAME_CHARS] = [0; MAX_FRAME_CHARS];
 
 struct Header {
     width: usize,
@@ -152,7 +154,7 @@ fn push_str(out: &mut [u8], i: usize, s: &[u8]) -> usize {
 }
 
 fn write_banner(hdr: &Header) {
-    let mut b = [0u8; 160];
+    let mut b = [0u8; 192];
     let mut i = 0usize;
     i = push_str(&mut b, i, b"badapple: ");
     i = push_u32(&mut b, hdr.width, i);
@@ -163,13 +165,18 @@ fn write_banner(hdr: &Header) {
     i = push_str(&mut b, i, b"  frames=");
     i = push_u32(&mut b, hdr.nframes, i);
     i = push_str(&mut b, i, b"  dur_s=");
-    i = push_u32(&mut b, hdr.nframes / hdr.fps, i);
-    i = push_str(&mut b, i, b" (src~30fps sampled; q=quit)\n");
+    i = push_u32(&mut b, hdr.nframes / hdr.fps.max(1), i);
+    i = push_str(&mut b, i, b" (30fps timeline; q=quit)\n");
     let _ = sys::debug_write(core::str::from_utf8(&b[..i]).unwrap_or("\n"));
 }
 
 /*
- * render_frame - picture + status line with frame index / totals
+ * render_frame - tear-resistant redraw
+ *
+ * - CSI ?2026 : buffered sync (ignored by dumb terminals)
+ * - cursor home, each row ends with EL (erase to EOL) so leftovers never flash
+ * - no extra blank lines that would scroll the viewport
+ * - status via CUP under the picture (updated by caller rate)
  */
 fn render_frame(
     pack: &[u8],
@@ -180,32 +187,36 @@ fn render_frame(
     nframes: usize,
     enc_fps: usize,
     drawn: usize,
+    show_status: bool,
     out: &mut [u8],
 ) {
     let mut n = 0usize;
-    out[n] = 0x1b;
-    out[n + 1] = b'[';
-    out[n + 2] = b'H';
-    n += 3;
+    /* Begin synchronized update + home. */
+    n = push_str(out, n, b"\x1b[?2026h\x1b[H");
     for y in 0..h {
         for x in 0..w {
             let lv = level_at(pack, y * w + x, bits) as usize;
             out[n] = RAMP[lv & 15];
             n += 1;
         }
-        out[n] = b'\n';
-        n += 1;
+        /* Erase to end of line, then next line — avoids scroll flicker. */
+        n = push_str(out, n, b"\x1b[K\n");
     }
-    /* Status under the picture. */
-    n = push_str(out, n, b"frame ");
-    n = push_u32(out, fi + 1, n);
-    n = push_str(out, n, b"/");
-    n = push_u32(out, nframes, n);
-    n = push_str(out, n, b"  enc_fps=");
-    n = push_u32(out, enc_fps, n);
-    n = push_str(out, n, b"  drawn=");
-    n = push_u32(out, drawn, n);
-    n = push_str(out, n, b"   \n");
+    if show_status {
+        /* Row h+2, column 1. */
+        n = push_str(out, n, b"\x1b[");
+        n = push_u32(out, h + 2, n);
+        n = push_str(out, n, b";1Hframe ");
+        n = push_u32(out, fi + 1, n);
+        n = push_str(out, n, b"/");
+        n = push_u32(out, nframes, n);
+        n = push_str(out, n, b"  fps=");
+        n = push_u32(out, enc_fps, n);
+        n = push_str(out, n, b"  drawn=");
+        n = push_u32(out, drawn, n);
+        n = push_str(out, n, b"\x1b[K");
+    }
+    n = push_str(out, n, b"\x1b[?2026l");
     let _ = sys::debug_write(core::str::from_utf8(&out[..n]).unwrap_or(""));
 }
 
@@ -265,40 +276,36 @@ pub extern "C" fn main() {
     };
 
     write_banner(&hdr);
-    let _ = sys::debug_write("\x1b[2J\x1b[H");
+    /* Alternate screen + hide cursor. */
+    let _ = sys::debug_write("\x1b[?1049h\x1b[?25l\x1b[2J\x1b[H");
+    write_banner(&hdr);
 
     let plen = packed_len(hdr.width, hdr.height, hdr.bits);
-    let mut prev = [0u8; MAX_PACKED];
-    let mut cur = [0u8; MAX_PACKED];
-    let mut xor_buf = [0u8; MAX_PACKED];
-    let mut frame = [0u8; MAX_FRAME_CHARS];
+    let (prev, cur, xor_buf, frame) = unsafe {
+        (
+            &mut *core::ptr::addr_of_mut!(PREV),
+            &mut *core::ptr::addr_of_mut!(CUR),
+            &mut *core::ptr::addr_of_mut!(XOR_BUF),
+            &mut *core::ptr::addr_of_mut!(FRAME),
+        )
+    };
+    prev[..plen].fill(0);
 
     let fps = hdr.fps as u64;
     let mut off = 0usize;
     let t0 = sys::time_ms();
     let mut drawn = 0usize;
+    let status_every = if hdr.fps >= 15 { hdr.fps } else { 1 };
 
     for fi in 0..hdr.nframes {
         if quit_requested() {
             break;
         }
-        if !decode_one(
-            hdr.body,
-            &mut off,
-            plen,
-            &mut xor_buf,
-            &mut prev,
-            &mut cur,
-        ) {
+        if !decode_one(hdr.body, &mut off, plen, xor_buf, prev, cur) {
             let _ = sys::debug_write("badapple: decode error\n");
             break;
         }
 
-        /*
-         * Wall-clock target frame. If we are late, skip drawing (decode
-         * still runs — stream is delta-coded) so timeline stays aligned
-         * with the source (enc_fps samples of original time).
-         */
         let elapsed = sys::time_ms().wrapping_sub(t0);
         let target = ((elapsed * fps) / 1000) as usize;
         if fi < target {
@@ -306,6 +313,7 @@ pub extern "C" fn main() {
         }
 
         drawn += 1;
+        let show_status = drawn == 1 || drawn % status_every == 0 || fi + 1 == hdr.nframes;
         render_frame(
             &cur[..plen],
             hdr.width,
@@ -315,18 +323,21 @@ pub extern "C" fn main() {
             hdr.nframes,
             hdr.fps,
             drawn,
-            &mut frame,
+            show_status,
+            frame,
         );
 
-        /* Next frame due at t0 + (fi+1)/fps seconds. */
         let next_ms = t0.wrapping_add(((fi as u64 + 1) * 1000) / fps);
         wait_until(next_ms);
     }
 
+    /* Restore terminal. */
+    let _ = sys::debug_write("\x1b[?25h\x1b[?1049l");
+
     let elapsed = sys::time_ms().wrapping_sub(t0);
     let mut b = [0u8; 96];
     let mut i = 0usize;
-    i = push_str(&mut b, i, b"\nbadapple: done  wall_ms=");
+    i = push_str(&mut b, i, b"badapple: done  wall_ms=");
     i = push_u32(&mut b, elapsed as usize, i);
     i = push_str(&mut b, i, b"  drawn=");
     i = push_u32(&mut b, drawn, i);
@@ -339,6 +350,6 @@ pub extern "C" fn main() {
 
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
-    let _ = sys::debug_write("badapple: PANIC\n");
+    let _ = sys::debug_write("\x1b[?25h\x1b[?1049lbadapple: PANIC\n");
     sys::exit(1);
 }
