@@ -10,16 +10,20 @@ DeepRoot/
 ├── README.md               # 给 GitHub 访客的简介
 ├── LICENSE                 # Apache-2.0
 ├── Cargo.toml              # workspace：列出 kernel / libs / user/*
+├── platform/               # 板级设备树源（qemu-virt/deeproot.dts）
 ├── book/                   # 学习文档源码（mdBook）
 ├── docs/                   # 构建后的静态站点（GitHub Pages → /docs）
 ├── scripts/
-│   └── run-qemu.sh         # 构建 + 启动 QEMU（交互 / --smoke）
+│   ├── run-qemu.sh         # 构建 DTB + 内核 + 启动 QEMU
+│   └── build-dtb.sh        # dtc：DTS → build/*.dtb
 ├── kernel/                 # 微内核 crate（#![no_std]）
 │   ├── build.rs            # 编译并嵌入用户 ELF
 │   ├── linker.ld
 │   └── src/
 │       ├── main.rs         # kernel_main
 │       ├── boot.rs         # _start
+│       ├── fdt.rs          # FDT 遍历 → Platform
+│       ├── virtio_blk.rs   # legacy virtio-mmio 块驱动
 │       ├── sbi.rs          # 控制台 / 时钟等 SBI
 │       ├── trap.rs         # 陷阱与 syscall 入口
 │       ├── sched.rs        # 调度 + 大部分 syscall 实现
@@ -45,22 +49,24 @@ DeepRoot/
 |---|---|
 | 开机入口 | `kernel/src/boot.rs`、`main.rs`、`sbi.rs` |
 | 页表 / 内存 | `kernel/src/mm/`（`memmap` → `frame` → `sv39`） |
+| 设备树 | `platform/qemu-virt/deeproot.dts`、`kernel/src/fdt.rs` |
 | 能力 | `kernel/src/cap/`、`libs/deeproot-abi` |
 | IPC / Ledger | `kernel/src/ipc.rs`、`ledger.rs`、`user/init`、`user/ping` |
 | 调度与 syscall | `kernel/src/sched.rs`、`trap.rs` |
 | 用户程序怎么进内核 | `libs/deeproot-user/src/lib.rs` |
 | shell / ramfs | `user/shell/`、`kernel/src/fs.rs`、`kernel/build.rs` |
-| 块层替身 | `kernel/src/block.rs` |
+| 块 / virtio | `kernel/src/block.rs`、`virtio_blk.rs` |
 
 ## 3. 构建时发生了什么？（必读）
 
 ```text
 ./scripts/run-qemu.sh
+    → scripts/build-dtb.sh（dtc：deeproot.dts → .dtb）
     → cargo build -p deeproot-kernel …
         → kernel/build.rs 对每个 user 包再 cargo build
         → 把 ELF 复制到 OUT_DIR
         → fs.rs / servers.rs 里 include_bytes!
-    → qemu-system-riscv64 -kernel deeproot-kernel …
+    → qemu … -kernel … -dtb … -device virtio-blk-device …
 ```
 
 因此：
@@ -82,6 +88,7 @@ DeepRoot/
 | 1.1 | `elf`、`AddrSpace`、`SYS_SPAWN` |
 | 1.2 | `user/shell`、`SYS_DEBUG_READ` |
 | 1.3 | `fs.rs`、`SYS_EXEC` |
-| 1.4 | `block.rs` |
+| 1.4 | `block.rs`（DRFS） |
+| 1.5–1.6 | `platform/…/deeproot.dts`、`fdt.rs`、`virtio_blk.rs` |
 
 下一章回主线：[学习路线图](../path/overview.md)。若尚未开机，先去 [第一次启动](first-boot.md)。

@@ -112,12 +112,15 @@ backend：ramdisk  或  virtio-blk
 | 「所有文件都在 DISK 里」 | ELF 仍在 `include_bytes!` |
 | 「没有 virtio 就是没完成 1.4」 | 看 `VERSION`：替身 + 块上文本即本系列交付 |
 
-## 8. 教学路径到此（1.4 系列）
+## 8. 教学路径到此（1.4 系列）——请继续 1.5–1.6
 
-恭喜：串口 → 页表 → 能力 → IPC → 用户态 → 调度 → ABI → spawn → shell → ramfs → **块上 DRFS 文本**。
+恭喜：串口 → 页表 → 能力 → IPC → 用户态 → 调度 → ABI → spawn → shell → ramfs → **DRFS**。
 
-接下来建议：
+块设备的「真盘 + 自有设备树」见下一章：
+
+- [1.5–1.6 设备树与 virtio-blk](10-fdt-virtio.md)（对齐 **v1.6.1**）
+
+也可先练：
 
 1. [Shell 常用命令](../hands-on/shell-commands.md)  
 2. [自己写一个用户程序](../hands-on/write-user-prog.md)  
-3. [常见问题](../hands-on/faq.md)  

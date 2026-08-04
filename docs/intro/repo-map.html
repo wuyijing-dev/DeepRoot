@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-96d2b290.js";
+            window.path_to_searchindex_js = "../searchindex-f9a18a48.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-d263d424.js"></script>
+        <script src="../toc-b6d20683.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -188,16 +188,20 @@
 ├── README.md               # 给 GitHub 访客的简介
 ├── LICENSE                 # Apache-2.0
 ├── Cargo.toml              # workspace：列出 kernel / libs / user/*
+├── platform/               # 板级设备树源（qemu-virt/deeproot.dts）
 ├── book/                   # 学习文档源码（mdBook）
 ├── docs/                   # 构建后的静态站点（GitHub Pages → /docs）
 ├── scripts/
-│   └── run-qemu.sh         # 构建 + 启动 QEMU（交互 / --smoke）
+│   ├── run-qemu.sh         # 构建 DTB + 内核 + 启动 QEMU
+│   └── build-dtb.sh        # dtc：DTS → build/*.dtb
 ├── kernel/                 # 微内核 crate（#![no_std]）
 │   ├── build.rs            # 编译并嵌入用户 ELF
 │   ├── linker.ld
 │   └── src/
 │       ├── main.rs         # kernel_main
 │       ├── boot.rs         # _start
+│       ├── fdt.rs          # FDT 遍历 → Platform
+│       ├── virtio_blk.rs   # legacy virtio-mmio 块驱动
 │       ├── sbi.rs          # 控制台 / 时钟等 SBI
 │       ├── trap.rs         # 陷阱与 syscall 入口
 │       ├── sched.rs        # 调度 + 大部分 syscall 实现
@@ -225,22 +229,24 @@
 <tbody>
 <tr><td>开机入口</td><td><code>kernel/src/boot.rs</code>、<code>main.rs</code>、<code>sbi.rs</code></td></tr>
 <tr><td>页表 / 内存</td><td><code>kernel/src/mm/</code>（<code>memmap</code> → <code>frame</code> → <code>sv39</code>）</td></tr>
+<tr><td>设备树</td><td><code>platform/qemu-virt/deeproot.dts</code>、<code>kernel/src/fdt.rs</code></td></tr>
 <tr><td>能力</td><td><code>kernel/src/cap/</code>、<code>libs/deeproot-abi</code></td></tr>
 <tr><td>IPC / Ledger</td><td><code>kernel/src/ipc.rs</code>、<code>ledger.rs</code>、<code>user/init</code>、<code>user/ping</code></td></tr>
 <tr><td>调度与 syscall</td><td><code>kernel/src/sched.rs</code>、<code>trap.rs</code></td></tr>
 <tr><td>用户程序怎么进内核</td><td><code>libs/deeproot-user/src/lib.rs</code></td></tr>
 <tr><td>shell / ramfs</td><td><code>user/shell/</code>、<code>kernel/src/fs.rs</code>、<code>kernel/build.rs</code></td></tr>
-<tr><td>块层替身</td><td><code>kernel/src/block.rs</code></td></tr>
+<tr><td>块 / virtio</td><td><code>kernel/src/block.rs</code>、<code>virtio_blk.rs</code></td></tr>
 </tbody>
 </table>
 </div>
 <h2 id="3-构建时发生了什么必读"><a class="header" href="#3-构建时发生了什么必读">3. 构建时发生了什么？（必读）</a></h2>
 <pre><code class="language-text">./scripts/run-qemu.sh
+    → scripts/build-dtb.sh（dtc：deeproot.dts → .dtb）
     → cargo build -p deeproot-kernel …
         → kernel/build.rs 对每个 user 包再 cargo build
         → 把 ELF 复制到 OUT_DIR
         → fs.rs / servers.rs 里 include_bytes!
-    → qemu-system-riscv64 -kernel deeproot-kernel …
+    → qemu … -kernel … -dtb … -device virtio-blk-device …
 </code></pre>
 <p>因此：</p>
 <ul>
@@ -263,7 +269,8 @@
 <tr><td>1.1</td><td><code>elf</code>、<code>AddrSpace</code>、<code>SYS_SPAWN</code></td></tr>
 <tr><td>1.2</td><td><code>user/shell</code>、<code>SYS_DEBUG_READ</code></td></tr>
 <tr><td>1.3</td><td><code>fs.rs</code>、<code>SYS_EXEC</code></td></tr>
-<tr><td>1.4</td><td><code>block.rs</code></td></tr>
+<tr><td>1.4</td><td><code>block.rs</code>（DRFS）</td></tr>
+<tr><td>1.5–1.6</td><td><code>platform/…/deeproot.dts</code>、<code>fdt.rs</code>、<code>virtio_blk.rs</code></td></tr>
 </tbody>
 </table>
 </div>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-96d2b290.js";
+            window.path_to_searchindex_js = "../searchindex-f9a18a48.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-d263d424.js"></script>
+        <script src="../toc-b6d20683.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -207,10 +207,16 @@ sudo apt-get install -y qemu-system-misc
 qemu-system-riscv64 --version
 </code></pre>
 <p>其它发行版包名可能不同，关键词是 <strong><code>qemu-system-riscv64</code></strong>。</p>
-<h3 id="24-git"><a class="header" href="#24-git">2.4 Git</a></h3>
+<h3 id="24-设备树编译器dtc"><a class="header" href="#24-设备树编译器dtc">2.4 设备树编译器（<code>dtc</code>）</a></h3>
+<p><strong>1.6.1</strong> 起启动脚本会编译 DeepRoot 自有 DTS，需要主机上的 <code>dtc</code>：</p>
+<pre><code class="language-bash">sudo apt-get install -y device-tree-compiler
+dtc --version
+./scripts/build-dtb.sh   # 应生成 build/deeproot-qemu-virt.dtb
+</code></pre>
+<h3 id="25-git"><a class="header" href="#25-git">2.5 Git</a></h3>
 <pre><code class="language-bash">git --version
 </code></pre>
-<h3 id="25-常见可选工具"><a class="header" href="#25-常见可选工具">2.5 常见可选工具</a></h3>
+<h3 id="26-常见可选工具"><a class="header" href="#26-常见可选工具">2.6 常见可选工具</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>

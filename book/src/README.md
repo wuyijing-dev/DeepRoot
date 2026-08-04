@@ -67,8 +67,9 @@
 2. [你需要准备什么](intro/prerequisites.md) — 装工具  
 3. [第一次启动](intro/first-boot.md) — **必须先跑通 QEMU**  
 4. [仓库长什么样](intro/repo-map.md) — 建立代码地图  
-5. [学习路线图](path/overview.md) 起，从 **0.1 读到 1.4**  
+5. [学习路线图](path/overview.md) 起，从 **0.1 读到 1.6**  
    - 每章固定结构：概念 → 源码跟读 → 动手验证 → 易错点  
+   - **1.6.1** 重点：[设备树与 virtio-blk](path/10-fdt-virtio.md)  
 6. 想创造时看 [动手玩](hands-on/shell-commands.md)
 
 ## 每一章你该怎么学？

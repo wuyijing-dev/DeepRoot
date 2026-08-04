@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-96d2b290.js";
+            window.path_to_searchindex_js = "../../searchindex-f9a18a48.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-d263d424.js"></script>
+        <script src="../../toc-b6d20683.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,24 +180,27 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="021-ram-发现与-dtb-回退"><a class="header" href="#021-ram-发现与-dtb-回退">0.2.1 RAM 发现与 DTB 回退</a></h1>
+                        <h1 id="021-ram-发现与-dtb"><a class="header" href="#021-ram-发现与-dtb">0.2.1 RAM 发现与 DTB</a></h1>
 <p>这一页只讲：<strong>内核怎么知道“哪段物理内存是 RAM，可以拿来用”。</strong></p>
 <h2 id="1-关键文件"><a class="header" href="#1-关键文件">1. 关键文件</a></h2>
 <ul>
 <li><code>kernel/src/mm/mod.rs</code></li>
 <li><code>kernel/src/mm/memmap.rs</code></li>
+<li><code>kernel/src/fdt.rs</code>（1.5+：真正的 FDT 遍历）</li>
 </ul>
 <h2 id="2-思路"><a class="header" href="#2-思路">2. 思路</a></h2>
-<p>优先从 DTB 里拿内存信息；<br>如果拿不到，再回退到 QEMU <code>virt</code> 的已知默认布局。</p>
+<ol>
+<li>启动时 <code>fdt::probe(dtb_pa)</code> 先走完整棵树。</li>
+<li><code>memmap::discover</code> 调用 <code>fdt::memory_reg()</code> 取 <code>/memory</code> 的 <code>reg</code>。</li>
+<li>若拿不到或校验失败，再回退到 QEMU <code>virt</code> 默认常量。</li>
+</ol>
+<p><strong>1.6.1</strong> 起 <code>dtb_pa</code> 通常指向 <strong>DeepRoot 自有</strong> <code>deeproot-qemu-virt.dtb</code>（见 <a href="../fdt-virtio/01-own-dts.html">自有设备树</a>），不只是 QEMU 临时生成的 blob。</p>
 <h2 id="3-为什么这一步是整个内存系统的地基"><a class="header" href="#3-为什么这一步是整个内存系统的地基">3. 为什么这一步是整个内存系统的地基</a></h2>
 <p>frame allocator、页表页、用户页、内核堆，全都建立在“我先知道哪段 RAM 可用”这个前提上。</p>
 <h2 id="4-你该观察什么"><a class="header" href="#4-你该观察什么">4. 你该观察什么</a></h2>
-<p>启动日志里的 <code>mm:</code> 行，通常会告诉你：</p>
-<ul>
-<li>当前 hart</li>
-<li>RAM 起止</li>
-<li>free 区间</li>
-</ul>
+<pre><code class="language-text">fdt: memory 0x80000000..0x90000000 (256 MiB)
+mm: hart=0 dtb=… ram=0x80000000..0x90000000 free=…
+</code></pre>
 <p>如果这里离谱，后面几乎都会跟着离谱。</p>
 <p>下一页：<a href="02-frame-heap.html">0.2.2 frame allocator 与 heap</a></p>
 

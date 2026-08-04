@@ -11,10 +11,13 @@
 | **capability（能力）** | 受内核管理的「权限票」，持有者才能对某对象执行某些操作。 |
 | **cap / CSpace** | 能力与能力表（任务持有哪些票）。 |
 | **DBCN** | SBI Debug Console 扩展：批量写控制台。 |
-| **DTB** | Device Tree Blob，固件传给内核的硬件描述（DeepRoot 早期可能只用一部分）。 |
+| **DTB** | Device Tree Blob：编译后的设备树；DeepRoot 用自有 DTS 生成并经 `-dtb` 交给 OpenSBI。 |
+| **DTS** | Device Tree Source：人类可读的板级描述；真源在 `platform/qemu-virt/deeproot.dts`。 |
+| **DRFS** | DeepRoot 教学「盘上」镜像格式（magic `DRFS`）；可在 ramdisk 或 virtio-blk 上。 |
 | **ecall** | RISC-V 环境调用指令；用户态进内核做 syscall。 |
 | **ELF** | 可执行文件格式；用户程序以 ELF 嵌入并加载。 |
 | **Endpoint** | IPC 通信端点对象；常通过能力引用。 |
+| **FDT** | Flattened Device Tree；内核侧 walker 在 `kernel/src/fdt.rs`。 |
 | **hart** | Hardware thread，一颗硬件硬件线程/核。 |
 | **idle** | 无可运行任务时睡的内核任务（常 `wfi`）。 |
 | **IPC** | 进程/任务间通信；DeepRoot 教学树以同步 call/recv/reply 为主。 |
@@ -27,7 +30,7 @@
 | **provenance** | 能力来源：这张票是怎么 mint/derive 出来的。 |
 | **QEMU virt** | 常用的虚拟开发板机型；DeepRoot 脚本默认用它。 |
 | **ramfs** | 教学内存文件系统：名字→静态字节。 |
-| **ramdisk** | 用内存假装磁盘；1.4 块层替身。 |
+| **ramdisk** | 用内存假装磁盘；1.4 块层替身，1.6 起多为 virtio 失败时的回退。 |
 | **SBI** | Supervisor Binary Interface：S-mode 向固件借的服务。 |
 | **satp** | 控制页表根与模式的 CSR；切任务时常切 satp。 |
 | **sched id** | 调度器任务槽编号；`SYS_EXEC`/`SYS_WAIT` 使用。 |
@@ -38,6 +41,8 @@
 | **Sv39** | RISC-V 39 位虚址页表模式（三级页表）。 |
 | **syscall** | 系统调用；DeepRoot 用 `a7` 放号码。 |
 | **TCB** | 任务控制块：调度器眼里的任务状态。 |
+| **virtio-blk** | 半虚拟化块设备；教学驱动在 `virtio_blk.rs`（legacy MMIO + 轮询）。 |
+| **virtio-mmio** | 以 MMIO 寄存器暴露的 virtio 传输；QEMU virt 上有多个槽。 |
 | **trap frame** | 保存/恢复用户寄存器的结构。 |
 | **virtio-blk** | 虚拟化块设备标准；1.4 用 ramdisk 替身占位。 |
 | **wfi** | Wait For Interrupt，闲时省电/等待。 |

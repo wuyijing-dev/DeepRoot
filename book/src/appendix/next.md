@@ -1,7 +1,7 @@
 # 下一步可以看什么
 
-你已经走完 DeepRoot **1.4** 教学主线（当前推荐标签 **`v1.4.1`**）。  
-仓库路线图已规划到 **2.0**（见根目录 `VERSION`）：设备树 → virtio 块 → SMP → 更完善的自研 shell → framebuffer 简易 UI。
+你已经走完 DeepRoot **1.6** 教学主线（当前推荐标签 **`v1.6.1`**）：自有 DTS、FDT 发现、virtio-blk 上的 DRFS。  
+仓库路线图继续到 **2.0**（见根目录 `VERSION`）：SMP → 更完善自研 shell → framebuffer 简易 UI。
 
 ## 1. 巩固（强烈建议）
 

@@ -31,21 +31,23 @@ sudo apt-get install -y qemu-system-misc
 ```bash
 git clone git@github.com:wuyijing-dev/DeepRoot.git
 cd DeepRoot
-git checkout v1.4.1   # 与本教程文字对齐；对照初版可用 v1.4.0
+git checkout v1.6.1   # 与本教程文字对齐；更早快照用选择器或其它标签
 ```
 
 ## 2. `run-qemu.sh` 实际做了什么？
 
 打开 `scripts/run-qemu.sh` 阅读，顺序是：
 
-1. `cargo build -p deeproot-kernel --release --target riscv64gc-unknown-none-elf`  
-2. 调用 `qemu-system-riscv64`，关键参数包括：  
-   - `-machine virt`：QEMU 的 virt 板  
-   - `-cpu rv64`  
-   - `-nographic`：没有窗口，串口接到当前终端  
-   - `-bios default`：使用发行版自带的 OpenSBI  
-   - `-kernel …/deeproot-kernel`：把内核 ELF 交给模拟器  
-   - `-accel tcg,thread=multi`：在 x86 主机上用 TCG 模拟 RISC-V（一般不能用 KVM）
+1. `./scripts/build-dtb.sh` —— 把 `platform/qemu-virt/deeproot.dts` 编成 DTB  
+2. `cargo build -p deeproot-kernel --release --target riscv64gc-unknown-none-elf`  
+3. 若无磁盘镜像则创建 `build/deeproot-disk.img`  
+4. 调用 `qemu-system-riscv64`，关键参数包括：  
+   - `-machine virt` / `-cpu rv64` / `-m 256M` / `-nographic`  
+   - `-bios default`：OpenSBI  
+   - `-kernel …/deeproot-kernel`  
+   - **`-dtb build/deeproot-qemu-virt.dtb`**：DeepRoot **自有**设备树  
+   - `-drive` + `-device virtio-blk-device,…`：教学块设备  
+   - `-accel tcg,thread=multi`  
 
 交互模式会 `exec` 进 QEMU；`--smoke` 模式会限时跑并 `grep` 关键字符串。
 
@@ -72,7 +74,7 @@ git checkout v1.4.1   # 与本教程文字对齐；对照初版可用 v1.4.0
 ### 4.2 内核横幅
 
 ```text
-  DeepRoot microkernel 1.4.1
+  DeepRoot microkernel 1.6.1
   RISC-V S-mode · capability microkernel
   remote: git@github.com:wuyijing-dev/DeepRoot.git
 ```
@@ -80,22 +82,28 @@ git checkout v1.4.1   # 与本教程文字对齐；对照初版可用 v1.4.0
 来自 `kernel_main` 里的 `println!`（`kernel/src/main.rs`）。版本号来自仓库根 `VERSION` 第一行。  
 若版本不是你以为的那个，检查 `VERSION` 第一行与 `git describe`。
 
-### 4.3 trap / mm / block / timer
+### 4.3 FDT / mm / block / timer
 
 ```text
-trap: early stvec=...
+fdt: blob pa=...
+fdt: model "DeepRoot QEMU virt"
+fdt: board deeproot,qemu-virt
+fdt: memory ...
+fdt: uart ns16550a @ ...
+fdt: virtio-mmio count=8
 mm: hart=... ram=... free=...
 mm: Sv39 identity map active
-block: ramdisk ready ...
+virtio-blk: ready mmio=... legacy
+block: virtio-blk ready size=... files=... (DRFS)
 timer: hart=... slice=...
 ```
 
 含义速记：
 
-- **stvec**：陷阱入口设好了  
-- **mm**：物理内存范围与页表启用  
-- **block**：教学 ramdisk + DRFS 镜像（日志里应含 `DRFS`）  
-- **timer**：时钟中断/时间片相关
+- **fdt model/board**：正在用仓库里的自有 DTS（1.6.1）  
+- **stvec / mm**：陷阱与页表  
+- **virtio-blk / block**：真盘上的 DRFS  
+- **timer**：时钟中断/时间片  
 
 ### 4.4 加载用户 ELF + canopy
 

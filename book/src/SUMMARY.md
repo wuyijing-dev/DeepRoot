@@ -59,7 +59,11 @@
 - [1.4 块设备（教学替身）](path/09-block.md)
   - [1.4.1 为什么先做替身](path/block/01-why-standin.md)
   - [1.4.2 跟读 `block.rs`](path/block/02-read-block-rs.md)
-  - [1.4.3 以后怎么走向 virtio-blk](path/block/03-next-step-virtio.md)
+  - [1.4.3 走向 virtio（见 1.5–1.6）](path/block/03-next-step-virtio.md)
+- [1.5–1.6 设备树与 virtio-blk](path/10-fdt-virtio.md)
+  - [1.6.1 自有设备树 `deeproot.dts`](path/fdt-virtio/01-own-dts.md)
+  - [1.5 跟读 `fdt.rs`](path/fdt-virtio/02-fdt-walker.md)
+  - [1.6 virtio-blk 与 DRFS 后端](path/fdt-virtio/03-virtio-blk.md)
 
 # 动手玩
 

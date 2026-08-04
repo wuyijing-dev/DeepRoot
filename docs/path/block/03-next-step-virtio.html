@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>1.4.3 以后怎么走向 virtio-blk - DeepRoot 学习笔记</title>
+        <title>1.4.3 走向 virtio（见 1.5–1.6） - DeepRoot 学习笔记</title>
 
 
         <!-- Custom HTML head -->
@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-96d2b290.js";
+            window.path_to_searchindex_js = "../../searchindex-f9a18a48.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-d263d424.js"></script>
+        <script src="../../toc-b6d20683.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,26 +180,23 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="143-以后怎么走向-virtio-blk"><a class="header" href="#143-以后怎么走向-virtio-blk">1.4.3 以后怎么走向 virtio-blk</a></h1>
-<p>这一页只讲：<strong>如果以后要把 stand-in 换成真块设备，应该怎么想。</strong></p>
-<h2 id="1-理想分层"><a class="header" href="#1-理想分层">1. 理想分层</a></h2>
-<pre><code class="language-text">更高层文件系统 / 路径接口
+                        <h1 id="143-走向-virtio见-1516"><a class="header" href="#143-走向-virtio见-1516">1.4.3 走向 virtio（见 1.5–1.6）</a></h1>
+<p>1.4 教学路径先交 <strong>ramdisk + DRFS</strong>。真设备与自有设备树已经在后续系列落地。</p>
+<h2 id="分层回顾"><a class="header" href="#分层回顾">分层回顾</a></h2>
+<pre><code class="language-text">更高层路径 API（ls / cat）
     ↓
-block 抽象（read/write）
+block / DRFS
     ↓
-具体后端：ramdisk 或 virtio-blk
+后端：ramdisk（1.4）或 virtio-blk（1.6）
 </code></pre>
-<h2 id="2-为什么现在先不展开"><a class="header" href="#2-为什么现在先不展开">2. 为什么现在先不展开</a></h2>
-<p>因为完整 virtio 已超出 1.4 主线必要难度。<br>你先把「路径 → exec」和「DRFS on ramdisk」读懂，收获更大。</p>
-<h2 id="3-真正继续做下去时要补什么"><a class="header" href="#3-真正继续做下去时要补什么">3. 真正继续做下去时要补什么</a></h2>
+<h2 id="请转到新章"><a class="header" href="#请转到新章">请转到新章</a></h2>
+<p>完整说明（对齐 <strong>v1.6.1</strong>）在：</p>
 <ul>
-<li>QEMU 挂真实磁盘镜像</li>
-<li>virtio-blk 设备发现</li>
-<li>descriptor/queue</li>
-<li>同步与中断</li>
-<li>更高层文件系统如何消费 block 接口</li>
+<li><a href="../10-fdt-virtio.html">1.5–1.6 设备树与 virtio-blk</a></li>
+<li><a href="../fdt-virtio/01-own-dts.html">自有 <code>deeproot.dts</code></a></li>
+<li><a href="../fdt-virtio/03-virtio-blk.html">virtio-blk 与 DRFS</a></li>
 </ul>
-<p>下一节建议去：<a href="../../hands-on/write-user-prog.html">自己写一个用户程序</a></p>
+<p>不必在 1.4 里把 virtio 规范读完；把路径 API 弄清楚后，按上面三页跟读即可。</p>
 
                     </main>
 
@@ -209,7 +206,7 @@ block 抽象（read/write）
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../../hands-on/shell-commands.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../path/10-fdt-virtio.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -223,7 +220,7 @@ block 抽象（read/write）
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../../hands-on/shell-commands.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../path/10-fdt-virtio.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

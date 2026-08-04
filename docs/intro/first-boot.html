@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-96d2b290.js";
+            window.path_to_searchindex_js = "../searchindex-f9a18a48.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-d263d424.js"></script>
+        <script src="../toc-b6d20683.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -199,20 +199,22 @@ sudo apt-get install -y qemu-system-misc
 <h2 id="1-拿到代码并对齐文档基线"><a class="header" href="#1-拿到代码并对齐文档基线">1. 拿到代码并对齐文档基线</a></h2>
 <pre><code class="language-bash">git clone git@github.com:wuyijing-dev/DeepRoot.git
 cd DeepRoot
-git checkout v1.4.1   # 与本教程文字对齐；对照初版可用 v1.4.0
+git checkout v1.6.1   # 与本教程文字对齐；更早快照用选择器或其它标签
 </code></pre>
 <h2 id="2-run-qemush-实际做了什么"><a class="header" href="#2-run-qemush-实际做了什么">2. <code>run-qemu.sh</code> 实际做了什么？</a></h2>
 <p>打开 <code>scripts/run-qemu.sh</code> 阅读，顺序是：</p>
 <ol>
+<li><code>./scripts/build-dtb.sh</code> —— 把 <code>platform/qemu-virt/deeproot.dts</code> 编成 DTB</li>
 <li><code>cargo build -p deeproot-kernel --release --target riscv64gc-unknown-none-elf</code></li>
+<li>若无磁盘镜像则创建 <code>build/deeproot-disk.img</code></li>
 <li>调用 <code>qemu-system-riscv64</code>，关键参数包括：
 <ul>
-<li><code>-machine virt</code>：QEMU 的 virt 板</li>
-<li><code>-cpu rv64</code></li>
-<li><code>-nographic</code>：没有窗口，串口接到当前终端</li>
-<li><code>-bios default</code>：使用发行版自带的 OpenSBI</li>
-<li><code>-kernel …/deeproot-kernel</code>：把内核 ELF 交给模拟器</li>
-<li><code>-accel tcg,thread=multi</code>：在 x86 主机上用 TCG 模拟 RISC-V（一般不能用 KVM）</li>
+<li><code>-machine virt</code> / <code>-cpu rv64</code> / <code>-m 256M</code> / <code>-nographic</code></li>
+<li><code>-bios default</code>：OpenSBI</li>
+<li><code>-kernel …/deeproot-kernel</code></li>
+<li><strong><code>-dtb build/deeproot-qemu-virt.dtb</code></strong>：DeepRoot <strong>自有</strong>设备树</li>
+<li><code>-drive</code> + <code>-device virtio-blk-device,…</code>：教学块设备</li>
+<li><code>-accel tcg,thread=multi</code></li>
 </ul>
 </li>
 </ol>
@@ -227,24 +229,30 @@ git checkout v1.4.1   # 与本教程文字对齐；对照初版可用 v1.4.0
 <h3 id="41-opensbi-的横幅"><a class="header" href="#41-opensbi-的横幅">4.1 OpenSBI 的横幅</a></h3>
 <p>你可能看到 OpenSBI 自己的版本、内存域、平台信息。<br>这是<strong>固件</strong>，还不是 DeepRoot。可以先略读。</p>
 <h3 id="42-内核横幅"><a class="header" href="#42-内核横幅">4.2 内核横幅</a></h3>
-<pre><code class="language-text">  DeepRoot microkernel 1.4.1
+<pre><code class="language-text">  DeepRoot microkernel 1.6.1
   RISC-V S-mode · capability microkernel
   remote: git@github.com:wuyijing-dev/DeepRoot.git
 </code></pre>
 <p>来自 <code>kernel_main</code> 里的 <code>println!</code>（<code>kernel/src/main.rs</code>）。版本号来自仓库根 <code>VERSION</code> 第一行。<br>若版本不是你以为的那个，检查 <code>VERSION</code> 第一行与 <code>git describe</code>。</p>
-<h3 id="43-trap--mm--block--timer"><a class="header" href="#43-trap--mm--block--timer">4.3 trap / mm / block / timer</a></h3>
-<pre><code class="language-text">trap: early stvec=...
+<h3 id="43-fdt--mm--block--timer"><a class="header" href="#43-fdt--mm--block--timer">4.3 FDT / mm / block / timer</a></h3>
+<pre><code class="language-text">fdt: blob pa=...
+fdt: model "DeepRoot QEMU virt"
+fdt: board deeproot,qemu-virt
+fdt: memory ...
+fdt: uart ns16550a @ ...
+fdt: virtio-mmio count=8
 mm: hart=... ram=... free=...
 mm: Sv39 identity map active
-block: ramdisk ready ...
+virtio-blk: ready mmio=... legacy
+block: virtio-blk ready size=... files=... (DRFS)
 timer: hart=... slice=...
 </code></pre>
 <p>含义速记：</p>
 <ul>
-<li><strong>stvec</strong>：陷阱入口设好了</li>
-<li><strong>mm</strong>：物理内存范围与页表启用</li>
-<li><strong>block</strong>：教学 ramdisk + DRFS 镜像（日志里应含 <code>DRFS</code>）</li>
-<li><strong>timer</strong>：时钟中断/时间片相关</li>
+<li><strong>fdt model/board</strong>：正在用仓库里的自有 DTS（1.6.1）</li>
+<li><strong>stvec / mm</strong>：陷阱与页表</li>
+<li><strong>virtio-blk / block</strong>：真盘上的 DRFS</li>
+<li><strong>timer</strong>：时钟中断/时间片</li>
 </ul>
 <h3 id="44-加载用户-elf--canopy"><a class="header" href="#44-加载用户-elf--canopy">4.4 加载用户 ELF + canopy</a></h3>
 <pre><code class="language-text">elf: ...   （若当前版本仍打印）

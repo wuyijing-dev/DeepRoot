@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-96d2b290.js";
+            window.path_to_searchindex_js = "../searchindex-f9a18a48.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-d263d424.js"></script>
+        <script src="../toc-b6d20683.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -224,7 +224,7 @@ U-mode（User）      ← init / shell / hello 在这里
 <p>代码入口可以先记：<code>kernel/src/ledger.rs</code>，启动时在 <code>kernel_main</code> 里就会 <code>LEDGER.record(Boot, …)</code>。</p>
 <h3 id="capability-provenance能力来源"><a class="header" href="#capability-provenance能力来源">Capability Provenance（能力来源）</a></h3>
 <p>每张「工作证」不只说你能干什么，还尽量记下<strong>它是怎么被开出来的</strong>（mint / derive …）。<br>学权限时，这比只看一个整数 flag 更有教学价值。</p>
-<h2 id="4-到-v141-你到底能得到什么"><a class="header" href="#4-到-v141-你到底能得到什么">4. 到 v1.4.1 你到底能得到什么？</a></h2>
+<h2 id="4-到-v161-你到底能得到什么"><a class="header" href="#4-到-v161-你到底能得到什么">4. 到 v1.6.1 你到底能得到什么？</a></h2>
 <p>已经齐的：</p>
 <ul>
 <li>QEMU 上可启动的 S-mode 内核</li>
@@ -234,13 +234,14 @@ U-mode（User）      ← init / shell / hello 在这里
 <li>调度与时钟抢占</li>
 <li>交互 shell：<code>ls</code> / <code>cat</code> / <code>run</code></li>
 <li>ramfs（构建期嵌入的文件与 ELF）</li>
-<li>块层 <strong>ramdisk + DRFS</strong>：<code>cat block.txt</code> 等文本来自「盘上」布局（1.4.1）</li>
+<li><strong>自有设备树</strong>（<code>platform/qemu-virt/deeproot.dts</code>）+ FDT 发现</li>
+<li><strong>virtio-blk</strong> 上的 DRFS（<code>cat block.txt</code>）</li>
 </ul>
 <p>刻意没有的（别失望，是范围控制）：</p>
 <ul>
 <li>Linux 应用二进制兼容</li>
-<li>真实 virtio-blk / 可拔插持久盘（替身后端仍是内存数组）</li>
-<li>网络、图形、多用户登录</li>
+<li>完整桌面 / GPU 3D</li>
+<li>网络、多用户登录、移植 bash</li>
 </ul>
 <h2 id="5-这份教程怎么用"><a class="header" href="#5-这份教程怎么用">5. 这份教程怎么用？</a></h2>
 <ol>

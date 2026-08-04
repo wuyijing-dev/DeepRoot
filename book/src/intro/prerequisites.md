@@ -42,13 +42,23 @@ qemu-system-riscv64 --version
 
 其它发行版包名可能不同，关键词是 **`qemu-system-riscv64`**。
 
-### 2.4 Git
+### 2.4 设备树编译器（`dtc`）
+
+**1.6.1** 起启动脚本会编译 DeepRoot 自有 DTS，需要主机上的 `dtc`：
+
+```bash
+sudo apt-get install -y device-tree-compiler
+dtc --version
+./scripts/build-dtb.sh   # 应生成 build/deeproot-qemu-virt.dtb
+```
+
+### 2.5 Git
 
 ```bash
 git --version
 ```
 
-### 2.5 常见可选工具
+### 2.6 常见可选工具
 
 | 工具 | 用途 |
 |---|---|

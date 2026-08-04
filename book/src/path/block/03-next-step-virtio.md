@@ -1,29 +1,23 @@
-# 1.4.3 以后怎么走向 virtio-blk
+# 1.4.3 走向 virtio（见 1.5–1.6）
 
-这一页只讲：**如果以后要把 stand-in 换成真块设备，应该怎么想。**
+1.4 教学路径先交 **ramdisk + DRFS**。真设备与自有设备树已经在后续系列落地。
 
-## 1. 理想分层
+## 分层回顾
 
 ```text
-更高层文件系统 / 路径接口
+更高层路径 API（ls / cat）
     ↓
-block 抽象（read/write）
+block / DRFS
     ↓
-具体后端：ramdisk 或 virtio-blk
+后端：ramdisk（1.4）或 virtio-blk（1.6）
 ```
 
-## 2. 为什么现在先不展开
+## 请转到新章
 
-因为完整 virtio 已超出 1.4 主线必要难度。  
-你先把「路径 → exec」和「DRFS on ramdisk」读懂，收获更大。
+完整说明（对齐 **v1.6.1**）在：
 
-## 3. 真正继续做下去时要补什么
+- [1.5–1.6 设备树与 virtio-blk](../10-fdt-virtio.md)  
+- [自有 `deeproot.dts`](../fdt-virtio/01-own-dts.md)  
+- [virtio-blk 与 DRFS](../fdt-virtio/03-virtio-blk.md)  
 
-- QEMU 挂真实磁盘镜像
-- virtio-blk 设备发现
-- descriptor/queue
-- 同步与中断
-- 更高层文件系统如何消费 block 接口
-
-下一节建议去：[自己写一个用户程序](../../hands-on/write-user-prog.md)
-
+不必在 1.4 里把 virtio 规范读完；把路径 API 弄清楚后，按上面三页跟读即可。

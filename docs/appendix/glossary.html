@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-96d2b290.js";
+            window.path_to_searchindex_js = "../searchindex-f9a18a48.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-d263d424.js"></script>
+        <script src="../toc-b6d20683.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -195,10 +195,13 @@
 <tr><td><strong>capability（能力）</strong></td><td>受内核管理的「权限票」，持有者才能对某对象执行某些操作。</td></tr>
 <tr><td><strong>cap / CSpace</strong></td><td>能力与能力表（任务持有哪些票）。</td></tr>
 <tr><td><strong>DBCN</strong></td><td>SBI Debug Console 扩展：批量写控制台。</td></tr>
-<tr><td><strong>DTB</strong></td><td>Device Tree Blob，固件传给内核的硬件描述（DeepRoot 早期可能只用一部分）。</td></tr>
+<tr><td><strong>DTB</strong></td><td>Device Tree Blob：编译后的设备树；DeepRoot 用自有 DTS 生成并经 <code>-dtb</code> 交给 OpenSBI。</td></tr>
+<tr><td><strong>DTS</strong></td><td>Device Tree Source：人类可读的板级描述；真源在 <code>platform/qemu-virt/deeproot.dts</code>。</td></tr>
+<tr><td><strong>DRFS</strong></td><td>DeepRoot 教学「盘上」镜像格式（magic <code>DRFS</code>）；可在 ramdisk 或 virtio-blk 上。</td></tr>
 <tr><td><strong>ecall</strong></td><td>RISC-V 环境调用指令；用户态进内核做 syscall。</td></tr>
 <tr><td><strong>ELF</strong></td><td>可执行文件格式；用户程序以 ELF 嵌入并加载。</td></tr>
 <tr><td><strong>Endpoint</strong></td><td>IPC 通信端点对象；常通过能力引用。</td></tr>
+<tr><td><strong>FDT</strong></td><td>Flattened Device Tree；内核侧 walker 在 <code>kernel/src/fdt.rs</code>。</td></tr>
 <tr><td><strong>hart</strong></td><td>Hardware thread，一颗硬件硬件线程/核。</td></tr>
 <tr><td><strong>idle</strong></td><td>无可运行任务时睡的内核任务（常 <code>wfi</code>）。</td></tr>
 <tr><td><strong>IPC</strong></td><td>进程/任务间通信；DeepRoot 教学树以同步 call/recv/reply 为主。</td></tr>
@@ -211,7 +214,7 @@
 <tr><td><strong>provenance</strong></td><td>能力来源：这张票是怎么 mint/derive 出来的。</td></tr>
 <tr><td><strong>QEMU virt</strong></td><td>常用的虚拟开发板机型；DeepRoot 脚本默认用它。</td></tr>
 <tr><td><strong>ramfs</strong></td><td>教学内存文件系统：名字→静态字节。</td></tr>
-<tr><td><strong>ramdisk</strong></td><td>用内存假装磁盘；1.4 块层替身。</td></tr>
+<tr><td><strong>ramdisk</strong></td><td>用内存假装磁盘；1.4 块层替身，1.6 起多为 virtio 失败时的回退。</td></tr>
 <tr><td><strong>SBI</strong></td><td>Supervisor Binary Interface：S-mode 向固件借的服务。</td></tr>
 <tr><td><strong>satp</strong></td><td>控制页表根与模式的 CSR；切任务时常切 satp。</td></tr>
 <tr><td><strong>sched id</strong></td><td>调度器任务槽编号；<code>SYS_EXEC</code>/<code>SYS_WAIT</code> 使用。</td></tr>
@@ -222,6 +225,8 @@
 <tr><td><strong>Sv39</strong></td><td>RISC-V 39 位虚址页表模式（三级页表）。</td></tr>
 <tr><td><strong>syscall</strong></td><td>系统调用；DeepRoot 用 <code>a7</code> 放号码。</td></tr>
 <tr><td><strong>TCB</strong></td><td>任务控制块：调度器眼里的任务状态。</td></tr>
+<tr><td><strong>virtio-blk</strong></td><td>半虚拟化块设备；教学驱动在 <code>virtio_blk.rs</code>（legacy MMIO + 轮询）。</td></tr>
+<tr><td><strong>virtio-mmio</strong></td><td>以 MMIO 寄存器暴露的 virtio 传输；QEMU virt 上有多个槽。</td></tr>
 <tr><td><strong>trap frame</strong></td><td>保存/恢复用户寄存器的结构。</td></tr>
 <tr><td><strong>virtio-blk</strong></td><td>虚拟化块设备标准；1.4 用 ramdisk 替身占位。</td></tr>
 <tr><td><strong>wfi</strong></td><td>Wait For Interrupt，闲时省电/等待。</td></tr>

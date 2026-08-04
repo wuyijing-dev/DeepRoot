@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-96d2b290.js";
+            window.path_to_searchindex_js = "searchindex-f9a18a48.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-d263d424.js"></script>
+        <script src="toc-b6d20683.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -243,9 +243,10 @@
 <li><a href="#你需要准备什么详细">你需要准备什么</a> — 装工具</li>
 <li><a href="#第一次启动详细版">第一次启动</a> — <strong>必须先跑通 QEMU</strong></li>
 <li><a href="#仓库长什么样详细地图">仓库长什么样</a> — 建立代码地图</li>
-<li><a href="#学习路线图详细版">学习路线图</a> 起，从 <strong>0.1 读到 1.4</strong>
+<li><a href="#学习路线图详细版">学习路线图</a> 起，从 <strong>0.1 读到 1.6</strong>
 <ul>
 <li>每章固定结构：概念 → 源码跟读 → 动手验证 → 易错点</li>
+<li><strong>1.6.1</strong> 重点：<a href="#1516-设备树与-virtio-blk对齐-v161">设备树与 virtio-blk</a></li>
 </ul>
 </li>
 <li>想创造时看 <a href="#shell-常用命令详细手册">动手玩</a></li>
@@ -313,7 +314,7 @@ U-mode（User）      ← init / shell / hello 在这里
 <p>代码入口可以先记：<code>kernel/src/ledger.rs</code>，启动时在 <code>kernel_main</code> 里就会 <code>LEDGER.record(Boot, …)</code>。</p>
 <h3 id="capability-provenance能力来源"><a class="header" href="#capability-provenance能力来源">Capability Provenance（能力来源）</a></h3>
 <p>每张「工作证」不只说你能干什么，还尽量记下<strong>它是怎么被开出来的</strong>（mint / derive …）。<br>学权限时，这比只看一个整数 flag 更有教学价值。</p>
-<h2 id="4-到-v141-你到底能得到什么"><a class="header" href="#4-到-v141-你到底能得到什么">4. 到 v1.4.1 你到底能得到什么？</a></h2>
+<h2 id="4-到-v161-你到底能得到什么"><a class="header" href="#4-到-v161-你到底能得到什么">4. 到 v1.6.1 你到底能得到什么？</a></h2>
 <p>已经齐的：</p>
 <ul>
 <li>QEMU 上可启动的 S-mode 内核</li>
@@ -323,13 +324,14 @@ U-mode（User）      ← init / shell / hello 在这里
 <li>调度与时钟抢占</li>
 <li>交互 shell：<code>ls</code> / <code>cat</code> / <code>run</code></li>
 <li>ramfs（构建期嵌入的文件与 ELF）</li>
-<li>块层 <strong>ramdisk + DRFS</strong>：<code>cat block.txt</code> 等文本来自「盘上」布局（1.4.1）</li>
+<li><strong>自有设备树</strong>（<code>platform/qemu-virt/deeproot.dts</code>）+ FDT 发现</li>
+<li><strong>virtio-blk</strong> 上的 DRFS（<code>cat block.txt</code>）</li>
 </ul>
 <p>刻意没有的（别失望，是范围控制）：</p>
 <ul>
 <li>Linux 应用二进制兼容</li>
-<li>真实 virtio-blk / 可拔插持久盘（替身后端仍是内存数组）</li>
-<li>网络、图形、多用户登录</li>
+<li>完整桌面 / GPU 3D</li>
+<li>网络、多用户登录、移植 bash</li>
 </ul>
 <h2 id="5-这份教程怎么用"><a class="header" href="#5-这份教程怎么用">5. 这份教程怎么用？</a></h2>
 <ol>
@@ -374,10 +376,16 @@ sudo apt-get install -y qemu-system-misc
 qemu-system-riscv64 --version
 </code></pre>
 <p>其它发行版包名可能不同，关键词是 <strong><code>qemu-system-riscv64</code></strong>。</p>
-<h3 id="24-git"><a class="header" href="#24-git">2.4 Git</a></h3>
+<h3 id="24-设备树编译器dtc"><a class="header" href="#24-设备树编译器dtc">2.4 设备树编译器（<code>dtc</code>）</a></h3>
+<p><strong>1.6.1</strong> 起启动脚本会编译 DeepRoot 自有 DTS，需要主机上的 <code>dtc</code>：</p>
+<pre><code class="language-bash">sudo apt-get install -y device-tree-compiler
+dtc --version
+./scripts/build-dtb.sh   # 应生成 build/deeproot-qemu-virt.dtb
+</code></pre>
+<h3 id="25-git"><a class="header" href="#25-git">2.5 Git</a></h3>
 <pre><code class="language-bash">git --version
 </code></pre>
-<h3 id="25-常见可选工具"><a class="header" href="#25-常见可选工具">2.5 常见可选工具</a></h3>
+<h3 id="26-常见可选工具"><a class="header" href="#26-常见可选工具">2.6 常见可选工具</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -449,20 +457,22 @@ sudo apt-get install -y qemu-system-misc
 <h2 id="1-拿到代码并对齐文档基线"><a class="header" href="#1-拿到代码并对齐文档基线">1. 拿到代码并对齐文档基线</a></h2>
 <pre><code class="language-bash">git clone git@github.com:wuyijing-dev/DeepRoot.git
 cd DeepRoot
-git checkout v1.4.1   # 与本教程文字对齐；对照初版可用 v1.4.0
+git checkout v1.6.1   # 与本教程文字对齐；更早快照用选择器或其它标签
 </code></pre>
 <h2 id="2-run-qemush-实际做了什么"><a class="header" href="#2-run-qemush-实际做了什么">2. <code>run-qemu.sh</code> 实际做了什么？</a></h2>
 <p>打开 <code>scripts/run-qemu.sh</code> 阅读，顺序是：</p>
 <ol>
+<li><code>./scripts/build-dtb.sh</code> —— 把 <code>platform/qemu-virt/deeproot.dts</code> 编成 DTB</li>
 <li><code>cargo build -p deeproot-kernel --release --target riscv64gc-unknown-none-elf</code></li>
+<li>若无磁盘镜像则创建 <code>build/deeproot-disk.img</code></li>
 <li>调用 <code>qemu-system-riscv64</code>，关键参数包括：
 <ul>
-<li><code>-machine virt</code>：QEMU 的 virt 板</li>
-<li><code>-cpu rv64</code></li>
-<li><code>-nographic</code>：没有窗口，串口接到当前终端</li>
-<li><code>-bios default</code>：使用发行版自带的 OpenSBI</li>
-<li><code>-kernel …/deeproot-kernel</code>：把内核 ELF 交给模拟器</li>
-<li><code>-accel tcg,thread=multi</code>：在 x86 主机上用 TCG 模拟 RISC-V（一般不能用 KVM）</li>
+<li><code>-machine virt</code> / <code>-cpu rv64</code> / <code>-m 256M</code> / <code>-nographic</code></li>
+<li><code>-bios default</code>：OpenSBI</li>
+<li><code>-kernel …/deeproot-kernel</code></li>
+<li><strong><code>-dtb build/deeproot-qemu-virt.dtb</code></strong>：DeepRoot <strong>自有</strong>设备树</li>
+<li><code>-drive</code> + <code>-device virtio-blk-device,…</code>：教学块设备</li>
+<li><code>-accel tcg,thread=multi</code></li>
 </ul>
 </li>
 </ol>
@@ -477,24 +487,30 @@ git checkout v1.4.1   # 与本教程文字对齐；对照初版可用 v1.4.0
 <h3 id="41-opensbi-的横幅"><a class="header" href="#41-opensbi-的横幅">4.1 OpenSBI 的横幅</a></h3>
 <p>你可能看到 OpenSBI 自己的版本、内存域、平台信息。<br>这是<strong>固件</strong>，还不是 DeepRoot。可以先略读。</p>
 <h3 id="42-内核横幅"><a class="header" href="#42-内核横幅">4.2 内核横幅</a></h3>
-<pre><code class="language-text">  DeepRoot microkernel 1.4.1
+<pre><code class="language-text">  DeepRoot microkernel 1.6.1
   RISC-V S-mode · capability microkernel
   remote: git@github.com:wuyijing-dev/DeepRoot.git
 </code></pre>
 <p>来自 <code>kernel_main</code> 里的 <code>println!</code>（<code>kernel/src/main.rs</code>）。版本号来自仓库根 <code>VERSION</code> 第一行。<br>若版本不是你以为的那个，检查 <code>VERSION</code> 第一行与 <code>git describe</code>。</p>
-<h3 id="43-trap--mm--block--timer"><a class="header" href="#43-trap--mm--block--timer">4.3 trap / mm / block / timer</a></h3>
-<pre><code class="language-text">trap: early stvec=...
+<h3 id="43-fdt--mm--block--timer"><a class="header" href="#43-fdt--mm--block--timer">4.3 FDT / mm / block / timer</a></h3>
+<pre><code class="language-text">fdt: blob pa=...
+fdt: model "DeepRoot QEMU virt"
+fdt: board deeproot,qemu-virt
+fdt: memory ...
+fdt: uart ns16550a @ ...
+fdt: virtio-mmio count=8
 mm: hart=... ram=... free=...
 mm: Sv39 identity map active
-block: ramdisk ready ...
+virtio-blk: ready mmio=... legacy
+block: virtio-blk ready size=... files=... (DRFS)
 timer: hart=... slice=...
 </code></pre>
 <p>含义速记：</p>
 <ul>
-<li><strong>stvec</strong>：陷阱入口设好了</li>
-<li><strong>mm</strong>：物理内存范围与页表启用</li>
-<li><strong>block</strong>：教学 ramdisk + DRFS 镜像（日志里应含 <code>DRFS</code>）</li>
-<li><strong>timer</strong>：时钟中断/时间片相关</li>
+<li><strong>fdt model/board</strong>：正在用仓库里的自有 DTS（1.6.1）</li>
+<li><strong>stvec / mm</strong>：陷阱与页表</li>
+<li><strong>virtio-blk / block</strong>：真盘上的 DRFS</li>
+<li><strong>timer</strong>：时钟中断/时间片</li>
 </ul>
 <h3 id="44-加载用户-elf--canopy"><a class="header" href="#44-加载用户-elf--canopy">4.4 加载用户 ELF + canopy</a></h3>
 <pre><code class="language-text">elf: ...   （若当前版本仍打印）
@@ -556,16 +572,20 @@ deeproot&gt; run hello
 ├── README.md               # 给 GitHub 访客的简介
 ├── LICENSE                 # Apache-2.0
 ├── Cargo.toml              # workspace：列出 kernel / libs / user/*
+├── platform/               # 板级设备树源（qemu-virt/deeproot.dts）
 ├── book/                   # 学习文档源码（mdBook）
 ├── docs/                   # 构建后的静态站点（GitHub Pages → /docs）
 ├── scripts/
-│   └── run-qemu.sh         # 构建 + 启动 QEMU（交互 / --smoke）
+│   ├── run-qemu.sh         # 构建 DTB + 内核 + 启动 QEMU
+│   └── build-dtb.sh        # dtc：DTS → build/*.dtb
 ├── kernel/                 # 微内核 crate（#![no_std]）
 │   ├── build.rs            # 编译并嵌入用户 ELF
 │   ├── linker.ld
 │   └── src/
 │       ├── main.rs         # kernel_main
 │       ├── boot.rs         # _start
+│       ├── fdt.rs          # FDT 遍历 → Platform
+│       ├── virtio_blk.rs   # legacy virtio-mmio 块驱动
 │       ├── sbi.rs          # 控制台 / 时钟等 SBI
 │       ├── trap.rs         # 陷阱与 syscall 入口
 │       ├── sched.rs        # 调度 + 大部分 syscall 实现
@@ -593,22 +613,24 @@ deeproot&gt; run hello
 <tbody>
 <tr><td>开机入口</td><td><code>kernel/src/boot.rs</code>、<code>main.rs</code>、<code>sbi.rs</code></td></tr>
 <tr><td>页表 / 内存</td><td><code>kernel/src/mm/</code>（<code>memmap</code> → <code>frame</code> → <code>sv39</code>）</td></tr>
+<tr><td>设备树</td><td><code>platform/qemu-virt/deeproot.dts</code>、<code>kernel/src/fdt.rs</code></td></tr>
 <tr><td>能力</td><td><code>kernel/src/cap/</code>、<code>libs/deeproot-abi</code></td></tr>
 <tr><td>IPC / Ledger</td><td><code>kernel/src/ipc.rs</code>、<code>ledger.rs</code>、<code>user/init</code>、<code>user/ping</code></td></tr>
 <tr><td>调度与 syscall</td><td><code>kernel/src/sched.rs</code>、<code>trap.rs</code></td></tr>
 <tr><td>用户程序怎么进内核</td><td><code>libs/deeproot-user/src/lib.rs</code></td></tr>
 <tr><td>shell / ramfs</td><td><code>user/shell/</code>、<code>kernel/src/fs.rs</code>、<code>kernel/build.rs</code></td></tr>
-<tr><td>块层替身</td><td><code>kernel/src/block.rs</code></td></tr>
+<tr><td>块 / virtio</td><td><code>kernel/src/block.rs</code>、<code>virtio_blk.rs</code></td></tr>
 </tbody>
 </table>
 </div>
 <h2 id="3-构建时发生了什么必读"><a class="header" href="#3-构建时发生了什么必读">3. 构建时发生了什么？（必读）</a></h2>
 <pre><code class="language-text">./scripts/run-qemu.sh
+    → scripts/build-dtb.sh（dtc：deeproot.dts → .dtb）
     → cargo build -p deeproot-kernel …
         → kernel/build.rs 对每个 user 包再 cargo build
         → 把 ELF 复制到 OUT_DIR
         → fs.rs / servers.rs 里 include_bytes!
-    → qemu-system-riscv64 -kernel deeproot-kernel …
+    → qemu … -kernel … -dtb … -device virtio-blk-device …
 </code></pre>
 <p>因此：</p>
 <ul>
@@ -631,7 +653,8 @@ deeproot&gt; run hello
 <tr><td>1.1</td><td><code>elf</code>、<code>AddrSpace</code>、<code>SYS_SPAWN</code></td></tr>
 <tr><td>1.2</td><td><code>user/shell</code>、<code>SYS_DEBUG_READ</code></td></tr>
 <tr><td>1.3</td><td><code>fs.rs</code>、<code>SYS_EXEC</code></td></tr>
-<tr><td>1.4</td><td><code>block.rs</code></td></tr>
+<tr><td>1.4</td><td><code>block.rs</code>（DRFS）</td></tr>
+<tr><td>1.5–1.6</td><td><code>platform/…/deeproot.dts</code>、<code>fdt.rs</code>、<code>virtio_blk.rs</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -647,14 +670,14 @@ deeproot&gt; run hello
 <tr><th>段</th><th>含义</th><th>初学者怎么用</th></tr>
 </thead>
 <tbody>
-<tr><td>MAJOR</td><td>ABI 大断裂（0→1 表示稳定基线）</td><td>文档基线在 <strong>1.x</strong></td></tr>
-<tr><td>PATCHLEVEL</td><td><strong>一类用户可见能力</strong></td><td>按 0.1 → … → 1.4 读文档</td></tr>
-<tr><td>SUBLEVEL</td><td>系列内修修补补</td><td>学概念时可忽略小版本差异</td></tr>
+<tr><td>MAJOR</td><td>ABI 大断裂或平台跃迁（2.0 = DT/SMP/显示集成）</td><td>文档基线在 <strong>1.x</strong>，当前推荐 <strong>v1.6.1</strong></td></tr>
+<tr><td>PATCHLEVEL</td><td><strong>一类用户可见能力</strong></td><td>按 0.1 → … → 1.6 读文档</td></tr>
+<tr><td>SUBLEVEL</td><td>系列内修复与打磨</td><td>1.6.1 = 自有 DTS</td></tr>
 </tbody>
 </table>
 </div>
-<p>完整注释清单在仓库根目录 <a href="https://github.com/wuyijing-dev/DeepRoot/blob/main/VERSION"><code>VERSION</code></a>。那是路线图原文；本章是人话导航。</p>
-<h2 id="1-总览图到-14"><a class="header" href="#1-总览图到-14">1. 总览图（到 1.4）</a></h2>
+<p>完整注释清单在仓库根目录 <a href="https://github.com/wuyijing-dev/DeepRoot/blob/main/VERSION"><code>VERSION</code></a>。</p>
+<h2 id="1-总览图到-16"><a class="header" href="#1-总览图到-16">1. 总览图（到 1.6）</a></h2>
 <pre><code class="language-text">0.1  启动、串口、trap、Ledger 雏形
 0.2  物理内存、堆、Sv39 页表
 0.3  Capability（能力票）
@@ -666,10 +689,11 @@ deeproot&gt; run hello
 1.1  每任务地址空间 + SYS_SPAWN
 1.2  交互 shell（读串口、解析命令）
 1.3  ramfs + 按路径 SYS_EXEC
-1.4  块设备教学替身 → 1.4.1 DRFS（路径可读块上文本）
+1.4  块设备教学替身 → DRFS 文本
+1.5  FDT 平台发现（fdt.rs）
+1.6  virtio-blk + DRFS；1.6.1 自有 deeproot.dts
 </code></pre>
 <h2 id="2-每段你应该看见什么"><a class="header" href="#2-每段你应该看见什么">2. 每段你「应该看见」什么</a></h2>
-<p>读完一章，用这条清单自测（比背定义有用）：</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -684,20 +708,21 @@ deeproot&gt; run hello
 <tr><td>1.1</td><td><code>spawn</code>/<code>run</code> 出来的 hello 有自己的地址空间</td></tr>
 <tr><td>1.2</td><td>你能在 <code>deeproot&gt;</code> 打字</td></tr>
 <tr><td>1.3</td><td><code>ls</code>/<code>cat</code>/<code>run</code> 对应 ramfs</td></tr>
-<tr><td>1.4</td><td>启动有 <code>block: ramdisk ready</code>…<code>DRFS</code>；<code>cat block.txt</code> 有内容</td></tr>
+<tr><td>1.4</td><td><code>DRFS</code>；<code>cat block.txt</code> 有内容</td></tr>
+<tr><td>1.5–1.6</td><td><code>fdt: board deeproot,qemu-virt</code>；<code>virtio-blk: ready</code>；<code>block: virtio-blk ready</code></td></tr>
 </tbody>
 </table>
 </div>
 <h2 id="3-推荐学习节奏"><a class="header" href="#3-推荐学习节奏">3. 推荐学习节奏</a></h2>
 <ol>
 <li><strong>第 0 天</strong>：只做 <a href="#第一次启动详细版">第一次启动</a>，不改代码。</li>
-<li><strong>然后</strong>：严格按下一章顺序；每章至少做「动手验证」里的一半。</li>
-<li><strong>卡壳时</strong>：先查 <a href="#常见问题faq">常见问题</a>，再对照该章「易错点」。</li>
+<li><strong>然后</strong>：按章节顺序读到 <strong>1.6</strong>；每章至少做一半「动手验证」。</li>
+<li><strong>卡壳时</strong>：先查 <a href="#常见问题faq">常见问题</a>。</li>
 <li><strong>想创造时</strong>：完成 1.3 后再做 <a href="#自己写一个用户程序逐步教程">自己写用户程序</a>。</li>
 </ol>
-<p>不要跳着改版本号学：请固定 <code>v1.4.1</code>（或用页首选择器打开冻结快照），否则日志和截图对不上。</p>
+<p>请固定 <strong><code>v1.6.1</code></strong>（或页首选择器打开对应冻结快照），否则日志和截图对不上。</p>
 <h2 id="4-一句话心态"><a class="header" href="#4-一句话心态">4. 一句话心态</a></h2>
-<p>先求「跑起来、看见现象」，再求「为什么这样设计」。<br>操作系统很大；DeepRoot 故意把教学关在 1.4 以内，就是为了让你能<strong>走完一条路</strong>。</p>
+<p>先求「跑起来、看见现象」，再求「为什么这样设计」。<br>1.6 之后还有 SMP / 更丰富 shell / 简易图形（见 <code>VERSION</code> 与 <a href="#下一步可以看什么">下一步</a>）。</p>
 <p>下一章：<a href="#01-启动与串口详细跟读">0.1 启动与串口</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="01-启动与串口详细跟读"><a class="header" href="#01-启动与串口详细跟读">0.1 启动与串口（详细跟读）</a></h1>
@@ -922,19 +947,22 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="013-跟读-kernel_main"><a class="header" href="#013-跟读-kernel_main">0.1.3 跟读 <code>kernel_main</code></a></h1>
 <p>这一页只讲：<strong>Rust 世界里的启动顺序为什么要这样排。</strong></p>
-<h2 id="1-顺序"><a class="header" href="#1-顺序">1. 顺序</a></h2>
+<h2 id="1-顺序对齐-161"><a class="header" href="#1-顺序对齐-161">1. 顺序（对齐 1.6.1）</a></h2>
 <pre><code class="language-text">ledger::init
 trap::init
+fdt::probe(dtb_pa)
 mm::init
-block::init
+map_mmio_range（UART / virtio / 可选 FB）
+block::init          ← 内含 virtio_blk::init
 timer::init
 servers::bring_up
 </code></pre>
 <h2 id="2-为什么不能乱排"><a class="header" href="#2-为什么不能乱排">2. 为什么不能乱排</a></h2>
 <ul>
 <li>没有 <code>trap::init</code>，后面 fault/ecall 没地方接</li>
+<li>没有 <code>fdt::probe</code>，<code>mm</code> / virtio 不知道板级布局</li>
 <li>没有 <code>mm::init</code>，用户 ELF 没法映射</li>
-<li>没有 <code>block::init</code>，后面 shell 读不到 DRFS 文本（1.4.1）</li>
+<li>没有 MMIO 映射，读 <code>0x1000_xxxx</code> 会页故障</li>
 <li>没有 <code>timer::init</code>，调度无法抢占</li>
 <li>一旦 <code>servers::bring_up</code> 开始，就进入多任务阶段</li>
 </ul>
@@ -1014,7 +1042,7 @@ servers::bring_up
 <p>没有内存管理，内核只能「瞎猫碰死耗子」地用物理地址。<br>0.2 的目标是：知道 RAM 在哪、能分配物理页、能建 Sv39 页表并打开虚拟内存。</p>
 <h2 id="本章拆读顺序-1"><a class="header" href="#本章拆读顺序-1">本章拆读顺序</a></h2>
 <ol>
-<li><a href="#021-ram-发现与-dtb-回退">0.2.1 RAM 发现与 DTB 回退</a></li>
+<li><a href="#021-ram-发现与-dtb">0.2.1 RAM 发现与 DTB 回退</a></li>
 <li><a href="#022-frame-allocator-与-heap">0.2.2 frame allocator 与 heap</a></li>
 <li><a href="#023-sv39-身份映射">0.2.3 Sv39 身份映射</a></li>
 <li><a href="#024-为什么这决定-elf-装载">0.2.4 为什么这决定 ELF 装载</a></li>
@@ -1115,24 +1143,27 @@ servers::bring_up
 <p>0.2 之后，内核不再「裸奔物理地址」，而是：<strong>可分配的物理页 + 可切换的翻译手册</strong>。<br>这是 1.1「每任务地址空间」的地基。</p>
 <p>下一章：<a href="#0304-能力与-ipc详细跟读">0.3–0.4 能力与 IPC</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="021-ram-发现与-dtb-回退"><a class="header" href="#021-ram-发现与-dtb-回退">0.2.1 RAM 发现与 DTB 回退</a></h1>
+<h1 id="021-ram-发现与-dtb"><a class="header" href="#021-ram-发现与-dtb">0.2.1 RAM 发现与 DTB</a></h1>
 <p>这一页只讲：<strong>内核怎么知道“哪段物理内存是 RAM，可以拿来用”。</strong></p>
 <h2 id="1-关键文件"><a class="header" href="#1-关键文件">1. 关键文件</a></h2>
 <ul>
 <li><code>kernel/src/mm/mod.rs</code></li>
 <li><code>kernel/src/mm/memmap.rs</code></li>
+<li><code>kernel/src/fdt.rs</code>（1.5+：真正的 FDT 遍历）</li>
 </ul>
 <h2 id="2-思路"><a class="header" href="#2-思路">2. 思路</a></h2>
-<p>优先从 DTB 里拿内存信息；<br>如果拿不到，再回退到 QEMU <code>virt</code> 的已知默认布局。</p>
+<ol>
+<li>启动时 <code>fdt::probe(dtb_pa)</code> 先走完整棵树。</li>
+<li><code>memmap::discover</code> 调用 <code>fdt::memory_reg()</code> 取 <code>/memory</code> 的 <code>reg</code>。</li>
+<li>若拿不到或校验失败，再回退到 QEMU <code>virt</code> 默认常量。</li>
+</ol>
+<p><strong>1.6.1</strong> 起 <code>dtb_pa</code> 通常指向 <strong>DeepRoot 自有</strong> <code>deeproot-qemu-virt.dtb</code>（见 <a href="#自有设备树platformqemu-virtdeeprootdts">自有设备树</a>），不只是 QEMU 临时生成的 blob。</p>
 <h2 id="3-为什么这一步是整个内存系统的地基"><a class="header" href="#3-为什么这一步是整个内存系统的地基">3. 为什么这一步是整个内存系统的地基</a></h2>
 <p>frame allocator、页表页、用户页、内核堆，全都建立在“我先知道哪段 RAM 可用”这个前提上。</p>
 <h2 id="4-你该观察什么"><a class="header" href="#4-你该观察什么">4. 你该观察什么</a></h2>
-<p>启动日志里的 <code>mm:</code> 行，通常会告诉你：</p>
-<ul>
-<li>当前 hart</li>
-<li>RAM 起止</li>
-<li>free 区间</li>
-</ul>
+<pre><code class="language-text">fdt: memory 0x80000000..0x90000000 (256 MiB)
+mm: hart=0 dtb=… ram=0x80000000..0x90000000 free=…
+</code></pre>
 <p>如果这里离谱，后面几乎都会跟着离谱。</p>
 <p>下一页：<a href="#022-frame-allocator-与-heap">0.2.2 frame allocator 与 heap</a></p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2902,7 +2933,7 @@ block DRFS （block.rs DISK[]）
 <ol>
 <li><a href="#为什么先做替身">为什么先做替身</a></li>
 <li><a href="#跟读-blockrs">跟读 <code>block.rs</code></a></li>
-<li><a href="#143-以后怎么走向-virtio-blk">以后怎么走向 virtio-blk</a></li>
+<li><a href="#143-走向-virtio见-1516">以后怎么走向 virtio-blk</a></li>
 </ol>
 <h2 id="1-这一章要解决什么心理预期"><a class="header" href="#1-这一章要解决什么心理预期">1. 这一章要解决什么心理预期？</a></h2>
 <p>很多人看到路线图写「块设备」，期待立刻：</p>
@@ -2997,13 +3028,16 @@ backend：ramdisk  或  virtio-blk
 </tbody>
 </table>
 </div>
-<h2 id="8-教学路径到此14-系列"><a class="header" href="#8-教学路径到此14-系列">8. 教学路径到此（1.4 系列）</a></h2>
-<p>恭喜：串口 → 页表 → 能力 → IPC → 用户态 → 调度 → ABI → spawn → shell → ramfs → <strong>块上 DRFS 文本</strong>。</p>
-<p>接下来建议：</p>
+<h2 id="8-教学路径到此14-系列请继续-1516"><a class="header" href="#8-教学路径到此14-系列请继续-1516">8. 教学路径到此（1.4 系列）——请继续 1.5–1.6</a></h2>
+<p>恭喜：串口 → 页表 → 能力 → IPC → 用户态 → 调度 → ABI → spawn → shell → ramfs → <strong>DRFS</strong>。</p>
+<p>块设备的「真盘 + 自有设备树」见下一章：</p>
+<ul>
+<li><a href="#1516-设备树与-virtio-blk对齐-v161">1.5–1.6 设备树与 virtio-blk</a>（对齐 <strong>v1.6.1</strong>）</li>
+</ul>
+<p>也可先练：</p>
 <ol>
 <li><a href="#shell-常用命令详细手册">Shell 常用命令</a></li>
 <li><a href="#自己写一个用户程序逐步教程">自己写一个用户程序</a></li>
-<li><a href="#常见问题faq">常见问题</a></li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="为什么先做替身"><a class="header" href="#为什么先做替身">为什么先做替身</a></h1>
@@ -3051,28 +3085,292 @@ READY : AtomicBool
 <li>极简 on-disk 布局如何支撑「按路径取内容」</li>
 <li>换 virtio 后端时，理想上只换 <code>DISK[]</code> 的访问方式，不必改 shell 路径习惯</li>
 </ul>
-<p>下一页：<a href="#143-以后怎么走向-virtio-blk">以后怎么走向 virtio-blk</a></p>
+<p>下一页：<a href="#143-走向-virtio见-1516">以后怎么走向 virtio-blk</a></p>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="143-以后怎么走向-virtio-blk"><a class="header" href="#143-以后怎么走向-virtio-blk">1.4.3 以后怎么走向 virtio-blk</a></h1>
-<p>这一页只讲：<strong>如果以后要把 stand-in 换成真块设备，应该怎么想。</strong></p>
-<h2 id="1-理想分层"><a class="header" href="#1-理想分层">1. 理想分层</a></h2>
-<pre><code class="language-text">更高层文件系统 / 路径接口
+<h1 id="143-走向-virtio见-1516"><a class="header" href="#143-走向-virtio见-1516">1.4.3 走向 virtio（见 1.5–1.6）</a></h1>
+<p>1.4 教学路径先交 <strong>ramdisk + DRFS</strong>。真设备与自有设备树已经在后续系列落地。</p>
+<h2 id="分层回顾"><a class="header" href="#分层回顾">分层回顾</a></h2>
+<pre><code class="language-text">更高层路径 API（ls / cat）
     ↓
-block 抽象（read/write）
+block / DRFS
     ↓
-具体后端：ramdisk 或 virtio-blk
+后端：ramdisk（1.4）或 virtio-blk（1.6）
 </code></pre>
-<h2 id="2-为什么现在先不展开"><a class="header" href="#2-为什么现在先不展开">2. 为什么现在先不展开</a></h2>
-<p>因为完整 virtio 已超出 1.4 主线必要难度。<br>你先把「路径 → exec」和「DRFS on ramdisk」读懂，收获更大。</p>
-<h2 id="3-真正继续做下去时要补什么"><a class="header" href="#3-真正继续做下去时要补什么">3. 真正继续做下去时要补什么</a></h2>
+<h2 id="请转到新章"><a class="header" href="#请转到新章">请转到新章</a></h2>
+<p>完整说明（对齐 <strong>v1.6.1</strong>）在：</p>
 <ul>
-<li>QEMU 挂真实磁盘镜像</li>
-<li>virtio-blk 设备发现</li>
-<li>descriptor/queue</li>
-<li>同步与中断</li>
-<li>更高层文件系统如何消费 block 接口</li>
+<li><a href="#1516-设备树与-virtio-blk对齐-v161">1.5–1.6 设备树与 virtio-blk</a></li>
+<li><a href="#自有设备树platformqemu-virtdeeprootdts">自有 <code>deeproot.dts</code></a></li>
+<li><a href="#virtio-blk-与-drfs-后端">virtio-blk 与 DRFS</a></li>
 </ul>
-<p>下一节建议去：<a href="#自己写一个用户程序逐步教程">自己写一个用户程序</a></p>
+<p>不必在 1.4 里把 virtio 规范读完；把路径 API 弄清楚后，按上面三页跟读即可。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="1516-设备树与-virtio-blk对齐-v161"><a class="header" href="#1516-设备树与-virtio-blk对齐-v161">1.5–1.6 设备树与 virtio-blk（对齐 v1.6.1）</a></h1>
+<p>到 <strong>1.4</strong> 你已经有：shell、ramfs、<code>DRFS</code> 文本、块层替身。<br>从 <strong>1.5 / 1.6</strong> 起，板级描述与真块设备接上——当前推荐标签 <strong><code>v1.6.1</code></strong>。</p>
+<h2 id="本章拆读顺序-9"><a class="header" href="#本章拆读顺序-9">本章拆读顺序</a></h2>
+<ol>
+<li><a href="#自有设备树platformqemu-virtdeeprootdts">自有设备树 <code>deeproot.dts</code></a></li>
+<li><a href="#跟读-kernelsrcfdtrs">跟读 <code>fdt.rs</code> 遍历器</a></li>
+<li><a href="#virtio-blk-与-drfs-后端">virtio-blk 与 DRFS 后端</a></li>
+</ol>
+<h2 id="1-这一章要解决什么"><a class="header" href="#1-这一章要解决什么">1. 这一章要解决什么？</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>误解</th><th>纠正</th></tr>
+</thead>
+<tbody>
+<tr><td>「设备树是 Linux 专属」</td><td>FDT 是通用固件约定；DeepRoot 用它描述教学板</td></tr>
+<tr><td>「解析 QEMU 自动生成的 DTB 就够了」</td><td><strong>1.6.1</strong> 起仓库里有 <strong>自己的</strong> <code>.dts</code>，编译后用 <code>-dtb</code> 交给 OpenSBI</td></tr>
+<tr><td>「virtio 必须先上 PLIC 中断」</td><td>教学驱动用 <strong>轮询</strong> used 环即可（<code>virtio_blk.rs</code>）</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="2-一张图串起来"><a class="header" href="#2-一张图串起来">2. 一张图串起来</a></h2>
+<pre><code class="language-text">platform/qemu-virt/deeproot.dts
+        │  scripts/build-dtb.sh (dtc)
+        ▼
+build/deeproot-qemu-virt.dtb
+        │  run-qemu.sh: -dtb …
+        ▼
+OpenSBI ──a1──► kernel_main ──► fdt::probe
+                                   │
+                    ┌──────────────┼──────────────┐
+                    ▼              ▼              ▼
+                 memory         uart /          virtio,mmio[]
+                 (mm)           MMIO map        virtio_blk::init
+                                                   │
+                                                   ▼
+                                            block:: DRFS
+                                                   │
+                                                   ▼
+                                            shell ls / cat
+</code></pre>
+<h2 id="3-版本对照读日志时用"><a class="header" href="#3-版本对照读日志时用">3. 版本对照（读日志时用）</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>标签</th><th>你该看见</th></tr>
+</thead>
+<tbody>
+<tr><td>1.4.x</td><td><code>block: ramdisk ready</code> … <code>DRFS</code></td></tr>
+<tr><td>1.6.0</td><td><code>fdt:</code> 发现行 + <code>virtio-blk: ready</code> + <code>block: virtio-blk ready</code></td></tr>
+<tr><td><strong>1.6.1</strong></td><td>另有 <code>fdt: model "DeepRoot QEMU virt"</code> / <code>fdt: board deeproot,qemu-virt</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="4-动手验收请逐条做"><a class="header" href="#4-动手验收请逐条做">4. 动手验收（请逐条做）</a></h2>
+<pre><code class="language-bash">git checkout v1.6.1   # 或当前 main，以 VERSION 为准
+./scripts/build-dtb.sh
+./scripts/run-qemu.sh --smoke
+</code></pre>
+<p>进交互后再试：</p>
+<pre><code class="language-text">deeproot&gt; ls
+deeproot&gt; cat block.txt
+deeproot&gt; cat blk-version
+</code></pre>
+<p><code>ls</code> 应同时有 <code>fs: ramfs /</code> 与 <code>fs: block /</code>；<code>block.txt</code> 来自 <strong>盘上 DRFS</strong>（经 virtio）。</p>
+<h2 id="5-和-14-章怎么衔接"><a class="header" href="#5-和-14-章怎么衔接">5. 和 1.4 章怎么衔接？</a></h2>
+<ul>
+<li><a href="#14-块设备教学替身详细说明">1.4 块设备</a> 仍讲 <strong>DRFS 布局</strong> 与路径 API。</li>
+<li>本章讲 <strong>板级真源（DTS）</strong> 与 <strong>virtio 后端</strong>。</li>
+<li><a href="#143-走向-virtio见-1516">1.4.3</a> 已改成「指向本章」，不再假装 virtio 是遥远未来。</li>
+</ul>
+<p>下一页：<a href="#自有设备树platformqemu-virtdeeprootdts">自有设备树</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="自有设备树platformqemu-virtdeeprootdts"><a class="header" href="#自有设备树platformqemu-virtdeeprootdts">自有设备树：<code>platform/qemu-virt/deeproot.dts</code></a></h1>
+<p>这一页只讲：<strong>DeepRoot 自己的板级描述写在哪、怎么进到内核手里。</strong></p>
+<p>对齐标签：<strong>v1.6.1</strong>。</p>
+<h2 id="1-为什么要自己的树"><a class="header" href="#1-为什么要自己的树">1. 为什么要「自己的」树？</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>做法</th><th>结果</th></tr>
+</thead>
+<tbody>
+<tr><td>只用 QEMU 自动生成的 DTB</td><td>内核能发现设备，但仓库里<strong>没有</strong>可读、可 diff 的板级契约</td></tr>
+<tr><td>维护 <code>deeproot.dts</code> + <code>-dtb</code></td><td>板级地址、兼容串、model 都在 git 里；smoke 能核对 <code>deeproot,qemu-virt</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>硬件仍是 QEMU <code>virt</code>；我们<strong>不发明</strong>另一套 MMIO，而是把已知布局写成 <strong>DeepRoot 署名的</strong> DTS。</p>
+<h2 id="2-源文件在哪"><a class="header" href="#2-源文件在哪">2. 源文件在哪？</a></h2>
+<pre><code class="language-text">platform/
+├── README.md
+└── qemu-virt/
+    └── deeproot.dts      ← 真源
+scripts/build-dtb.sh      ← dtc → build/deeproot-qemu-virt.dtb
+scripts/run-qemu.sh       ← -dtb build/deeproot-qemu-virt.dtb
+</code></pre>
+<p>打开 DTS，根节点大致是：</p>
+<pre><code class="language-dts">/ {
+    model = "DeepRoot QEMU virt";
+    compatible = "deeproot,qemu-virt", "riscv-virtio";
+    ...
+    memory@80000000 { ... };          /* 与 -m 256M 对齐 */
+    soc {
+        uart@10000000 { compatible = "ns16550a"; ... };
+        virtio_mmio@10001000 { compatible = "virtio,mmio"; ... };
+        /* … 共 8 个 virtio-mmio 槽 … */
+        clint@2000000 { ... };
+        interrupt-controller@c000000 { ... };  /* PLIC */
+    };
+};
+</code></pre>
+<h2 id="3-编译与启动链"><a class="header" href="#3-编译与启动链">3. 编译与启动链</a></h2>
+<pre><code class="language-bash">./scripts/build-dtb.sh
+# → build/deeproot-qemu-virt.dtb
+</code></pre>
+<p><code>run-qemu.sh</code> 会先编 DTB，再：</p>
+<pre><code class="language-text">qemu-system-riscv64 … -kernel deeproot-kernel -dtb deeproot-qemu-virt.dtb …
+</code></pre>
+<p>OpenSBI 把该 blob 的物理地址放进 <strong><code>a1</code></strong>，<code>_start</code> 原样交给 <code>kernel_main(hartid, dtb_pa)</code>。</p>
+<h2 id="4-你该在日志里看见什么"><a class="header" href="#4-你该在日志里看见什么">4. 你该在日志里看见什么</a></h2>
+<pre><code class="language-text">fdt: blob pa=0x… size=… version=17
+fdt: model "DeepRoot QEMU virt"
+fdt: board deeproot,qemu-virt
+fdt: memory 0x80000000..0x90000000 (256 MiB)
+fdt: uart ns16550a @ 0x10000000 …
+fdt: virtio-mmio count=8
+</code></pre>
+<p>若没有 <code>model</code> / <code>board</code> 行：多半仍在用自动 DTB（旧脚本未传 <code>-dtb</code>），或标签早于 <strong>1.6.1</strong>。</p>
+<h2 id="5-依赖工具"><a class="header" href="#5-依赖工具">5. 依赖工具</a></h2>
+<p>需要主机上的 <strong><code>dtc</code></strong>（Debian/Ubuntu：<code>device-tree-compiler</code>）。<br>见 <a href="#你需要准备什么详细">你需要准备什么</a>。</p>
+<h2 id="6-动手小实验"><a class="header" href="#6-动手小实验">6. 动手小实验</a></h2>
+<ol>
+<li>改 <code>model</code> 字符串里加一个后缀，重跑 <code>build-dtb.sh</code> + QEMU，看日志是否变。做完请还原。</li>
+<li><code>dtc -I dtb -O dts build/deeproot-qemu-virt.dtb | less</code> —— 确认编出来的内容和源接近。</li>
+<li><strong>不要</strong>随便改 <code>reg</code> 地址：必须与 QEMU virt 实际 MMIO 一致，否则 virtio/OpenSBI 会挂。</li>
+</ol>
+<p>下一页：<a href="#跟读-kernelsrcfdtrs">跟读 <code>fdt.rs</code></a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="跟读-kernelsrcfdtrs"><a class="header" href="#跟读-kernelsrcfdtrs">跟读 <code>kernel/src/fdt.rs</code></a></h1>
+<p>这一页只讲：<strong>内核如何把 DTB 变成可用的 <code>Platform</code> 结构。</strong></p>
+<p>对齐：<strong>v1.6.1</strong>（walker 自 1.5/1.6.0 起；model/board 日志在 1.6.1 强化）。</p>
+<h2 id="1-它做什么--不做什么"><a class="header" href="#1-它做什么--不做什么">1. 它做什么 / 不做什么</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>做</th><th>不做</th></tr>
+</thead>
+<tbody>
+<tr><td>校验 magic <code>0xd00dfeed</code></td><td>不执行 DTS 文本（只认二进制 FDT）</td></tr>
+<tr><td>走 struct + strings，读 <code>compatible</code> / <code>reg</code> / <code>interrupts</code></td><td>不实现完整 Linux binding 动物园</td></tr>
+<tr><td>填 <code>Platform</code>：memory、uart、virtio[]、framebuffer 提示</td><td>不直接驱动 UART / virtio</td></tr>
+</tbody>
+</table>
+</div>
+<p>驱动方再读 <code>fdt::get()</code>：<code>mm</code> 用 memory，<code>virtio_blk</code> 扫 <code>virtio,mmio</code>。</p>
+<h2 id="2-启动顺序里谁先谁后"><a class="header" href="#2-启动顺序里谁先谁后">2. 启动顺序里谁先谁后</a></h2>
+<p><a href="#013-跟读-kernel_main"><code>kernel_main</code></a> 大致：</p>
+<pre><code class="language-text">trap::init
+fdt::probe(dtb_pa)     ← 此时尚未开 Sv39；DTB 在 DRAM，可按物理地址读
+mm::init               ← memmap::discover → fdt::memory_reg()
+map_mmio_range(…)      ← UART / virtio / 可选 FB
+block::init            ← 内部 virtio_blk::init()
+timer / servers
+</code></pre>
+<h2 id="3-platform-里有什么心智模型"><a class="header" href="#3-platform-里有什么心智模型">3. <code>Platform</code> 里有什么（心智模型）</a></h2>
+<pre><code class="language-text">Platform {
+  model / board_compat     // 根节点（1.6.1 日志）
+  memory: Option&lt;Reg&gt;      // /memory@…
+  uart: Option&lt;UartDev&gt;    // ns16550a 等
+  virtio[0..N]             // compatible = "virtio,mmio"
+  framebuffer: Option&lt;…&gt;   // 为 1.9 预留
+}
+</code></pre>
+<p><code>Reg { base, size }</code> 来自 <code>reg</code> 属性，并尊重父节点的 <code>#address-cells</code> / <code>#size-cells</code>。</p>
+<h2 id="4-和早期-memmap-的关系"><a class="header" href="#4-和早期-memmap-的关系">4. 和早期 <code>memmap</code> 的关系</a></h2>
+<p>0.2 时代：<code>memmap.rs</code> 里内嵌了一个「只找 memory」的迷你 walker。<br>1.5 起：共享逻辑在 <strong><code>fdt.rs</code></strong>；<code>memmap::discover</code> 只消费 <code>fdt::memory_reg()</code>，失败再回退常量。</p>
+<p>读内存章时：<a href="#021-ram-发现与-dtb">0.2.1 RAM 发现</a> —— 概念仍对，实现入口已换成 FDT 模块。</p>
+<h2 id="5-你该观察什么"><a class="header" href="#5-你该观察什么">5. 你该观察什么</a></h2>
+<ul>
+<li><code>fdt: blob pa=…</code>：证明 <code>a1</code> 有效</li>
+<li><code>fdt: model</code> / <code>fdt: board</code>：证明是 <strong>我们的</strong> 树（1.6.1）</li>
+<li><code>fdt: virtio-mmio count=8</code>：与 DTS 里八个槽一致</li>
+<li>若 <code>memory</code> 离谱：先查 DTS 里 <code>memory@80000000</code> 的 <code>reg</code> 是否与 <code>-m</code> 一致</li>
+</ul>
+<h2 id="6-易错点-5"><a class="header" href="#6-易错点-5">6. 易错点</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>现象</th><th>常见原因</th></tr>
+</thead>
+<tbody>
+<tr><td><code>fdt: no DTB</code></td><td><code>a1=0</code>；或未传 <code>-dtb</code> 且固件也没给</td></tr>
+<tr><td>有 blob 无 virtio</td><td>DTS 缺 <code>virtio,mmio</code>，或 <code>compatible</code> 拼错</td></tr>
+<tr><td>开页表后读 MMIO 炸</td><td>忘记 <code>map_mmio_range</code>（DRAM 身份映射盖不住 <code>0x1000_xxxx</code>）</td></tr>
+</tbody>
+</table>
+</div>
+<p>下一页：<a href="#virtio-blk-与-drfs-后端">virtio-blk 与 DRFS</a>。</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="virtio-blk-与-drfs-后端"><a class="header" href="#virtio-blk-与-drfs-后端">virtio-blk 与 DRFS 后端</a></h1>
+<p>这一页只讲：<strong>块数据如何从 QEMU 磁盘进到 <code>cat block.txt</code>。</strong></p>
+<p>对齐：<strong>v1.6.0+</strong>（驱动） / <strong>v1.6.1</strong>（自有 DTB + 日志验收）。</p>
+<h2 id="1-分层请背这张"><a class="header" href="#1-分层请背这张">1. 分层（请背这张）</a></h2>
+<pre><code class="language-text">shell: cat block.txt
+    → SYS_FS_CAT → fs::cat
+        → block::lookup  （DRFS：目录 + 文件偏移）
+            → block::read
+                → virtio_blk::read_bytes   （优先）
+                → 或静态 ramdisk           （无设备时回退）
+</code></pre>
+<p><strong>DRFS 布局</strong>仍与 <a href="#14-块设备教学替身详细说明">1.4 章</a> 相同（magic <code>DRFS</code>、目录项、载荷）。<br>变的是：<strong>底层存储</strong>从「内核里的数组」换成「virtio 后面的 raw 镜像」。</p>
+<h2 id="2-qemu-怎么挂盘"><a class="header" href="#2-qemu-怎么挂盘">2. QEMU 怎么挂盘</a></h2>
+<p><code>scripts/run-qemu.sh</code>：</p>
+<pre><code class="language-text">build/deeproot-disk.img     # 没有则 dd 出 1MiB
+-drive file=…,if=none,id=hd0
+-device virtio-blk-device,drive=hd0,bus=virtio-mmio-bus.0
+-dtb build/deeproot-qemu-virt.dtb
+</code></pre>
+<p><code>bus.0</code> 对应 DTS / 硬件上靠前的 <code>virtio,mmio</code> 槽（常见物理基址 <code>0x10001000</code>）。</p>
+<h2 id="3-跟读-virtio_blkrs教学范围"><a class="header" href="#3-跟读-virtio_blkrs教学范围">3. 跟读 <code>virtio_blk.rs</code>（教学范围）</a></h2>
+<p>当前 QEMU virt 报告的是 <strong>legacy MMIO（version = 1）</strong>：</p>
+<ol>
+<li>在 <code>fdt</code> 的 virtio 列表里找 <code>device_id == 2</code>（block）</li>
+<li><code>map_mmio_range</code> 后读写寄存器</li>
+<li>协商 feature、设置 <code>GuestPageSize</code> / <code>QueueNum</code> / <code>QueuePFN</code></li>
+<li>用静态对齐的两页做 legacy vring（保证物理连续）</li>
+<li>每次读写一个 <strong>512 字节扇区</strong>；完成靠 <strong>轮询 used 环</strong>（尚未接 PLIC）</li>
+</ol>
+<p>失败时：<code>block::init</code> 打日志并回退 ramdisk，shell 仍可用（smoke 则要求必须 virtio 成功）。</p>
+<h2 id="4-blockinit-做什么"><a class="header" href="#4-blockinit-做什么">4. <code>block::init</code> 做什么</a></h2>
+<ol>
+<li><code>virtio_blk::init()</code></li>
+<li>若成功：DRFS 窗口落在盘前 <strong>64KiB</strong>（教学镜像够用）</li>
+<li>若盘上无 <code>DRFS</code> magic：格式化并播种 <code>block.txt</code> / <code>from-block</code> / <code>blk-version</code></li>
+<li>打印类似：</li>
+</ol>
+<pre><code class="language-text">virtio-blk: ready mmio=0x10001000 capacity=2048 sectors … legacy
+block: virtio-blk ready size=65536 files=3 (DRFS)
+</code></pre>
+<h2 id="5-和-embed-ramfs-的边界再强调"><a class="header" href="#5-和-embed-ramfs-的边界再强调">5. 和 embed ramfs 的边界（再强调）</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th>embed <code>FILES</code></th><th>块上 DRFS</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ls</code> / <code>cat</code></td><td>有</td><td>有</td></tr>
+<tr><td><code>run</code> / <code>SYS_EXEC</code></td><td>ELF</td><td><strong>否</strong></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="6-动手验证-2"><a class="header" href="#6-动手验证-2">6. 动手验证</a></h2>
+<ol>
+<li><code>./scripts/run-qemu.sh --smoke</code> —— 必须出现 <code>virtio-blk: ready</code> 与 <code>block: virtio-blk ready</code>。</li>
+<li>交互：<code>cat block.txt</code>，应提到 virtio / DTS（1.6.1 播种文案）。</li>
+<li>退出 QEMU 后看 <code>build/deeproot-disk.img</code>：再次启动应打印 <code>found existing DRFS</code>（内容留在镜像里）。</li>
+<li>（进阶）暂时去掉 <code>-device virtio-blk-device</code>，应回退 <code>block: ramdisk ready</code>——证明分层有效。做完请恢复脚本。</li>
+</ol>
+<h2 id="7-故意没做的避免期望膨胀"><a class="header" href="#7-故意没做的避免期望膨胀">7. 故意没做的（避免期望膨胀）</a></h2>
+<ul>
+<li>virtio 1.0 modern 传输、PLIC 完成中断</li>
+<li>把 ELF 也放到 DRFS 再 <code>run</code></li>
+<li>完整文件系统（ext 等）</li>
+</ul>
+<p>下一站建议：<a href="#shell-常用命令详细手册">Shell 常用命令</a>，或路线图里的 <strong>1.7 SMP</strong>（见 <code>VERSION</code>）。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="shell-常用命令详细手册"><a class="header" href="#shell-常用命令详细手册">Shell 常用命令（详细手册）</a></h1>
 <p>提示符：<code>deeproot&gt;</code><br>解析器在 <code>user/shell/src/main.rs</code>：非常朴素——<strong>没有</strong>引号、管道、变量、通配符。</p>
@@ -3181,7 +3479,7 @@ else:
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="自己写一个用户程序逐步教程"><a class="header" href="#自己写一个用户程序逐步教程">自己写一个用户程序（逐步教程）</a></h1>
 <p>目标：新增一个可 <code>run</code> 的 ELF，例如打印 <code>echo: …</code> 的小程序 <code>echo</code>。<br>做完后你应彻底理解：<strong>用户包 → build.rs → ramfs → shell</strong>。</p>
-<h2 id="本章拆读顺序-9"><a class="header" href="#本章拆读顺序-9">本章拆读顺序</a></h2>
+<h2 id="本章拆读顺序-10"><a class="header" href="#本章拆读顺序-10">本章拆读顺序</a></h2>
 <ol>
 <li><a href="#步骤-1复制-hello-模板">步骤 1：复制 hello 模板</a></li>
 <li><a href="#步骤-2注册到-workspace-与-build">步骤 2：注册到 workspace 与 build</a></li>
@@ -3476,10 +3774,13 @@ mdbook serve --open
 <tr><td><strong>capability（能力）</strong></td><td>受内核管理的「权限票」，持有者才能对某对象执行某些操作。</td></tr>
 <tr><td><strong>cap / CSpace</strong></td><td>能力与能力表（任务持有哪些票）。</td></tr>
 <tr><td><strong>DBCN</strong></td><td>SBI Debug Console 扩展：批量写控制台。</td></tr>
-<tr><td><strong>DTB</strong></td><td>Device Tree Blob，固件传给内核的硬件描述（DeepRoot 早期可能只用一部分）。</td></tr>
+<tr><td><strong>DTB</strong></td><td>Device Tree Blob：编译后的设备树；DeepRoot 用自有 DTS 生成并经 <code>-dtb</code> 交给 OpenSBI。</td></tr>
+<tr><td><strong>DTS</strong></td><td>Device Tree Source：人类可读的板级描述；真源在 <code>platform/qemu-virt/deeproot.dts</code>。</td></tr>
+<tr><td><strong>DRFS</strong></td><td>DeepRoot 教学「盘上」镜像格式（magic <code>DRFS</code>）；可在 ramdisk 或 virtio-blk 上。</td></tr>
 <tr><td><strong>ecall</strong></td><td>RISC-V 环境调用指令；用户态进内核做 syscall。</td></tr>
 <tr><td><strong>ELF</strong></td><td>可执行文件格式；用户程序以 ELF 嵌入并加载。</td></tr>
 <tr><td><strong>Endpoint</strong></td><td>IPC 通信端点对象；常通过能力引用。</td></tr>
+<tr><td><strong>FDT</strong></td><td>Flattened Device Tree；内核侧 walker 在 <code>kernel/src/fdt.rs</code>。</td></tr>
 <tr><td><strong>hart</strong></td><td>Hardware thread，一颗硬件硬件线程/核。</td></tr>
 <tr><td><strong>idle</strong></td><td>无可运行任务时睡的内核任务（常 <code>wfi</code>）。</td></tr>
 <tr><td><strong>IPC</strong></td><td>进程/任务间通信；DeepRoot 教学树以同步 call/recv/reply 为主。</td></tr>
@@ -3492,7 +3793,7 @@ mdbook serve --open
 <tr><td><strong>provenance</strong></td><td>能力来源：这张票是怎么 mint/derive 出来的。</td></tr>
 <tr><td><strong>QEMU virt</strong></td><td>常用的虚拟开发板机型；DeepRoot 脚本默认用它。</td></tr>
 <tr><td><strong>ramfs</strong></td><td>教学内存文件系统：名字→静态字节。</td></tr>
-<tr><td><strong>ramdisk</strong></td><td>用内存假装磁盘；1.4 块层替身。</td></tr>
+<tr><td><strong>ramdisk</strong></td><td>用内存假装磁盘；1.4 块层替身，1.6 起多为 virtio 失败时的回退。</td></tr>
 <tr><td><strong>SBI</strong></td><td>Supervisor Binary Interface：S-mode 向固件借的服务。</td></tr>
 <tr><td><strong>satp</strong></td><td>控制页表根与模式的 CSR；切任务时常切 satp。</td></tr>
 <tr><td><strong>sched id</strong></td><td>调度器任务槽编号；<code>SYS_EXEC</code>/<code>SYS_WAIT</code> 使用。</td></tr>
@@ -3503,6 +3804,8 @@ mdbook serve --open
 <tr><td><strong>Sv39</strong></td><td>RISC-V 39 位虚址页表模式（三级页表）。</td></tr>
 <tr><td><strong>syscall</strong></td><td>系统调用；DeepRoot 用 <code>a7</code> 放号码。</td></tr>
 <tr><td><strong>TCB</strong></td><td>任务控制块：调度器眼里的任务状态。</td></tr>
+<tr><td><strong>virtio-blk</strong></td><td>半虚拟化块设备；教学驱动在 <code>virtio_blk.rs</code>（legacy MMIO + 轮询）。</td></tr>
+<tr><td><strong>virtio-mmio</strong></td><td>以 MMIO 寄存器暴露的 virtio 传输；QEMU virt 上有多个槽。</td></tr>
 <tr><td><strong>trap frame</strong></td><td>保存/恢复用户寄存器的结构。</td></tr>
 <tr><td><strong>virtio-blk</strong></td><td>虚拟化块设备标准；1.4 用 ramdisk 替身占位。</td></tr>
 <tr><td><strong>wfi</strong></td><td>Wait For Interrupt，闲时省电/等待。</td></tr>
@@ -3585,7 +3888,7 @@ git checkout main
 <p>想对比某一系列引入了什么：<code>git log v1.4.0..v1.4.1 --oneline</code>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="下一步可以看什么"><a class="header" href="#下一步可以看什么">下一步可以看什么</a></h1>
-<p>你已经走完 DeepRoot <strong>1.4</strong> 教学主线（当前推荐标签 <strong><code>v1.4.1</code></strong>）。<br>仓库路线图已规划到 <strong>2.0</strong>（见根目录 <code>VERSION</code>）：设备树 → virtio 块 → SMP → 更完善的自研 shell → framebuffer 简易 UI。</p>
+<p>你已经走完 DeepRoot <strong>1.6</strong> 教学主线（当前推荐标签 <strong><code>v1.6.1</code></strong>）：自有 DTS、FDT 发现、virtio-blk 上的 DRFS。<br>仓库路线图继续到 <strong>2.0</strong>（见根目录 <code>VERSION</code>）：SMP → 更完善自研 shell → framebuffer 简易 UI。</p>
 <h2 id="1-巩固强烈建议"><a class="header" href="#1-巩固强烈建议">1. 巩固（强烈建议）</a></h2>
 <ul>
 <li>不看文档，独立画出：<code>ecall</code> → <code>trap</code> → <code>handle_syscall</code> → <code>sret</code></li>
