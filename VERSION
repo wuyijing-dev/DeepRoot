@@ -197,7 +197,7 @@
 # Work to land before tagging 1.5.0:
 #   W1  Shared FDT walker (compatible, reg, interrupts) — kernel/src/fdt.rs
 #   W2  Discover UART / virtio MMIO / memory; log nodes at boot
-#   W3  Optional: locate ramfb / simple-framebuffer for 1.9 prep
+#   W3  Optional: locate ramfb / simple-framebuffer (display deferred to 1.12)
 #   W4  Smoke: boot logs fdt: lines; RAM from DTB (QEMU -m)
 #
 # Releases:
