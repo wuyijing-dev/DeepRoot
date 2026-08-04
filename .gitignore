@@ -1,3 +1,6 @@
+# mdBook output
+docs/book/
+
 # Build artifacts
 /target/
 **/target/

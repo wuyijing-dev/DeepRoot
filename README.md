@@ -5,6 +5,13 @@ Rust capability microkernel for RISC-V.
 Repository: https://github.com/wuyijing-dev/DeepRoot  
 Version: see [`VERSION`](VERSION) — current **1.4.0**
 
+## Learning docs
+
+面向新手的逐步教程（基线 **v1.4.0**）：
+
+- 在线：https://wuyijing-dev.github.io/DeepRoot/
+- 本地：`cargo install mdbook && cd docs && mdbook serve --open`
+
 ## Quick start
 
 ```bash
@@ -25,7 +32,8 @@ Shell: `ls`, `cat readme.txt`, `run hello`, `run badapple` (realtime ASCII).
 ```
 kernel/           # microkernel (no_std)
 libs/             # deeproot-abi, deeproot-user
-user/             # init, console, ping (U-mode ELFs)
+user/             # init, console, ping, shell, hello…
+docs/             # mdBook learning notes (Chinese)
 scripts/          # QEMU helpers
 VERSION           # current release + full roadmap
 ```

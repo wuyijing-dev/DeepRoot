@@ -1,0 +1,20 @@
+[book]
+title = "DeepRoot 学习笔记"
+description = "面向新手的 DeepRoot 微内核学习文档（基于 v1.4.0）"
+authors = ["wuyijing-dev"]
+language = "zh"
+src = "src"
+
+[build]
+build-dir = "book"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/wuyijing-dev/DeepRoot"
+edit-url-template = "https://github.com/wuyijing-dev/DeepRoot/edit/main/docs/{path}"
+site-url = "/DeepRoot/"
+no-section-label = true
+
+[output.html.search]
+enable = true
