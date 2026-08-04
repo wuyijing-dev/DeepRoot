@@ -1,6 +1,6 @@
-//! Teaching block device (1.4) — RAM disk stand-in for virtio-blk.
+//! Teaching block layer — DRFS on virtio-blk (1.6) or ramdisk fallback.
 //!
-//! Layout (DeepRoot teaching FS image, magic `DRFS`):
+//! On-disk layout (DeepRoot teaching FS image, magic `DRFS`):
 //!
 //! ```text
 //! [0..4)    magic b"DRFS"
@@ -9,20 +9,21 @@
 //! [12..16)  reserved
 //! [16..)    directory: N × 48-byte entries
 //!             name[32]  NUL-padded ASCII
-//!             offset    u32 LE  (byte offset into DISK)
+//!             offset    u32 LE  (byte offset into image)
 //!             length    u32 LE
 //!             flags     u32 LE  (bit0 = text)
 //! then file payloads at the recorded offsets
 //! ```
 //!
-//! QEMU virtio-blk can replace the DISK[] backend later without changing
-//! the DRFS layout or the shell path API (`ls` / `cat`).
+//! Byte read/write go through [`virtio_blk`] when present; otherwise a static
+//! ramdisk. Shell `ls` / `cat` stay on this DRFS API.
 
-use core::sync::atomic::{AtomicBool, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use crate::println;
+use crate::virtio_blk;
 
-pub const DISK_BYTES: usize = 16 * 1024;
+pub const DRFS_BYTES: usize = 64 * 1024;
 const MAGIC: &[u8; 4] = b"DRFS";
 const VERSION: u32 = 1;
 const DIR_OFF: usize = 16;
@@ -30,8 +31,10 @@ const ENTRY_SIZE: usize = 48;
 const NAME_LEN: usize = 32;
 const MAX_FILES: usize = 8;
 
-static mut DISK: [u8; DISK_BYTES] = [0; DISK_BYTES];
+static mut RAMDISK: [u8; DRFS_BYTES] = [0; DRFS_BYTES];
 static READY: AtomicBool = AtomicBool::new(false);
+static USE_VIRTIO: AtomicBool = AtomicBool::new(false);
+static STORE_SIZE: AtomicUsize = AtomicUsize::new(DRFS_BYTES);
 
 #[derive(Clone, Copy)]
 pub struct DirEnt {
@@ -52,25 +55,54 @@ impl DirEnt {
     }
 }
 
+fn backend_read(off: usize, out: &mut [u8]) -> usize {
+    if USE_VIRTIO.load(Ordering::Relaxed) {
+        virtio_blk::read_bytes(off, out)
+    } else {
+        let size = STORE_SIZE.load(Ordering::Relaxed);
+        if off >= size {
+            return 0;
+        }
+        let n = out.len().min(size - off);
+        unsafe {
+            out[..n].copy_from_slice(&RAMDISK[off..off + n]);
+        }
+        n
+    }
+}
+
+fn backend_write(off: usize, data: &[u8]) -> usize {
+    if USE_VIRTIO.load(Ordering::Relaxed) {
+        virtio_blk::write_bytes(off, data)
+    } else {
+        let size = STORE_SIZE.load(Ordering::Relaxed);
+        if off >= size {
+            return 0;
+        }
+        let n = data.len().min(size - off);
+        unsafe {
+            RAMDISK[off..off + n].copy_from_slice(&data[..n]);
+        }
+        n
+    }
+}
+
 fn write_u32(off: usize, v: u32) {
     let b = v.to_le_bytes();
-    unsafe {
-        DISK[off..off + 4].copy_from_slice(&b);
-    }
+    let _ = backend_write(off, &b);
 }
 
 fn read_u32(off: usize) -> u32 {
     let mut b = [0u8; 4];
-    unsafe {
-        b.copy_from_slice(&DISK[off..off + 4]);
+    let n = backend_read(off, &mut b);
+    if n < 4 {
+        return 0;
     }
     u32::from_le_bytes(b)
 }
 
 fn put_bytes(off: usize, data: &[u8]) {
-    unsafe {
-        DISK[off..off + data.len()].copy_from_slice(data);
-    }
+    let _ = backend_write(off, data);
 }
 
 fn write_entry(slot: usize, name: &str, offset: u32, length: u32, flags: u32) {
@@ -78,34 +110,41 @@ fn write_entry(slot: usize, name: &str, offset: u32, length: u32, flags: u32) {
     let mut name_buf = [0u8; NAME_LEN];
     let n = name.len().min(NAME_LEN - 1);
     name_buf[..n].copy_from_slice(&name.as_bytes()[..n]);
-    unsafe {
-        DISK[base..base + NAME_LEN].copy_from_slice(&name_buf);
-    }
+    put_bytes(base, &name_buf);
     write_u32(base + NAME_LEN, offset);
     write_u32(base + NAME_LEN + 4, length);
     write_u32(base + NAME_LEN + 8, flags);
 }
 
-/*
- * init - format a DRFS image on the ramdisk and seed teaching text files
- */
-pub fn init() {
-    unsafe {
-        DISK.fill(0);
+fn has_drfs_magic() -> bool {
+    let mut magic = [0u8; 4];
+    if backend_read(0, &mut magic) < 4 {
+        return false;
+    }
+    &magic == MAGIC
+}
+
+fn format_drfs() {
+    /* Zero the teaching image window. */
+    let zero = [0u8; 512];
+    let mut off = 0usize;
+    while off < DRFS_BYTES {
+        let n = (DRFS_BYTES - off).min(zero.len());
+        let _ = backend_write(off, &zero[..n]);
+        off += n;
     }
 
-    /* File payloads start after the directory table. */
     let data_base = DIR_OFF + MAX_FILES * ENTRY_SIZE;
     let files: &[(&str, &[u8])] = &[
         (
             "block.txt",
-            b"DeepRoot 1.4.1 - this file lives on the block device (DRFS), not in embed ramfs.\n",
+            b"DeepRoot 1.6.0 - this file lives on the block device (DRFS via virtio-blk or ramdisk).\n",
         ),
         (
             "from-block",
             b"cat from-block  # path served via block::read\n",
         ),
-        ("blk-version", b"1.4.1\n"),
+        ("blk-version", b"1.6.0\n"),
     ];
 
     put_bytes(0, MAGIC);
@@ -118,15 +157,50 @@ pub fn init() {
         put_bytes(cursor, data);
         write_entry(i, name, cursor as u32, data.len() as u32, 1);
         cursor += data.len();
-        /* Keep payloads 4-byte aligned for neatness. */
         cursor = (cursor + 3) & !3;
+    }
+}
+
+/*
+ * init - prefer virtio-blk from FDT; else ramdisk. Ensure DRFS image exists.
+ */
+pub fn init() {
+    let virt = virtio_blk::init();
+    if virt {
+        USE_VIRTIO.store(true, Ordering::Relaxed);
+        let cap = virtio_blk::capacity_bytes();
+        let window = if cap == 0 {
+            DRFS_BYTES
+        } else {
+            core::cmp::min(cap, DRFS_BYTES)
+        };
+        STORE_SIZE.store(window, Ordering::Relaxed);
+    } else {
+        USE_VIRTIO.store(false, Ordering::Relaxed);
+        STORE_SIZE.store(DRFS_BYTES, Ordering::Relaxed);
+        unsafe {
+            RAMDISK.fill(0);
+        }
+    }
+
+    if !has_drfs_magic() {
+        format_drfs();
+        println!("block: formatted DRFS image ({} bytes window)", size());
+    } else {
+        println!("block: found existing DRFS image");
     }
 
     READY.store(true, Ordering::Relaxed);
+    let backend = if USE_VIRTIO.load(Ordering::Relaxed) {
+        "virtio-blk"
+    } else {
+        "ramdisk"
+    };
     println!(
-        "block: ramdisk ready size={} files={} (DRFS / virtio-blk stand-in)",
-        DISK_BYTES,
-        files.len()
+        "block: {} ready size={} files={} (DRFS)",
+        backend,
+        size(),
+        file_count()
     );
 }
 
@@ -135,51 +209,44 @@ pub fn ready() -> bool {
 }
 
 pub fn size() -> usize {
-    DISK_BYTES
+    STORE_SIZE.load(Ordering::Relaxed)
+}
+
+pub fn using_virtio() -> bool {
+    USE_VIRTIO.load(Ordering::Relaxed)
 }
 
 pub fn read(off: usize, out: &mut [u8]) -> usize {
-    if !ready() || off >= DISK_BYTES {
-        return 0;
-    }
-    let n = out.len().min(DISK_BYTES - off);
-    unsafe {
-        out[..n].copy_from_slice(&DISK[off..off + n]);
-    }
-    n
-}
-
-pub fn write(off: usize, data: &[u8]) -> usize {
-    if !ready() || off >= DISK_BYTES {
-        return 0;
-    }
-    let n = data.len().min(DISK_BYTES - off);
-    unsafe {
-        DISK[off..off + n].copy_from_slice(&data[..n]);
-    }
-    n
-}
-
-/*
- * file_count - number of DRFS directory entries
- */
-pub fn file_count() -> usize {
     if !ready() {
         return 0;
     }
-    let mut magic = [0u8; 4];
-    unsafe {
-        magic.copy_from_slice(&DISK[0..4]);
+    let lim = STORE_SIZE.load(Ordering::Relaxed);
+    if off >= lim {
+        return 0;
     }
-    if &magic != MAGIC {
+    let n = out.len().min(lim - off);
+    backend_read(off, &mut out[..n])
+}
+
+pub fn write(off: usize, data: &[u8]) -> usize {
+    if !ready() {
+        return 0;
+    }
+    let lim = STORE_SIZE.load(Ordering::Relaxed);
+    if off >= lim {
+        return 0;
+    }
+    let n = data.len().min(lim - off);
+    backend_write(off, &data[..n])
+}
+
+pub fn file_count() -> usize {
+    if !ready() || !has_drfs_magic() {
         return 0;
     }
     read_u32(8) as usize
 }
 
-/*
- * dirent - read directory entry @idx
- */
 pub fn dirent(idx: usize) -> Option<DirEnt> {
     let n = file_count();
     if idx >= n || idx >= MAX_FILES {
@@ -187,8 +254,8 @@ pub fn dirent(idx: usize) -> Option<DirEnt> {
     }
     let base = DIR_OFF + idx * ENTRY_SIZE;
     let mut name = [0u8; NAME_LEN];
-    unsafe {
-        name.copy_from_slice(&DISK[base..base + NAME_LEN]);
+    if backend_read(base, &mut name) < NAME_LEN {
+        return None;
     }
     let name_len = name.iter().position(|&c| c == 0).unwrap_or(NAME_LEN);
     Some(DirEnt {
@@ -200,11 +267,6 @@ pub fn dirent(idx: usize) -> Option<DirEnt> {
     })
 }
 
-/*
- * lookup - find a DRFS file by name; copy up to @out.len() bytes into @out
- *
- * Returns Some((copied_len, total_len, is_text)) or None.
- */
 pub fn lookup(name: &str, out: &mut [u8]) -> Option<(usize, usize, bool)> {
     let n = file_count();
     for i in 0..n {

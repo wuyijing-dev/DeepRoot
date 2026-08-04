@@ -1,4 +1,4 @@
-//! Server bring-up — per-task AS, shell, embedded spawn blobs (1.1–1.4).
+//! Server bring-up — per-task AS, shell, embedded spawn blobs (1.1–1.6).
 
 use crate::cap::{CapSpace, TaskId, TaskTable};
 use crate::elf;
@@ -92,7 +92,7 @@ pub fn bring_up() -> ! {
         "servers: canopy ready (ping={} console={} init={} shell={} idle={})",
         id_ping, id_console, id_init, id_shell, id_idle
     );
-    println!("servers: teaching path 1.1–1.4 (AS/spawn/shell/ramfs/block)");
+    println!("servers: teaching path 1.1–1.6 (AS/spawn/shell/ramfs/FDT/virtio-blk)");
 
     trap::install_ctx(tasks, eps);
     trap::enable_user();

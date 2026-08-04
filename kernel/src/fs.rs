@@ -26,7 +26,7 @@ static FILES: &[File] = &[
     },
     File {
         name: "version",
-        data: b"1.4.1\n",
+        data: b"1.6.0\n",
     },
     File {
         name: "hello",

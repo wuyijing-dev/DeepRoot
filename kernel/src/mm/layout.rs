@@ -10,8 +10,8 @@ pub const PAGE_SHIFT: usize = 12;
 
 /* QEMU virt DRAM default when DTB walk yields nothing useful. */
 pub const DRAM_START: usize = 0x8000_0000;
-/* Match scripts/run-qemu.sh `-m 128M`. */
-pub const DRAM_SIZE_DEFAULT: usize = 128 * 1024 * 1024;
+/* Match scripts/run-qemu.sh `-m 256M` fallback when DTB is missing. */
+pub const DRAM_SIZE_DEFAULT: usize = 256 * 1024 * 1024;
 pub const DRAM_END_DEFAULT: usize = DRAM_START + DRAM_SIZE_DEFAULT;
 
 pub const KERNEL_BASE: usize = 0x8020_0000;

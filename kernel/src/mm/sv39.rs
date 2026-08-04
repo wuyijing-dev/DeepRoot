@@ -156,6 +156,37 @@ pub fn map_user_in(root_pa: PhysAddr, va: usize, pa: PhysAddr, exec: bool, write
 }
 
 /*
+ * map_mmio_range - identity-map @base..@base+@size as device memory (R|W)
+ *
+ * Used after FDT discovery so virtio-mmio / UART registers are reachable.
+ */
+pub fn map_mmio_range(base: usize, size: usize) {
+    if size == 0 {
+        return;
+    }
+    let root_pa = kernel_root_pa();
+    if root_pa.as_usize() == 0 {
+        return;
+    }
+    let start = base & !(PAGE_SIZE - 1);
+    let end = (base + size + PAGE_SIZE - 1) & !(PAGE_SIZE - 1);
+    let flags = Pte::R | Pte::W;
+    let mut pa = start;
+    while pa < end {
+        map_page(
+            root_from(root_pa),
+            VirtAddr::new(pa),
+            PhysAddr::new(pa),
+            flags,
+        );
+        pa += PAGE_SIZE;
+    }
+    unsafe {
+        core::arch::asm!("sfence.vma", options(nostack));
+    }
+}
+
+/*
  * map_user - map into the currently active kernel template (boot helpers)
  */
 pub fn map_user(va: usize, pa: PhysAddr, exec: bool, write: bool) {

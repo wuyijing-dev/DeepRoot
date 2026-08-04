@@ -10,6 +10,7 @@ mod block;
 mod cap;
 mod console;
 mod elf;
+mod fdt;
 mod fs;
 mod ipc;
 mod ledger;
@@ -21,6 +22,7 @@ mod syscall;
 mod timer;
 mod trap;
 mod version;
+mod virtio_blk;
 
 use deeproot_abi::LedgerKind;
 use ledger::LEDGER;
@@ -39,7 +41,24 @@ pub extern "C" fn kernel_main(hartid: usize, dtb_pa: usize) -> ! {
     trap::init();
     LEDGER.record(LedgerKind::Trap, 0, 0, 1);
 
+    /* Probe FDT before mm so memory_reg() feeds the frame allocator. */
+    fdt::probe(dtb_pa);
     mm::init(hartid, dtb_pa);
+
+    /* Map discovered MMIO windows (UART / remaining virtio) for later use. */
+    if let Some(p) = fdt::get() {
+        if let Some(u) = p.uart {
+            mm::sv39::map_mmio_range(u.reg.base, u.reg.size.max(0x100));
+        }
+        for i in 0..p.virtio_count {
+            let v = p.virtio[i];
+            mm::sv39::map_mmio_range(v.reg.base, v.reg.size.max(mm::layout::PAGE_SIZE));
+        }
+        if let Some(fb) = p.framebuffer {
+            mm::sv39::map_mmio_range(fb.reg.base, fb.reg.size.max(mm::layout::PAGE_SIZE));
+        }
+    }
+
     block::init();
     timer::init(hartid);
     servers::bring_up();

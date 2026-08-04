@@ -1,6 +1,6 @@
 [book]
 title = "DeepRoot 学习笔记"
-description = "面向新手的 DeepRoot 微内核学习文档（基于 v1.4.1）"
+description = "面向新手的 DeepRoot 微内核学习文档（基于 v1.6.0）"
 authors = ["wuyijing-dev"]
 language = "zh"
 src = "src"

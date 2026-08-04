@@ -1,10 +1,14 @@
 [
   {
+    "version": "v1.6.0",
+    "label": "1.6.0（当前 · FDT + virtio-blk）"
+  },
+  {
     "version": "v1.4.1",
-    "label": "1.4.1（当前 · DRFS）"
+    "label": "1.4.1（DRFS 基线）"
   },
   {
     "version": "v1.4.0",
-    "label": "1.4.0（基线）"
+    "label": "1.4.0（块层替身）"
   }
 ]

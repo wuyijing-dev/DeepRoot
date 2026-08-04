@@ -14,13 +14,13 @@
 - virtio-blk 队列、descriptor  
 - 可持久化的文件系统  
 
-**教学树先交的是替身**：一块内存数组假装磁盘，上面再放一个极简 **DRFS** 镜像。  
+**1.4 先交替身；1.6 接上真 virtio-blk**：仍用同一套 **DRFS** 布局与 shell 路径。  
 目的：
 
 1. 启动路径上**出现块层模块**（`block::init`）  
-2. 留下 `read` / `write` / `lookup`，以后可换真实后端  
-3. 从 **1.4.1** 起，shell 的 `ls` / `cat` 已能读到块上的文本文件（`run` 仍只用 embed ELF）  
-4. 不在同一周把 virtio 规范整本倒给初学者  
+2. `read` / `write` / `lookup` 后端可换（ramdisk 或 virtio）  
+3. 从 **1.4.1** 起 shell 可读块上文本；**1.6.0** 默认走 QEMU `virtio-blk-device`  
+4. FDT（**1.5**）负责发现 `virtio,mmio` 节点  
 
 ## 2. 跟读 `kernel/src/block.rs`
 

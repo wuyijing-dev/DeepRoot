@@ -11,10 +11,18 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TARGET="riscv64gc-unknown-none-elf"
 KERNEL_ELF="${ROOT}/target/${TARGET}/release/deeproot-kernel"
+DISK_IMG="${ROOT}/build/deeproot-disk.img"
 MODE="${1:-}"
 
 cd "${ROOT}"
 cargo build -p deeproot-kernel --release --target "${TARGET}"
+
+mkdir -p "${ROOT}/build"
+if [[ ! -f "${DISK_IMG}" ]]; then
+  # 1 MiB raw image; kernel formats DRFS into the first 64 KiB if empty.
+  dd if=/dev/zero of="${DISK_IMG}" bs=1M count=1 status=none
+  echo "run-qemu: created ${DISK_IMG}"
+fi
 
 # Host is usually x86_64: RISC-V guests run under TCG. Prefer multi-thread TCG
 # and a large TB cache so ASCII playback is less jerky.
@@ -27,6 +35,8 @@ QEMU_COMMON=(
   -nographic
   -bios default
   -kernel "${KERNEL_ELF}"
+  -drive "file=${DISK_IMG},if=none,format=raw,id=hd0"
+  -device virtio-blk-device,drive=hd0,bus=virtio-mmio-bus.0
 )
 
 if [[ "${MODE}" == "--smoke" ]]; then
@@ -41,14 +51,17 @@ if [[ "${MODE}" == "--smoke" ]]; then
     >"${LOG}" 2>&1
   set -e
   ok=1
-    for needle in \
-    "DeepRoot microkernel 1.4.1" \
+  for needle in \
+    "DeepRoot microkernel 1.6.0" \
+    "fdt: blob" \
+    "fdt: virtio-mmio count=" \
+    "virtio-blk: ready" \
+    "block: virtio-blk ready" \
+    "DRFS" \
     "canopy ready" \
     "ping: pong" \
     "hello: spawned ELF says hi" \
     "shell: DeepRoot shell ready" \
-    "block: ramdisk ready" \
-    "DRFS" \
     "init: handing off to shell"
   do
     if ! grep -q "${needle}" "${LOG}"; then
@@ -58,7 +71,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
   done
   if [[ "${ok}" -ne 1 ]]; then
     echo "---- qemu log (tail) ----"
-    tail -n 80 "${LOG}"
+    tail -n 120 "${LOG}"
     exit 1
   fi
   echo "smoke: OK"
