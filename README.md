@@ -16,7 +16,9 @@ rustup target add riscv64gc-unknown-none-elf
 Requirements: Rust stable, `qemu-system-riscv64`.
 
 ABI: native capability microkernel (not Linux). Teaching path through **1.4**:
-per-task AS + `SYS_SPAWN`, serial shell, ramfs, ramdisk block stand-in.
+per-task AS + `SYS_SPAWN` / `SYS_EXEC`, serial shell, ramfs (text + ELF), ramdisk stand-in.
+
+Shell: `ls`, `cat readme.txt`, `run hello` (ELF from ramfs).
 
 ## Layout
 

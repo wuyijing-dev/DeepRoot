@@ -46,6 +46,10 @@ pub mod sys {
         unsafe { ecall(SYS_FS_CAT, path.as_ptr() as usize, path.len(), 0, 0) }
     }
 
+    pub fn exec(path: &[u8]) -> isize {
+        unsafe { ecall(SYS_EXEC, path.as_ptr() as usize, path.len(), 0, 0) }
+    }
+
     pub fn ipc_call(ep_slot: usize, label: u64, word0: u64) -> isize {
         unsafe { ecall(SYS_IPC_CALL, ep_slot, label as usize, word0 as usize, 0) }
     }

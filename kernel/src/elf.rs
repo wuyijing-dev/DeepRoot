@@ -150,10 +150,6 @@ pub fn load(name: &str, bytes: &[u8]) -> Option<LoadedElf> {
         sv39::map_user(slot.va, slot.pa, slot.exec, slot.write);
     }
 
-    println!(
-        "elf: loaded {} entry={:#x} span={:#x}..{:#x}",
-        name, ehdr.e_entry, load_base, load_end
-    );
     Some(LoadedElf {
         entry: ehdr.e_entry as usize,
         load_base,
@@ -251,10 +247,6 @@ pub fn load_into(
         aspace.map_user(slot.va, slot.pa, slot.exec, slot.write);
     }
 
-    println!(
-        "elf: loaded {} into as entry={:#x} span={:#x}..{:#x}",
-        name, ehdr.e_entry, load_base, load_end
-    );
     Some(LoadedElf {
         entry: ehdr.e_entry as usize,
         load_base,

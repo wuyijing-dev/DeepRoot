@@ -260,10 +260,7 @@ fn spawn_inner(
     if is_idle {
         s.idle_id = Some(idx);
     }
-    println!(
-        "sched: spawn {} id={} entry={:#x} sp={:#x} root={:#x} idle={}",
-        name, idx, entry, stack_top, root_pa, is_idle
-    );
+    /* Stay quiet on success — shell/fs exec should not flood the serial. */
     Some(idx)
 }
 
@@ -306,7 +303,7 @@ pub fn next_spawn_stack_base(sched_id: usize) -> usize {
     SPAWN_STACK_BASE + sched_id * SPAWN_STACK_STRIDE
 }
 
-pub fn mark_zombie(code: usize) {
+pub fn mark_zombie(_code: usize) {
     let s = inner();
     let id = s.current;
     if s.tasks[id].is_idle {
@@ -314,7 +311,6 @@ pub fn mark_zombie(code: usize) {
     }
     s.tasks[id].state = TaskState::Zombie;
     s.tasks[id].block = BlockReason::None;
-    println!("sched: {} exited code={}", s.tasks[id].name, code);
 }
 
 /*
@@ -412,18 +408,13 @@ pub fn yield_now() -> bool {
 
 /*
  * preempt - timer quantum expired (0.6.2 / 0.6.4)
+ *
+ * Stay quiet on the console: tick spam fights the interactive shell's
+ * serial input/echo. Count is kept for later ledger / debug dumps.
  */
 pub fn preempt() {
     let s = inner();
     s.preempt_count = s.preempt_count.wrapping_add(1);
-    if s.preempt_count == 1 || s.preempt_count % 50 == 0 {
-        println!(
-            "sched: preempt tick={} hart={} current={}",
-            timer::ticks(),
-            timer::hart_id(),
-            s.tasks[s.current].name
-        );
-    }
     let _ = yield_now();
 }
 
@@ -734,6 +725,39 @@ pub fn handle_syscall(
                     }
                 }
                 Err(_) => ERR_GENERIC,
+            }
+        }
+        SYS_EXEC => {
+            let ptr = a0 as usize;
+            let len = a1 as usize;
+            if len == 0 || len > 64 {
+                return ERR_GENERIC;
+            }
+            let slice = unsafe { core::slice::from_raw_parts(ptr as *const u8, len) };
+            let path = match core::str::from_utf8(slice) {
+                Ok(p) => p,
+                Err(_) => return ERR_GENERIC,
+            };
+            let (name, bytes) = match crate::fs::lookup(path) {
+                Some(v) => v,
+                None => return ERR_GENERIC,
+            };
+            if bytes.len() < 4 || &bytes[..4] != b"\x7fELF" {
+                return ERR_GENERIC;
+            }
+            let cap = match tasks.spawn(name) {
+                Some(t) => t,
+                None => return ERR_GENERIC,
+            };
+            let s = inner();
+            let slot = match s.tasks.iter().position(|t| t.state == TaskState::Empty) {
+                Some(i) => i,
+                None => return ERR_GENERIC,
+            };
+            let stack = next_spawn_stack_base(slot);
+            match spawn_elf_bytes(name, bytes, stack, cap) {
+                Some(id) => id as isize,
+                None => ERR_GENERIC,
             }
         }
         _ => ERR_NOSYS,

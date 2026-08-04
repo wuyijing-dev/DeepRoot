@@ -25,3 +25,5 @@ pub const SYS_DEBUG_READ: usize = 11;
 pub const SYS_FS_LIST: usize = 12;
 /// `a0`=path ptr, `a1`=len — print file contents
 pub const SYS_FS_CAT: usize = 13;
+/// `a0`=path ptr, `a1`=len — load ELF from ramfs and spawn
+pub const SYS_EXEC: usize = 14;

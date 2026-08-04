@@ -8,12 +8,12 @@
 
 const SBI_EXT_BASE: usize = 0x10;
 const SBI_EXT_DBCN: usize = 0x4442434E; /* "DBCN" */
-const SBI_EXT_LEGACY_CONSOLE: usize = 0x01;
+/* Legacy 0.1 console: EID is the operation (fid/a6 ignored). */
+const SBI_EXT_0_1_CONSOLE_PUTCHAR: usize = 0x01;
+const SBI_EXT_0_1_CONSOLE_GETCHAR: usize = 0x02;
 const SBI_EXT_HSM: usize = 0x48534D; /* "HSM" */
 
 const SBI_DBCN_CONSOLE_WRITE_BYTE: usize = 2;
-const SBI_LEGACY_CONSOLE_PUTCHAR: usize = 0;
-const SBI_LEGACY_CONSOLE_GETCHAR: usize = 1;
 const SBI_HSM_HART_STOP: usize = 1;
 
 #[repr(C)]
@@ -57,25 +57,23 @@ fn sbi_call(ext: usize, fid: usize, arg0: usize, arg1: usize, arg2: usize) -> Sb
 pub fn console_putchar(c: u8) {
     let r = sbi_call(SBI_EXT_DBCN, SBI_DBCN_CONSOLE_WRITE_BYTE, c as usize, 0, 0);
     if r.error != 0 {
-        let _ = sbi_call(
-            SBI_EXT_LEGACY_CONSOLE,
-            SBI_LEGACY_CONSOLE_PUTCHAR,
-            c as usize,
-            0,
-            0,
-        );
+        /* Legacy putchar: a7=0x01, character in a0; a6 ignored. */
+        let _ = sbi_call(SBI_EXT_0_1_CONSOLE_PUTCHAR, 0, c as usize, 0, 0);
     }
 }
 
 /*
- * console_getchar - poll one byte from the console (legacy SBI)
+ * console_getchar - poll one byte from the console (legacy SBI 0.1)
  *
- * Returns None when no character is available.
+ * EID must be 0x02 (not putchar 0x01). OpenSBI returns the character
+ * in a0, or a negative value when no input is pending — not the modern
+ * {error,value} pair (and a1 is left untouched for 0.1 calls).
  */
 pub fn console_getchar() -> Option<u8> {
-    let r = sbi_call(SBI_EXT_LEGACY_CONSOLE, SBI_LEGACY_CONSOLE_GETCHAR, 0, 0, 0);
-    if r.error == 0 && r.value >= 0 && r.value <= 255 {
-        Some(r.value as u8)
+    let r = sbi_call(SBI_EXT_0_1_CONSOLE_GETCHAR, 0, 0, 0, 0);
+    /* a0 lands in r.error for the legacy ABI. */
+    if r.error >= 0 && r.error <= 255 {
+        Some(r.error as u8)
     } else {
         None
     }

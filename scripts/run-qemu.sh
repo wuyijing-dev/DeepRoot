@@ -39,7 +39,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
     "hello: spawned ELF says hi" \
     "shell: DeepRoot shell ready" \
     "block: ramdisk ready" \
-    "sched: init exited"
+    "init: handing off to shell"
   do
     if ! grep -q "${needle}" "${LOG}"; then
       echo "smoke: FAIL missing: ${needle}"
