@@ -55,4 +55,4 @@ ls
 
 在 `kernel/src/pipe.rs`、`sched.rs`（`stdout_pipe`）对照实现。
 
-下一站：[Shell 常用命令](../../hands-on/shell-commands.md) 或路线图 **1.9** framebuffer。
+下一站：[Shell 常用命令](../../hands-on/shell-commands.md) 或路线图 **1.9 文件系统加深**（framebuffer 已延后，见 `VERSION`）。

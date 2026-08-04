@@ -3,11 +3,11 @@
 Rust capability microkernel for RISC-V.
 
 Repository: https://github.com/wuyijing-dev/DeepRoot  
-Version: see [`VERSION`](VERSION) — current **1.6.1**
+Version: see [`VERSION`](VERSION) — current **1.8.0**
 
 ## Learning docs
 
-面向新手的逐步教程（基线 **v1.6.1**）：
+面向新手的逐步教程（基线 **v1.8.0**）：
 
 - 在线：https://wuyijing-dev.github.io/DeepRoot/
 - 本地：`cargo install mdbook && cd book && mdbook serve --open`
@@ -23,10 +23,11 @@ rustup target add riscv64gc-unknown-none-elf
 
 Requirements: Rust stable, `qemu-system-riscv64`, `dtc` (device-tree-compiler).
 
-ABI: native capability microkernel (not Linux). Teaching path through **1.6**:
-per-task AS + shell + ramfs + **in-tree DTS** + virtio-blk DRFS.
+ABI: native capability microkernel (not Linux). Teaching path through **1.8**:
+DT + virtio-blk + SMP + richer shell. Next roadmap theme is **FS depth (1.9)**;
+framebuffer is deferred (see `VERSION`).
 
-Shell: `ls`, `cat readme.txt`, `run hello`, `run badapple` (realtime ASCII).
+Shell: `help`, `ls`, `cat`, `run hello`, pipes `|`, `>`, `&`, `export` / `history`.
 
 ## Layout
 

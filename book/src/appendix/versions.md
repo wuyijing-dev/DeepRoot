@@ -3,7 +3,7 @@
 ## 1. 文档对齐哪一版？
 
 本学习笔记默认对齐 **`v1.8.0`**（自研 shell+ + SMP + virtio-blk）。  
-页首选择器还可打开 **`v1.6.1`** / **`v1.6.0`** / **`v1.4.1`** / **`v1.4.0`** 等冻结快照。
+页首选择器还可打开更早冻结快照（如 `v1.7.0`、`v1.6.1`…）。
 
 核对三处：
 
@@ -16,7 +16,7 @@
 ```bash
 git fetch --tags
 git tag -l 'v*'
-git checkout v1.7.0
+git checkout v1.8.0
 ```
 
 冻结教程 HTML 在站点的 `/DeepRoot/<tag>/`（由标签工作流发布）。  
@@ -26,9 +26,9 @@ git checkout v1.7.0
 
 见根目录 `VERSION` 文件头注释。摘要：
 
-- **MAJOR**：ABI 断裂或平台级跃迁（**2.0** = DT/SMP/显示等集成，不是桌面 OS）  
-- **PATCHLEVEL**：一类用户可见能力（0.1 启动、1.2 shell、1.7 SMP…）  
-- **SUBLEVEL**：该系列内的修复与打磨  
+- **MAJOR**：刻意的平台里程碑（**2.0** = 集成发布，不是桌面 OS）  
+- **PATCHLEVEL**：一个**主题系列**（FS、模块…）；**不要**每个小功能都跳一级  
+- **SUBLEVEL**：同一主题内的分段落地与打磨（优先多打 `1.9.y`）
 
 | PATCHLEVEL | 主题 |
 |---|---|
@@ -36,10 +36,14 @@ git checkout v1.7.0
 | 1.0–1.4 | ABI → shell → ramfs → 块替身 |
 | 1.5–1.6 | FDT → virtio-blk；1.6.1 自有 DTS |
 | 1.7 | 多 hart（SMP） |
-| **1.8** | 自研 shell（argv/env/\|/\>/&） |
-| 1.9+ | 简易图形 → 2.0 |
+| **1.8** | 自研 shell（argv/env/\|/>/&） |
+| 1.9 | 文件系统加深（长系列 `1.9.y`） |
+| 1.10 | 可加载模块 / 动态服务器 |
+| 1.11 | 实用运行时打磨 |
+| 1.12 | Framebuffer（延后） |
+| 2.0 | 集成发布（不赶） |
 
-当前 **current** 是 `1.8.0`。下一站见 `VERSION` 的 1.9+。
+当前 **current** 是 `1.8.0`。下一站见 `VERSION` 的 **1.9 文件系统**（先不写 framebuffer）。
 
 ## 4. 和 GitHub Releases
 

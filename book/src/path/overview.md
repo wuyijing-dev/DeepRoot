@@ -8,9 +8,9 @@ MAJOR.PATCHLEVEL.SUBLEVEL
 
 | 段 | 含义 | 初学者怎么用 |
 |---|---|---|
-| MAJOR | ABI 大断裂或平台跃迁（2.0 = DT/SMP/显示集成） | 文档基线在 **1.x**，当前推荐 **v1.8.0** |
-| PATCHLEVEL | **一类用户可见能力** | 按 0.1 → … → 1.8 读文档 |
-| SUBLEVEL | 系列内修复与打磨 | 1.8.0 = 自研 shell+ |
+| MAJOR | ABI 大断裂或平台跃迁（2.0 = 集成发布，不赶） | 文档基线在 **1.x**，当前推荐 **v1.8.0** |
+| PATCHLEVEL | 一个主题系列（放慢；系列内多用 SUBLEVEL） | 按 0.1 → … → 1.8 读文档 |
+| SUBLEVEL | 系列内分段落地与打磨 | 例：1.9.0 → 1.9.1 → … |
 
 完整注释清单在仓库根目录 [`VERSION`](https://github.com/wuyijing-dev/DeepRoot/blob/main/VERSION)。
 
@@ -64,6 +64,6 @@ MAJOR.PATCHLEVEL.SUBLEVEL
 ## 4. 一句话心态
 
 先求「跑起来、看见现象」，再求「为什么这样设计」。  
-1.8 之后还有简易图形（1.9）与 2.0 集成（见 `VERSION` 与 [下一步](../appendix/next.md)）。
+1.8 之后优先 **文件系统加深（1.9）** 与模块/实用能力；framebuffer 延后（见 `VERSION` 与 [下一步](../appendix/next.md)）。
 
 下一章：[0.1 启动与串口](01-boot.md)。

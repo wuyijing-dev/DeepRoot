@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e0be0be6.js";
+            window.path_to_searchindex_js = "../searchindex-5d47ba41.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-11dd4d79.js"></script>
@@ -190,9 +190,9 @@
 <tr><th>段</th><th>含义</th><th>初学者怎么用</th></tr>
 </thead>
 <tbody>
-<tr><td>MAJOR</td><td>ABI 大断裂或平台跃迁（2.0 = DT/SMP/显示集成）</td><td>文档基线在 <strong>1.x</strong>，当前推荐 <strong>v1.8.0</strong></td></tr>
-<tr><td>PATCHLEVEL</td><td><strong>一类用户可见能力</strong></td><td>按 0.1 → … → 1.8 读文档</td></tr>
-<tr><td>SUBLEVEL</td><td>系列内修复与打磨</td><td>1.8.0 = 自研 shell+</td></tr>
+<tr><td>MAJOR</td><td>ABI 大断裂或平台跃迁（2.0 = 集成发布，不赶）</td><td>文档基线在 <strong>1.x</strong>，当前推荐 <strong>v1.8.0</strong></td></tr>
+<tr><td>PATCHLEVEL</td><td>一个主题系列（放慢；系列内多用 SUBLEVEL）</td><td>按 0.1 → … → 1.8 读文档</td></tr>
+<tr><td>SUBLEVEL</td><td>系列内分段落地与打磨</td><td>例：1.9.0 → 1.9.1 → …</td></tr>
 </tbody>
 </table>
 </div>
@@ -246,7 +246,7 @@
 </ol>
 <p>请固定 <strong><code>v1.8.0</code></strong>（或页首选择器打开对应冻结快照），否则日志和截图对不上。</p>
 <h2 id="4-一句话心态"><a class="header" href="#4-一句话心态">4. 一句话心态</a></h2>
-<p>先求「跑起来、看见现象」，再求「为什么这样设计」。<br>1.8 之后还有简易图形（1.9）与 2.0 集成（见 <code>VERSION</code> 与 <a href="../appendix/next.html">下一步</a>）。</p>
+<p>先求「跑起来、看见现象」，再求「为什么这样设计」。<br>1.8 之后优先 <strong>文件系统加深（1.9）</strong> 与模块/实用能力；framebuffer 延后（见 <code>VERSION</code> 与 <a href="../appendix/next.html">下一步</a>）。</p>
 <p>下一章：<a href="01-boot.html">0.1 启动与串口</a>。</p>
 
                     </main>

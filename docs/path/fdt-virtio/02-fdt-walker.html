@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-e0be0be6.js";
+            window.path_to_searchindex_js = "../../searchindex-5d47ba41.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-11dd4d79.js"></script>
@@ -212,7 +212,7 @@ timer / servers
   memory: Option&lt;Reg&gt;      // /memory@…
   uart: Option&lt;UartDev&gt;    // ns16550a 等
   virtio[0..N]             // compatible = "virtio,mmio"
-  framebuffer: Option&lt;…&gt;   // 为 1.9 预留
+  framebuffer: Option&lt;…&gt;   // 显示延后到 1.12；FDT 仍可先记下 hint
 }
 </code></pre>
 <p><code>Reg { base, size }</code> 来自 <code>reg</code> 属性，并尊重父节点的 <code>#address-cells</code> / <code>#size-cells</code>。</p>
