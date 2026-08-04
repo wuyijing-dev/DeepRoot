@@ -220,21 +220,51 @@ fn render_frame(
     let _ = sys::debug_write(core::str::from_utf8(&out[..n]).unwrap_or(""));
 }
 
+fn drain_input() {
+    for _ in 0..128 {
+        if sys::debug_read_byte() < 0 {
+            break;
+        }
+    }
+}
+
+/*
+ * quit_requested - true only for plain 'q'/'Q'
+ *
+ * Terminal focus/CSI replies start with ESC (27). Treating ESC as quit made
+ * playback stop around ~15s with drawn≪frames. Swallow ESC sequences.
+ */
 fn quit_requested() -> bool {
     let c = sys::debug_read_byte();
     if c < 0 {
         return false;
     }
-    c == b'q' as isize || c == b'Q' as isize || c == 27
+    if c == 27 {
+        /* Drain ESC [ ... final-byte or a few following bytes. */
+        for _ in 0..16 {
+            let n = sys::debug_read_byte();
+            if n < 0 {
+                break;
+            }
+            let b = n as u8;
+            if (b >= b'A' && b <= b'Z') || (b >= b'a' && b <= b'z') || b == b'~' {
+                break;
+            }
+        }
+        return false;
+    }
+    c == b'q' as isize || c == b'Q' as isize
 }
 
-fn wait_until(deadline_ms: u64) {
+/* Returns true if the user asked to quit while waiting. */
+fn wait_until(deadline_ms: u64) -> bool {
     while sys::time_ms() < deadline_ms {
         if quit_requested() {
-            return;
+            return true;
         }
         let _ = sys::yield_now();
     }
+    false
 }
 
 fn decode_one(
@@ -250,7 +280,11 @@ fn decode_one(
     }
     let enc_len = u16::from_le_bytes([body[*off], body[*off + 1]]) as usize;
     *off += 2;
-    if *off + enc_len > body.len() || enc_len > xor_buf.len() {
+    /*
+     * enc_len is the *compressed* RLE size and may exceed plen (worst case
+     * ~2 bytes per packed byte). Only the decompressed xor fills xor_buf.
+     */
+    if *off + enc_len > body.len() || plen > xor_buf.len() {
         return false;
     }
     let enc = &body[*off..*off + enc_len];
@@ -279,6 +313,7 @@ pub extern "C" fn main() {
     /* Alternate screen + hide cursor. */
     let _ = sys::debug_write("\x1b[?1049h\x1b[?25l\x1b[2J\x1b[H");
     write_banner(&hdr);
+    drain_input();
 
     let plen = packed_len(hdr.width, hdr.height, hdr.bits);
     let (prev, cur, xor_buf, frame) = unsafe {
@@ -295,6 +330,7 @@ pub extern "C" fn main() {
     let mut off = 0usize;
     let t0 = sys::time_ms();
     let mut drawn = 0usize;
+    let mut stop = "ok";
     let status_every = if hdr.fps >= 15 { hdr.fps } else { 1 };
 
     /*
@@ -304,9 +340,11 @@ pub extern "C" fn main() {
      */
     for fi in 0..hdr.nframes {
         if quit_requested() {
+            stop = "key";
             break;
         }
         if !decode_one(hdr.body, &mut off, plen, xor_buf, prev, cur) {
+            stop = "decode";
             let _ = sys::debug_write("badapple: decode error\n");
             break;
         }
@@ -328,8 +366,9 @@ pub extern "C" fn main() {
 
         let next_ms = t0.wrapping_add(((fi as u64 + 1) * 1000) / fps);
         let now = sys::time_ms();
-        if now < next_ms {
-            wait_until(next_ms);
+        if now < next_ms && wait_until(next_ms) {
+            stop = "key";
+            break;
         }
     }
 
@@ -337,9 +376,11 @@ pub extern "C" fn main() {
     let _ = sys::debug_write("\x1b[?25h\x1b[?1049l");
 
     let elapsed = sys::time_ms().wrapping_sub(t0);
-    let mut b = [0u8; 96];
+    let mut b = [0u8; 128];
     let mut i = 0usize;
-    i = push_str(&mut b, i, b"badapple: done  wall_ms=");
+    i = push_str(&mut b, i, b"badapple: done  stop=");
+    i = push_str(&mut b, i, stop.as_bytes());
+    i = push_str(&mut b, i, b"  wall_ms=");
     i = push_u32(&mut b, elapsed as usize, i);
     i = push_str(&mut b, i, b"  drawn=");
     i = push_u32(&mut b, drawn, i);
