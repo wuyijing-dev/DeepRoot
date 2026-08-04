@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-60769db6.js";
+            window.path_to_searchindex_js = "searchindex-4a2f9423.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9b9500d6.js"></script>
@@ -711,6 +711,14 @@ deeproot&gt; run hello
 </code></pre>
 <p>你<strong>不需要</strong>会写 OpenSBI；只要记住：内核拿到的 <code>hartid</code> / <code>dtb_pa</code> 来自固件约定。</p>
 <p>更具体一点：在 <code>kernel/src/boot.rs</code> 里，<code>_start</code> 会先把 <code>a0</code>（hartid）和 <code>a1</code>（DTB 物理地址）临时保存起来，再清 BSS，再把这两个值用 <code>mv a0, s0</code> / <code>mv a1, s1</code> 交还给 Rust 的 <code>kernel_main(hartid, dtb_pa)</code>。</p>
+<p>如果你是第一次读操作系统源码，建议把这里当成“Rust 之前的世界”：</p>
+<ul>
+<li>还没有堆</li>
+<li>还没有页表抽象</li>
+<li>还没有安全检查</li>
+<li>连普通函数调用都依赖你先把栈准备好</li>
+</ul>
+<p>这也是为什么启动代码通常短小、硬核、几乎全是“不能错一步”的机械动作。</p>
 <h2 id="2-跟读-_startkernelsrcbootrs"><a class="header" href="#2-跟读-_startkernelsrcbootrs">2. 跟读 <code>_start</code>（<code>kernel/src/boot.rs</code>）</a></h2>
 <p>入口汇编做了三件实事：</p>
 <ol>
@@ -721,6 +729,8 @@ deeproot&gt; run hello
 </ol>
 <p>如果 BSS 没清干净，你会遇到「全局变量里是垃圾」这种最难查的鬼畜 bug。所以开机第一课往往是：相信链接脚本 + 清 BSS。</p>
 <p>你可以把这一步当成“把现场整理干净”。后面 <code>trap</code>、<code>mm</code>、<code>servers</code> 之所以能稳定工作，很多初始化都默认“BSS 是 0”。</p>
+<h3 id="21-为什么栈一定要先于-rust-建好"><a class="header" href="#21-为什么栈一定要先于-rust-建好">2.1 为什么栈一定要先于 Rust 建好？</a></h3>
+<p>因为 <code>call kernel_main</code>、函数参数传递、局部变量、返回地址保存，都默认“当前 hart 已经有一块可用栈”。<br>如果 <code>sp</code> 没设好，哪怕只是一个普通 Rust 函数调用，都可能把数据写到随机地址，结果通常不是“报一个好懂的错”，而是直接死机或诡异 trap。</p>
 <h2 id="3-跟读-kernel_mainkernelsrcmainrs"><a class="header" href="#3-跟读-kernel_mainkernelsrcmainrs">3. 跟读 <code>kernel_main</code>（<code>kernel/src/main.rs</code>）</a></h2>
 <p>当前启动顺序（读代码时请逐行对）：</p>
 <pre><code class="language-text">ledger::init + Boot 事件
@@ -740,6 +750,29 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <li><code>block::init</code>：1.4 教学块层替身先 ready（便于你区分“模块已加载但暂时没被用”）</li>
 <li><code>servers::bring_up</code>：装入多个 U-mode ELF 并把控制权交给调度器；这一步通常“不返回”</li>
 </ul>
+<h3 id="31-为什么-serversbring_up-放在最后"><a class="header" href="#31-为什么-serversbring_up-放在最后">3.1 为什么 <code>servers::bring_up()</code> 放在最后？</a></h3>
+<p>因为它一旦把用户态服务器们装好，并切到调度器入口，系统就从“单线程的启动脚本阶段”进入“多任务动态运行阶段”了。<br>在这之后：</p>
+<ul>
+<li>trap 会不时因为 ecall/时钟中断回来</li>
+<li>调度器会在多个任务之间切换</li>
+<li>串口输出不再只是“按你写代码的顺序线性出现”</li>
+</ul>
+<p>所以在教学上，把它放在最后很重要：前面的步骤都还是“搭舞台”，它才是“演员真的开始演”。</p>
+<h3 id="32-run-qemush-其实也属于启动路径的一部分"><a class="header" href="#32-run-qemush-其实也属于启动路径的一部分">3.2 <code>run-qemu.sh</code> 其实也属于启动路径的一部分</a></h3>
+<p>很多新手只盯着 <code>kernel/src/</code>，但真正的“从命令到系统起来”还包括 <code>scripts/run-qemu.sh</code>：</p>
+<ol>
+<li><code>cargo build -p deeproot-kernel --release --target riscv64gc-unknown-none-elf</code></li>
+<li>QEMU 选择 <code>virt</code> 板型、<code>rv64</code> CPU、<code>-bios default</code></li>
+<li>把内核 ELF 通过 <code>-kernel</code> 交给模拟器</li>
+<li><code>-nographic</code> 把串口直接接到你的当前终端</li>
+</ol>
+<p>这解释了为什么你在本机终端里看到的每一行字符，其实是：</p>
+<pre><code class="language-text">QEMU virt guest
+  -&gt; OpenSBI
+  -&gt; DeepRoot 内核
+  -&gt; SBI 控制台
+  -&gt; 主机终端
+</code></pre>
 <h2 id="4-字是怎么出来的sbi-控制台"><a class="header" href="#4-字是怎么出来的sbi-控制台">4. 字是怎么出来的？SBI 控制台</a></h2>
 <p><code>println!</code> → <code>console::_print</code> → 最终会走到 <code>sbi::console_putchar</code> 或批量 <code>console_write</code>。</p>
 <p><code>kernel/src/sbi.rs</code> 里要点：</p>
@@ -750,9 +783,40 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 </ul>
 <p>对新手：先记住「内核打印 ≈ SBI 借固件写 UART」，用户态打印 ≈ <code>SYS_DEBUG_WRITE</code> 再进内核同一套输出路径。</p>
 <p>补一个更“源码向”的理解：<code>kernel/src/sbi.rs</code> 里 <code>console_write</code> 会优先走 SBI Debug Console（DBCN）批量写；如果固件不支持或失败，就逐字节回退 legacy <code>console_putchar</code>。这就是为什么早期输出有时你会看到“先快后慢/先稳后回退”的差异。</p>
+<h3 id="41-console_putchar-和-console_write-有什么区别"><a class="header" href="#41-console_putchar-和-console_write-有什么区别">4.1 <code>console_putchar</code> 和 <code>console_write</code> 有什么区别？</a></h3>
+<ul>
+<li><code>console_putchar</code>：一次只写 1 个字节，适合最早期、最保守路径</li>
+<li><code>console_write</code>：尝试一次写整个缓冲区，适合 shell 输出、大量文本、ASCII 动画</li>
+</ul>
+<p>这不是“写法不同但效果一样”那么简单。<br>在 QEMU 里，大量逐字节输出会明显拖慢交互，因此后来的 bulk write 对 shell 体验和 Bad Apple 之类场景都很关键。</p>
 <h2 id="5-trap-为什么这么早初始化"><a class="header" href="#5-trap-为什么这么早初始化">5. Trap 为什么这么早初始化？</a></h2>
 <p>没有陷阱入口时，一次非法指令/缺页可能直接让你懵在固件里。<br><code>trap::init</code> 先挂上向量，后面用户态 ecall、时钟中断才有地方可去。</p>
 <p>你在日志里看到的 <code>trap: early stvec=...</code> / <code>trap: user stvec=...</code>，就是在说：「入口地址已经写进 <code>stvec</code>」。</p>
+<h3 id="51-early_trap-和-user-trap-的区别"><a class="header" href="#51-early_trap-和-user-trap-的区别">5.1 <code>early_trap</code> 和 <code>user trap</code> 的区别</a></h3>
+<p>这里很值得你区分两种阶段：</p>
+<h4 id="早期-trap"><a class="header" href="#早期-trap">早期 trap</a></h4>
+<ul>
+<li>还没有用户任务</li>
+<li>还没有“当前任务 trap frame”</li>
+<li>更像“出了问题先把现场打印出来”</li>
+</ul>
+<p>所以 <code>early_trap_vector</code> 的逻辑很简单：拿 <code>scause/sepc/stval</code>，调用 <code>early_trap()</code> 打印。</p>
+<h4 id="用户态-trap"><a class="header" href="#用户态-trap">用户态 trap</a></h4>
+<ul>
+<li>已经有当前调度任务</li>
+<li><code>sscratch</code> 里保存着用户 trap frame 指针</li>
+<li>trap 返回前要能恢复用户寄存器并 <code>sret</code></li>
+</ul>
+<p>所以真正的 <code>trap_vector</code> 会保存大量寄存器，再进 <code>trap_handler()</code> 做 ecall / timer / fault 分发。</p>
+<p>这两套路径不能混。<br>如果在“还没准备 trap frame”的时候就切到用户态 trap 向量，保存/恢复逻辑会直接踩空。</p>
+<h3 id="52-stvec-是什么时候从-early-切到-user-的"><a class="header" href="#52-stvec-是什么时候从-early-切到-user-的">5.2 <code>stvec</code> 是什么时候从 early 切到 user 的？</a></h3>
+<p>启动初期 <code>trap::init()</code> 会把 <code>stvec</code> 设成 <code>early_trap_vector</code>。<br>等服务器和调度器准备得差不多后，系统才调用 <code>trap::enable_user()</code>，把 <code>stvec</code> 改成 <code>trap_vector</code>。</p>
+<p>这就是日志里你会看到两条不同的 trap 初始化信息的原因：</p>
+<ul>
+<li><code>trap: early stvec=...</code></li>
+<li><code>trap: user stvec=...</code></li>
+</ul>
+<p>它们不是重复打印，而是在说明：<strong>系统从“只会兜底打印错误”的 trap 阶段，进入了“能承接用户 ecall 和 timer 中断”的 trap 阶段。</strong></p>
 <h2 id="6-动手验证"><a class="header" href="#6-动手验证">6. 动手验证</a></h2>
 <ol>
 <li>在 <code>kernel_main</code> 横幅前后各加一行独特的 <code>println!("DBG_A")</code> / <code>DBG_B</code>（本地实验用，勿提交也行）。</li>
@@ -762,6 +826,14 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <p>额外建议：先别改代码，直接用脚本给的 smoke 目标“对照验收”。<code>scripts/run-qemu.sh --smoke</code> 里会检查一组关键字符串（适用于 v1.4.0）：</p>
 <p><code>DeepRoot microkernel 1.4.0</code> / <code>canopy ready</code> / <code>ping: pong</code> / <code>hello: spawned ELF says hi</code> / <code>shell: DeepRoot shell ready</code> / <code>block: ramdisk ready</code> / <code>init: handing off to shell</code>。</p>
 <p>你可以把这些字符串当成“里程碑坐标”：某一项缺失，通常就意味着启动链路在对应阶段还没成功走完。</p>
+<h3 id="61-我建议你学会的分段排错法"><a class="header" href="#61-我建议你学会的分段排错法">6.1 我建议你学会的“分段排错法”</a></h3>
+<p>如果系统没有完全起来，不要一把抓全部日志。<br>按阶段切：</p>
+<ol>
+<li><strong>连 OpenSBI 后都没进内核横幅</strong><br>查 <code>_start</code>、链接地址、<code>-kernel</code> 是否正确</li>
+<li><strong>有横幅，但没 <code>trap: early stvec</code> / <code>mm:</code></strong><br>查 <code>kernel_main</code> 顺序、早期 panic</li>
+<li><strong>有 <code>mm:</code> / <code>block:</code>，但没有 <code>shell:</code></strong><br>查 <code>servers::bring_up()</code>、ELF 加载、调度入口</li>
+<li><strong>有 <code>shell:</code>，但不能输入</strong><br>查 <code>console_getchar()</code> 与 shell 输入循环</li>
+</ol>
 <h2 id="7-易错点"><a class="header" href="#7-易错点">7. 易错点</a></h2>
 <div class="table-wrapper">
 <table>
@@ -772,6 +844,8 @@ servers::bring_up   ← 加载用户 ELF 并进入调度（不会返回）
 <tr><td>完全无输出</td><td>内核没进到 <code>kernel_main</code>，或 SBI 控制台不可用</td></tr>
 <tr><td>只有 OpenSBI 横幅</td><td>内核入口地址/链接地址与 OpenSBI 期望不符</td></tr>
 <tr><td>乱码</td><td>极少见；先查是否混用了错误的串口参数</td></tr>
+<tr><td>早期就 trap 死循环</td><td><code>stvec</code> 未正确设置，或早期访问了未准备好的内存/寄存器环境</td></tr>
+<tr><td>有 shell 但按键怪异</td><td>往往不是 shell 解析本身，而是 SBI getchar 路径/EID/返回值解析错</td></tr>
 </tbody>
 </table>
 </div>
@@ -1091,6 +1165,21 @@ LEDGER.record(Boot, ...);
 <li><code>sys::exec(path)</code>：<code>SYS_EXEC</code>，参数放到 <code>a0=path.as_ptr()</code>、<code>a1=path.len()</code></li>
 </ul>
 <p><strong>关键点</strong>：用户态并不知道“内核用哪个寄存器怎么解析”，它只负责把 <code>a7/a0..a3</code> 摆好，内核 trap 路径再按约定读出来。</p>
+<h2 id="12-你可以把-abi-想成插头定义"><a class="header" href="#12-你可以把-abi-想成插头定义">1.2 你可以把 ABI 想成“插头定义”</a></h2>
+<p>同样一条 <code>ecall</code> 指令，内核之所以知道你是想：</p>
+<ul>
+<li>打印字符串</li>
+<li>从 ramfs 执行 ELF</li>
+<li>查询时间</li>
+<li>等待子任务结束</li>
+</ul>
+<p>不是因为 CPU 懂“高级语义”，而是因为<strong>双方事先约好</strong>：</p>
+<pre><code class="language-text">a7 放 syscall 号
+a0..a3 放参数
+a0 收返回值
+负值表示错误
+</code></pre>
+<p>所以 ABI 最怕的不是“代码写得丑”，而是<strong>内核和用户态对同一组寄存器有不同理解</strong>。<br>一旦一边觉得 <code>a0</code> 是路径指针、另一边把它当 sched id，系统往往不会优雅报错，而是直接跑向 <code>ERR_GENERIC</code>、page fault，甚至乱码输出。</p>
 <h2 id="2-错误码"><a class="header" href="#2-错误码">2. 错误码</a></h2>
 <div class="table-wrapper">
 <table>
@@ -1110,6 +1199,19 @@ LEDGER.record(Boot, ...);
 <li><code>ERR_NOSYS</code>：ABI 不匹配（syscall 号写错、或用户库/内核没一起重编）</li>
 <li><code>ERR_GENERIC</code>：多半是参数/路径/ELF 映射失败（比如 <code>SYS_EXEC</code> 找不到 ramfs 文件，或 ELF magic 不对）</li>
 </ul>
+<h3 id="21-为什么-deeproot-喜欢返回负数"><a class="header" href="#21-为什么-deeproot-喜欢返回负数">2.1 为什么 DeepRoot 喜欢返回负数？</a></h3>
+<p>因为用户态封装统一把 <code>ecall</code> 返回值视为 <code>isize</code>。<br>这让调用者只需要做一个非常朴素的判断：</p>
+<pre><code class="language-text">ret &gt;= 0   → 成功，正数/0 可能自带业务含义
+ret &lt; 0    → 出错或暂不可用
+</code></pre>
+<p>例如：</p>
+<ul>
+<li><code>SYS_DEBUG_WRITE</code> 成功时返回写出的长度</li>
+<li><code>SYS_EXEC</code> 成功时返回 child sched id</li>
+<li><code>SYS_WAIT</code> 成功回收时返回 <code>0</code></li>
+<li><code>SYS_DEBUG_READ</code> 暂时没键时返回 <code>-11</code></li>
+</ul>
+<p>这对新手很友好，因为它把 syscall 学习门槛压到了“先区分正负号”。</p>
 <h2 id="3-系统调用一览v14-教学树"><a class="header" href="#3-系统调用一览v14-教学树">3. 系统调用一览（v1.4 教学树）</a></h2>
 <blockquote>
 <p>下表以 <code>libs/deeproot-abi/src/syscall.rs</code> 为准；学的时候请打开文件核对。</p>
@@ -1151,6 +1253,22 @@ LEDGER.record(Boot, ...);
 </tbody>
 </table>
 </div>
+<h3 id="33-先记住-5-个最常用-syscall"><a class="header" href="#33-先记住-5-个最常用-syscall">3.3 先记住 5 个最常用 syscall</a></h3>
+<p>如果你是第一次读 DeepRoot，不要一上来背完整 syscall 表。<br>先把下面 5 个吃透，基本就能走完整条用户态交互链：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>名字</th><th>你在哪最容易遇到它</th><th>成功返回</th><th>常见失败/特殊值</th></tr>
+</thead>
+<tbody>
+<tr><td><code>SYS_DEBUG_WRITE</code></td><td>所有用户程序打印</td><td>写出长度</td><td><code>-1</code> 参数异常</td></tr>
+<tr><td><code>SYS_DEBUG_READ</code></td><td>shell 读键盘</td><td>一个字节</td><td><code>-11</code> 暂无输入</td></tr>
+<tr><td><code>SYS_EXEC</code></td><td>shell <code>run xxx</code></td><td>child sched id</td><td><code>-1</code> 找不到/非 ELF/映射失败</td></tr>
+<tr><td><code>SYS_WAIT</code></td><td>shell 前台等待子任务</td><td><code>0</code></td><td><code>-11</code> 还没退出</td></tr>
+<tr><td><code>SYS_YIELD</code></td><td>轮询或主动让出</td><td><code>0</code></td><td>通常不失败</td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="4-从-ecall-到-handle_syscall跟读-traprs"><a class="header" href="#4-从-ecall-到-handle_syscall跟读-traprs">4. 从 ecall 到 handle_syscall（跟读 trap.rs）</a></h2>
 <p>用户态执行 <code>ecall</code> 后，<code>kernel/src/trap.rs</code> 会走到 <code>trap_handler()</code>。</p>
 <p>当它判定这是用户态 ecall（<code>scause</code> 的异常码对应）时，会做这些事：</p>
@@ -1167,16 +1285,120 @@ LEDGER.record(Boot, ...);
 <li><code>SYS_WAIT</code> 结束后，<code>wait(id)</code> 返回的值是写回给“调用 wait 的那一个任务”的 <code>a0</code></li>
 <li>如果你看到返回值异常（比如一直是 <code>-11</code>），通常不是用户库错了，而是内核调度/阻塞路径没发生你预期的状态切换</li>
 </ul>
+<h2 id="41-trap-frame-里为什么是-x17--x10"><a class="header" href="#41-trap-frame-里为什么是-x17--x10">4.1 trap frame 里为什么是 <code>x[17]</code> / <code>x[10]</code>？</a></h2>
+<p>调度器保存的是一个通用寄存器数组 <code>x[0..31]</code>。<br>RISC-V 的 ABI 名字（<code>a0</code>/<code>a1</code>/<code>a7</code>）只是这些整数寄存器的“别名”：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>ABI 名</th><th>实际整数寄存器</th><th>trap frame 下标</th></tr>
+</thead>
+<tbody>
+<tr><td><code>a0</code></td><td><code>x10</code></td><td><code>tf.x[10]</code></td></tr>
+<tr><td><code>a1</code></td><td><code>x11</code></td><td><code>tf.x[11]</code></td></tr>
+<tr><td><code>a2</code></td><td><code>x12</code></td><td><code>tf.x[12]</code></td></tr>
+<tr><td><code>a3</code></td><td><code>x13</code></td><td><code>tf.x[13]</code></td></tr>
+<tr><td><code>a7</code></td><td><code>x17</code></td><td><code>tf.x[17]</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>所以你在 <code>trap_handler()</code> 里看到：</p>
+<pre><code class="language-text">nr = tf.x[17]
+a0 = tf.x[10]
+...
+</code></pre>
+<p>并不是“写死魔法数字”，而是在直接用 RISC-V 调用约定读寄存器。</p>
+<h2 id="42-sepc--4-为什么不能少"><a class="header" href="#42-sepc--4-为什么不能少">4.2 <code>sepc += 4</code> 为什么不能少？</a></h2>
+<p><code>ecall</code> 本身是一条指令。<br>如果 trap 返回前不把 <code>sepc</code> 前移 4 字节，CPU 回到用户态后会再次执行<strong>同一条</strong> <code>ecall</code>，然后再进 trap，形成“无限重复系统调用”。</p>
+<p>这就是很多新手在自己写 trap 路径时最容易漏掉的一步。</p>
+<h2 id="43-从-handle_syscall-里跟-4-个真实例子"><a class="header" href="#43-从-handle_syscall-里跟-4-个真实例子">4.3 从 <code>handle_syscall()</code> 里跟 4 个真实例子</a></h2>
+<p>打开 <code>kernel/src/sched.rs</code> 的 <code>handle_syscall()</code>，建议按下面四个分支跟一遍：</p>
+<h3 id="例-1sys_debug_write"><a class="header" href="#例-1sys_debug_write">例 1：<code>SYS_DEBUG_WRITE</code></a></h3>
+<p>大意是：</p>
+<pre><code class="language-text">读 a0=ptr, a1=len
+len 太大 → ERR_GENERIC
+把 [ptr, ptr+len) 当用户缓冲区
+调用 console::write_bytes(slice)
+返回 len
+</code></pre>
+<p>这能解释为什么用户程序打印成功时常得到“写出长度”而不是简单的 0。</p>
+<h3 id="例-2sys_debug_read"><a class="header" href="#例-2sys_debug_read">例 2：<code>SYS_DEBUG_READ</code></a></h3>
+<p>它不是阻塞等待，而是：</p>
+<pre><code class="language-text">sbi::console_getchar()
+有字节 → 返回字节值
+没字节 → ERR_AGAIN
+</code></pre>
+<p>所以 shell 的读输入循环必须自己处理 <code>-11</code> 并 <code>yield_now()</code>。</p>
+<h3 id="例-3sys_exec"><a class="header" href="#例-3sys_exec">例 3：<code>SYS_EXEC</code></a></h3>
+<p>它会：</p>
+<pre><code class="language-text">读取 path 指针与长度
+校验长度范围
+utf8 解析 path
+fs::lookup(path)
+校验前 4 字节是不是 ELF
+spawn_elf_bytes(...)
+返回 child sched id
+</code></pre>
+<p>这解释了为什么 <code>run hello</code> 的失败点其实很多，不只是“文件不存在”：</p>
+<ul>
+<li>路径长度非法</li>
+<li>非 UTF-8</li>
+<li>ramfs 查不到</li>
+<li>文件存在但不是 ELF</li>
+<li>ELF 太大/映射失败</li>
+</ul>
+<h3 id="例-4sys_wait"><a class="header" href="#例-4sys_wait">例 4：<code>SYS_WAIT</code></a></h3>
+<p>这个分支非常值得新手背下来：</p>
+<pre><code class="language-text">child 越界            → ERR_GENERIC
+child == Zombie       → 清空槽位并返回 0
+child == Empty        → ERR_GENERIC
+其他状态（还在跑）    → ERR_AGAIN
+</code></pre>
+<p>于是 shell 的前台运行模型就清楚了：<code>run</code> 不是靠中断通知，而是靠 <code>wait -&gt; -11 -&gt; yield -&gt; wait</code> 轮询收尸。</p>
+<h2 id="44-abi-与调度为什么绑得这么紧"><a class="header" href="#44-abi-与调度为什么绑得这么紧">4.4 ABI 与调度为什么绑得这么紧？</a></h2>
+<p>很多教材会把“syscall”讲成纯接口，把“scheduler”讲成另一个主题。<br>但在 DeepRoot 里，两者是连着的：</p>
+<ul>
+<li><code>SYS_EXIT</code> 会把当前任务标成 <code>Zombie</code></li>
+<li><code>SYS_IPC_RECV</code> 在收不到消息时会阻塞当前任务</li>
+<li><code>SYS_WAIT</code> 读的是调度器里的任务状态</li>
+<li><code>SYS_YIELD</code> 直接推动下一个任务运行</li>
+</ul>
+<p>所以当你调一个“看起来只是 ABI 的问题”时，经常真正的根因在调度状态机里。</p>
 <h2 id="5-动手验证-2"><a class="header" href="#5-动手验证-2">5. 动手验证</a></h2>
 <ol>
 <li>在 <code>deeproot-user</code> 给 <code>debug_write</code> 临时打日志（或在内核 <code>SYS_DEBUG_WRITE</code> 分支计数）。</li>
 <li>自己写用户程序调用非法 <code>a7</code>，确认得到 <code>ERR_NOSYS</code>。</li>
 <li>对比：<code>SYS_SPAWN(0)</code> 与 <code>SYS_EXEC("hello")</code> 都能跑 hello，但路径不同——一个吃嵌入 blob id，一个吃 ramfs 名字。</li>
 </ol>
+<h3 id="51-建议你亲自跑的最小实验"><a class="header" href="#51-建议你亲自跑的最小实验">5.1 建议你亲自跑的最小实验</a></h3>
+<h4 id="实验-a确认-err_again-不是错误而是暂时没准备好"><a class="header" href="#实验-a确认-err_again-不是错误而是暂时没准备好">实验 A：确认 <code>ERR_AGAIN</code> 不是“错误”，而是“暂时没准备好”</a></h4>
+<p>在 shell 读一行之前，串口通常大部分时间是空的。<br>如果你在 <code>SYS_DEBUG_READ</code> 分支临时加计数，会看到它反复走到：</p>
+<pre><code class="language-text">None =&gt; ERR_AGAIN
+</code></pre>
+<p>而 shell 并不会 panic，只是继续 <code>yield_now()</code> 再读。</p>
+<h4 id="实验-b让-sys_exec-因不同原因失败"><a class="header" href="#实验-b让-sys_exec-因不同原因失败">实验 B：让 <code>SYS_EXEC</code> 因不同原因失败</a></h4>
+<p>分别试：</p>
+<pre><code class="language-text">deeproot&gt; run nosuch
+deeproot&gt; cat hello
+deeproot&gt; run readme.txt
+</code></pre>
+<p>你要能分清：</p>
+<ul>
+<li><code>nosuch</code>：ramfs 查不到</li>
+<li><code>readme.txt</code>：文件存在，但不是 ELF</li>
+<li><code>cat hello</code>：不是 exec 路径，而是 fs 文本显示路径</li>
+</ul>
+<h4 id="实验-c观察-wait-收尸"><a class="header" href="#实验-c观察-wait-收尸">实验 C：观察 <code>wait</code> 收尸</a></h4>
+<pre><code class="language-text">deeproot&gt; run hello
+deeproot&gt; run hello
+</code></pre>
+<p>如果第二次仍能正常运行，说明第一次的 child 已被 <code>SYS_WAIT</code> 回收掉了，而不是永久占着槽位。</p>
 <h2 id="6-易错点-2"><a class="header" href="#6-易错点-2">6. 易错点</a></h2>
 <ul>
 <li>改了 ABI 却只重编用户或只重编内核 → 必炸。应整仓构建。</li>
 <li>把 Linux 的 <code>write(1, …)</code> 脑补进来——号码和语义都对不上。</li>
+<li>看到 <code>-11</code> 就当成“失败” → 对 <code>read</code> / <code>wait</code> 这类接口来说，它常常只是“再等等”。</li>
+<li>以为 syscall 返回值总是马上写回当前 CPU 正在跑的那个任务 → IPC/阻塞路径下，返回值归属要看“谁发起了那次 syscall”。</li>
+<li>只记 syscall 名字，不记参数放在哪个寄存器 → 一到 trap frame 就会完全看不懂 <code>tf.x[10]</code> / <code>tf.x[17]</code> 这些代码。</li>
 </ul>
 <p>下一章：<a href="#11-地址空间与-spawn详细跟读">1.1 地址空间与 spawn</a>。</p>
 <div style="break-before: page; page-break-before: always;"></div>
