@@ -191,6 +191,25 @@ pub extern "C" fn main() {
         let _ = sys::debug_write("init: fbmenu load failed\n");
     }
 
+    const PEELFS_BADGE: u64 = 0xD018;
+    let pslot = sys::spawn_server(b"peelfs", PEELFS_BADGE);
+    if pslot >= 0 {
+        let mut i = 0usize;
+        while i < 64 {
+            let _ = sys::yield_now();
+            i += 1;
+        }
+        let _ = sys::debug_write("init: peelfs loaded\n");
+        let rc = sys::ipc_call(pslot as usize, 0x5046, 1);
+        if rc >= 0 {
+            let _ = sys::debug_write("init: peelfs call ok\n");
+        } else {
+            let _ = sys::debug_write("init: peelfs call failed\n");
+        }
+    } else {
+        let _ = sys::debug_write("init: peelfs load failed\n");
+    }
+
     /* 1.14: shared frame — map into grantpeer, peer verifies magic. */
     const GRANTPEER_BADGE: u64 = 0xD014;
     let gpslot = sys::spawn_server(b"grantpeer", GRANTPEER_BADGE);

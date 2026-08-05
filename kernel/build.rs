@@ -27,6 +27,7 @@ fn main() {
         ("deeproot-virtioblk", "deeproot-virtioblk", "drivers/virtioblk"),
         ("deeproot-fbdemo", "deeproot-fbdemo", "drivers/fbdemo"),
         ("deeproot-fbmenu", "deeproot-fbmenu", "drivers/fbmenu"),
+        ("deeproot-peelfs", "deeproot-peelfs", "drivers/peelfs"),
     ] {
         println!("cargo:rerun-if-changed=../{}/src/main.rs", src_dir);
         println!("cargo:rerun-if-changed=../{}/linker.ld", src_dir);

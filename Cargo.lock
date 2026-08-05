@@ -84,6 +84,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "deeproot-peelfs"
+version = "1.4.0"
+dependencies = [
+ "deeproot-abi",
+ "deeproot-user",
+]
+
+[[package]]
 name = "deeproot-ping"
 version = "1.4.0"
 dependencies = [

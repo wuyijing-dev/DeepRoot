@@ -16,6 +16,7 @@ members = [
     "drivers/virtioblk",
     "drivers/fbdemo",
     "drivers/fbmenu",
+    "drivers/peelfs",
 ]
 default-members = ["kernel"]
 
