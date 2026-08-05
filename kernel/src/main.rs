@@ -11,6 +11,7 @@ mod cap;
 mod console;
 mod elf;
 mod fdt;
+mod fd;
 mod fs;
 mod ipc;
 mod vfs;

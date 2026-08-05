@@ -96,6 +96,32 @@ pub extern "C" fn main() {
         let _ = sys::debug_write("init: durable DRFS write failed\n");
     }
 
+    /* 1.11.1: open/read/close durable.txt via fds */
+    let fd = sys::open(b"durable.txt", sys::O_RDONLY);
+    if fd >= 0 {
+        let mut buf = [0u8; 32];
+        let n = sys::fd_read(fd as usize, &mut buf);
+        let _ = sys::close(fd as usize);
+        if n >= 19 {
+            let _ = sys::debug_write("init: fd read ok\n");
+        } else {
+            let _ = sys::debug_write("init: fd read short\n");
+        }
+    } else {
+        let _ = sys::debug_write("init: fd open failed\n");
+    }
+
+    /* 1.12: sleep + ledger/cap inspect markers */
+    let _ = sys::sleep_ms(5);
+    let _ = sys::debug_write("init: slept\n");
+    let t = sys::time_ms();
+    let _ = sys::debug_write("init: time_ms ok\n");
+    let _ = t;
+    let _ = sys::ledger_dump();
+    let _ = sys::debug_write("init: ledger dumped\n");
+    let _ = sys::cap_dump();
+    let _ = sys::debug_write("init: caps dumped\n");
+
     let _ = sys::yield_now();
     let _ = sys::yield_now();
     let _ = sys::debug_write("init: handing off to shell\n");

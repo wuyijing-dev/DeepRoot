@@ -1,4 +1,4 @@
-//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.11.
+//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.12.
 //!
 //! 0..9 frozen at 1.0.0. New numbers are additive only.
 
@@ -73,6 +73,26 @@ pub const SYS_FS_CP: usize = 30;
 
 /// `a0`=path, `a1`=plen, `a2`=data, `a3`=dlen — append (root → DRFS)
 pub const SYS_FS_APPEND: usize = 31;
+
+/* ---- 1.11.1 file descriptors ---- */
+
+/// `a0`=path, `a1`=plen, `a2`=flags → fd
+pub const SYS_OPEN: usize = 32;
+/// `a0`=fd
+pub const SYS_CLOSE: usize = 33;
+/// `a0`=fd, `a1`=buf, `a2`=len → bytes read
+pub const SYS_FD_READ: usize = 34;
+/// `a0`=fd, `a1`=buf, `a2`=len → bytes written
+pub const SYS_FD_WRITE: usize = 35;
+/// `a0`=fd, `a1`=offset (isize), `a2`=whence → new offset
+pub const SYS_LSEEK: usize = 36;
+
+/* ---- 1.12 practical lab ---- */
+
+/// `a0`=milliseconds — sleep / yield until elapsed
+pub const SYS_SLEEP_MS: usize = 37;
+/// Dump current task CapSpace to console
+pub const SYS_CAP_DUMP: usize = 38;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

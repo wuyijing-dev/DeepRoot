@@ -396,15 +396,19 @@ pub fn next_spawn_stack_base(sched_id: usize) -> usize {
 }
 
 pub fn mark_zombie(_code: usize) {
-    let _g = SCHED_LOCK.lock();
-    let s = inner();
-    let h = smp::hart_id().min(MAX_HARTS - 1);
-    let id = s.current[h];
-    if s.tasks[id].is_idle {
-        return;
+    let id;
+    {
+        let _g = SCHED_LOCK.lock();
+        let s = inner();
+        let h = smp::hart_id().min(MAX_HARTS - 1);
+        id = s.current[h];
+        if s.tasks[id].is_idle {
+            return;
+        }
+        s.tasks[id].state = TaskState::Zombie;
+        s.tasks[id].block = BlockReason::None;
     }
-    s.tasks[id].state = TaskState::Zombie;
-    s.tasks[id].block = BlockReason::None;
+    crate::fd::clear_task(id);
 }
 
 /*
@@ -1209,6 +1213,81 @@ pub fn handle_syscall(
                 return ERR_GENERIC;
             }
             if crate::fs::copy_to_vfs(cwd, src, dst) {
+                0
+            } else {
+                ERR_GENERIC
+            }
+        }
+        SYS_OPEN => {
+            let cwd = current_cwd_node();
+            let sid = current_sched_id();
+            let mut pbuf = [0u8; 96];
+            let path = match copy_user_path(a0 as usize, a1 as usize, &mut pbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            if path.is_empty() {
+                return ERR_GENERIC;
+            }
+            match crate::fd::open(sid, cwd, path, a2 as u32) {
+                Some(fd) => fd as isize,
+                None => ERR_GENERIC,
+            }
+        }
+        SYS_CLOSE => {
+            let sid = current_sched_id();
+            if crate::fd::close(sid, a0 as usize) {
+                0
+            } else {
+                ERR_GENERIC
+            }
+        }
+        SYS_FD_READ => {
+            let sid = current_sched_id();
+            let fd = a0 as usize;
+            let len = a2 as usize;
+            if len > crate::vfs::FILE_MAX {
+                return ERR_GENERIC;
+            }
+            let buf = unsafe { core::slice::from_raw_parts_mut(a1 as usize as *mut u8, len) };
+            match crate::fd::read(sid, fd, buf) {
+                Some(n) => n as isize,
+                None => ERR_GENERIC,
+            }
+        }
+        SYS_FD_WRITE => {
+            let sid = current_sched_id();
+            let fd = a0 as usize;
+            let len = a2 as usize;
+            if len > crate::vfs::FILE_MAX {
+                return ERR_GENERIC;
+            }
+            let data = unsafe { core::slice::from_raw_parts(a1 as usize as *const u8, len) };
+            match crate::fd::write(sid, fd, data) {
+                Some(n) => n as isize,
+                None => ERR_GENERIC,
+            }
+        }
+        SYS_LSEEK => {
+            let sid = current_sched_id();
+            match crate::fd::lseek(sid, a0 as usize, a1 as isize, a2 as usize) {
+                Some(off) => off as isize,
+                None => ERR_GENERIC,
+            }
+        }
+        SYS_SLEEP_MS => {
+            let ms = a0 as u64;
+            let start = crate::timer::time_now();
+            let hz = deeproot_abi::syscall::TIME_HZ;
+            let target = start.saturating_add(ms.saturating_mul(hz / 1000));
+            while crate::timer::time_now() < target {
+                let _ = yield_now();
+            }
+            0
+        }
+        SYS_CAP_DUMP => {
+            if let Some(cs) = tasks.cspace(current) {
+                cs.dump_to_console();
                 0
             } else {
                 ERR_GENERIC

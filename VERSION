@@ -1,4 +1,4 @@
-1.11.0
+1.12.0
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -324,8 +324,8 @@
 #
 # Releases:
 # 1.11.0  Durable DRFS create/append (or equivalent) usable from shell
-# 1.11.1  Minimal fd table + open/read/write
-# 1.11.2  Seek / truncate; redirect polish
+# 1.11.1  Minimal fd table + open/read/write/close (+ lseek)
+# 1.11.2  Truncate polish / redirect-via-fd (optional; seek already in 1.11.1)
 # 1.11.y  More DRFS robustness; teach “file as teaching object”
 #
 # Out of scope for 1.11: full POSIX VFS, many FS types, networked FS, framebuffer.
@@ -342,9 +342,9 @@
 #   W4  Smoke: documented utility set + one scripted pipe/fd example
 #
 # Releases:
-# 1.12.0  Better console I/O path (virtio-console or equivalent)
-# 1.12.1  sleep/time + ledger/cap inspect from shell
-# 1.12.2  hexdump / stat / more ramfs tools
+# 1.12.0  Practical lab utilities: sleep/time + ledger/caps + hexdump/stat
+#         (virtio-console deferred — UART debug path remains “equivalent” for now)
+# 1.12.1  Richer UART / virtio-console when needed
 # 1.12.y  Utility polish
 #
 # Out of scope for 1.12: framebuffer UI, networking stack, POSIX login.
@@ -578,8 +578,8 @@
 # [1.8]  Richer native shell (argv/env/history/&/simple pipes) — no bash port
 # [1.9]  Filesystem depth (dirs first; durable/fds continue in 1.11)
 # [1.10] Loadable modules / dynamic servers (+ userspace driver load)
-# [1.11] FS durability + minimal fd table ← current
-# [1.12] Practical I/O and shell utilities
+# [1.11] FS durability + minimal fd table
+# [1.12] Practical I/O and shell utilities ← current
 # [1.13] Service naming / discovery + runtime polish
 # [1.14] Shared-memory grants (buffer foundation)
 # [1.15] Framebuffer pixels / simple UI

@@ -25,15 +25,15 @@ struct File {
 static FILES: &[File] = &[
     File {
         name: "readme.txt",
-        data: b"DeepRoot 1.11.0 - echo hi > note.txt  # durable DRFS at /\n",
+        data: b"DeepRoot 1.12.0 - sleep/ledger/hexdump; root > durable  # durable DRFS at /\n",
     },
     File {
         name: "hello.txt",
-        data: b"ELF: /hello /moddemo /modnote - root > writes on-disk DRFS\n",
+        data: b"ELF: /hello /moddemo /modnote - shell: sleep ledger hexdump; root > DRFS\n",
     },
     File {
         name: "version",
-        data: b"1.11.0\n",
+        data: b"1.12.0\n",
     },
     File {
         name: "hello",
@@ -212,12 +212,23 @@ pub fn getcwd(cwd: usize, out: &mut [u8]) -> usize {
     vfs::getcwd(cwd, out)
 }
 
-/*
- * write_path - create/replace file contents
- *
- * Root-level basenames (not embed ELFs) go to durable DRFS when the block
- * layer is ready (1.11). Nested paths stay on the in-RAM VFS.
- */
+pub fn file_len(cwd: usize, path: &str) -> Option<usize> {
+    if let Some((_, data)) = lookup(path) {
+        return Some(data.len());
+    }
+    let mut scratch = [0u8; FILE_MAX];
+    if let Some(n) = vfs::read_file(cwd, path, &mut scratch) {
+        return Some(n);
+    }
+    if is_root_level(path) && block::ready() {
+        let mut tmp = [0u8; 1];
+        if let Some((_, total, _)) = block::lookup(basename(path), &mut tmp) {
+            return Some(total);
+        }
+    }
+    None
+}
+
 pub fn write_path(cwd: usize, path: &str, data: &[u8]) -> bool {
     if lookup(path).is_some() {
         return false;

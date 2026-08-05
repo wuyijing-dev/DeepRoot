@@ -76,7 +76,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
   set -e
 
   COMMON_NEEDLES=(
-    "DeepRoot microkernel 1.11.0"
+    "DeepRoot microkernel 1.12.0"
     "fdt: model \"DeepRoot QEMU virt\""
     "fdt: board deeproot,qemu-virt"
     "fdt: cpu count=2"
@@ -102,7 +102,14 @@ if [[ "${MODE}" == "--smoke" ]]; then
     "init: vfs module loaded"
     "init: vfs module call ok"
     "init: durable DRFS written"
-    "shell: DeepRoot shell 1.11 ready"
+    "init: fd read ok"
+    "init: slept"
+    "init: time_ms ok"
+    "Root Ledger"
+    "init: ledger dumped"
+    "CapSpace"
+    "init: caps dumped"
+    "shell: DeepRoot shell 1.12 ready"
     "init: handing off to shell"
   )
 

@@ -127,6 +127,45 @@ pub mod sys {
         }
     }
 
+    pub fn open(path: &[u8], flags: u32) -> isize {
+        unsafe { ecall(SYS_OPEN, path.as_ptr() as usize, path.len(), flags as usize, 0) }
+    }
+
+    pub fn close(fd: usize) -> isize {
+        unsafe { ecall(SYS_CLOSE, fd, 0, 0, 0) }
+    }
+
+    pub fn fd_read(fd: usize, buf: &mut [u8]) -> isize {
+        unsafe { ecall(SYS_FD_READ, fd, buf.as_mut_ptr() as usize, buf.len(), 0) }
+    }
+
+    pub fn fd_write(fd: usize, buf: &[u8]) -> isize {
+        unsafe { ecall(SYS_FD_WRITE, fd, buf.as_ptr() as usize, buf.len(), 0) }
+    }
+
+    pub fn lseek(fd: usize, offset: isize, whence: usize) -> isize {
+        unsafe { ecall(SYS_LSEEK, fd, offset as usize, whence, 0) }
+    }
+
+    pub fn sleep_ms(ms: u64) -> isize {
+        unsafe { ecall(SYS_SLEEP_MS, ms as usize, 0, 0, 0) }
+    }
+
+    pub fn ledger_dump() -> isize {
+        unsafe { ecall(SYS_LEDGER_DUMP, 0, 0, 0, 0) }
+    }
+
+    pub fn cap_dump() -> isize {
+        unsafe { ecall(SYS_CAP_DUMP, 0, 0, 0, 0) }
+    }
+
+    pub const O_RDONLY: u32 = 0;
+    pub const O_WRONLY: u32 = 1;
+    pub const O_RDWR: u32 = 2;
+    pub const O_CREAT: u32 = 0x40;
+    pub const O_TRUNC: u32 = 0x200;
+    pub const O_APPEND: u32 = 0x400;
+
     pub fn exec(path: &[u8]) -> isize {
         unsafe { ecall(SYS_EXEC, path.as_ptr() as usize, path.len(), 0, 0) }
     }

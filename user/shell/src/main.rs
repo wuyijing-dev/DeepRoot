@@ -527,16 +527,16 @@ fn run_exec(
 }
 
 fn help() {
-    let _ = sys::debug_write("DeepRoot shell 1.11 — builtins:\n");
+    let _ = sys::debug_write("DeepRoot shell 1.12 — builtins:\n");
     let _ = sys::debug_write("  help / ls [DIR] / cat FILE / cp SRC DST / run ELF / exit\n");
-    let _ = sys::debug_write("  mkdir DIR / rmdir DIR / rm FILE\n");
+    let _ = sys::debug_write("  mkdir DIR / rmdir DIR / rm FILE / hexdump FILE / stat FILE\n");
+    let _ = sys::debug_write("  sleep MS / time / ledger / caps\n");
     let _ = sys::debug_write("  modload PATH [badge] / modules / moddemo / modnote\n");
     let _ = sys::debug_write("  echo ARGS   pwd   cd DIR   env   export KEY=VAL   history\n");
     let _ = sys::debug_write("Operators:  |  pipe   > file   >> append   &  background\n");
-    let _ = sys::debug_write("Root `>` / `>>` write durable DRFS (survives QEMU restart).\n");
+    let _ = sys::debug_write("Root `>` / `>>` write durable DRFS; fds: open/read via hexdump.\n");
     let _ = sys::debug_write("Examples:\n");
-    let _ = sys::debug_write("  echo hello > note.txt; cat note.txt\n");
-    let _ = sys::debug_write("  echo more >> note.txt\n");
+    let _ = sys::debug_write("  echo hello > note.txt; hexdump note.txt; sleep 100; ledger\n");
 }
 
 fn read_line(buf: &mut [u8], hist: &History) -> usize {
@@ -683,6 +683,83 @@ fn run_stage(
     } else if cmd == b"modules" {
         let _ = sys::module_list();
         return 0;
+    } else if cmd == b"sleep" {
+        let ms = st
+            .argv
+            .get(1)
+            .and_then(|b| parse_u64(b))
+            .unwrap_or(10);
+        let _ = sys::sleep_ms(ms);
+        return 0;
+    } else if cmd == b"time" {
+        let t = sys::time_ms();
+        let _ = sys::debug_write("time_ms=");
+        write_u32(t as u32);
+        let _ = sys::debug_write("\n");
+        return 0;
+    } else if cmd == b"ledger" {
+        let _ = sys::ledger_dump();
+        return 0;
+    } else if cmd == b"caps" {
+        let _ = sys::cap_dump();
+        return 0;
+    } else if cmd == b"hexdump" {
+        let Some(p) = st.argv.get(1) else {
+            let _ = sys::debug_write("shell: hexdump <file>\n");
+            return 0;
+        };
+        let fd = sys::open(p, sys::O_RDONLY);
+        if fd < 0 {
+            let _ = sys::debug_write("shell: open failed\n");
+            return 0;
+        }
+        let mut buf = [0u8; 256];
+        let n = sys::fd_read(fd as usize, &mut buf);
+        let _ = sys::close(fd as usize);
+        if n < 0 {
+            let _ = sys::debug_write("shell: read failed\n");
+            return 0;
+        }
+        let n = n as usize;
+        let mut i = 0usize;
+        while i < n {
+            let b = buf[i];
+            let hi = b >> 4;
+            let lo = b & 0xf;
+            let mut hx = [0u8; 3];
+            hx[0] = if hi < 10 { b'0' + hi } else { b'a' + hi - 10 };
+            hx[1] = if lo < 10 { b'0' + lo } else { b'a' + lo - 10 };
+            hx[2] = b' ';
+            let _ = sys::debug_write_bytes(&hx);
+            i += 1;
+            if i % 16 == 0 {
+                let _ = sys::debug_write("\n");
+            }
+        }
+        if n % 16 != 0 {
+            let _ = sys::debug_write("\n");
+        }
+        return 0;
+    } else if cmd == b"stat" {
+        let Some(p) = st.argv.get(1) else {
+            let _ = sys::debug_write("shell: stat <file>\n");
+            return 0;
+        };
+        let fd = sys::open(p, sys::O_RDONLY);
+        if fd < 0 {
+            let _ = sys::debug_write("shell: stat: no such file\n");
+            return 0;
+        }
+        let end = sys::lseek(fd as usize, 0, 2);
+        let _ = sys::close(fd as usize);
+        if end < 0 {
+            let _ = sys::debug_write("shell: stat failed\n");
+            return 0;
+        }
+        let _ = sys::debug_write("stat: size=");
+        write_u32(end as u32);
+        let _ = sys::debug_write("\n");
+        return 0;
     } else if cmd == b"cp" {
         let (Some(src), Some(dst)) = (st.argv.get(1), st.argv.get(2)) else {
             let _ = sys::debug_write("shell: cp <src> <dst>  (dst is a VFS path)\n");
@@ -794,13 +871,13 @@ fn run_stage(
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write(
-        "shell: DeepRoot shell 1.11 ready (help, >, >> durable at /)\n",
+        "shell: DeepRoot shell 1.12 ready (help, sleep, ledger, hexdump)\n",
     );
     let mut buf = [0u8; LINE_MAX];
     let mut hist = History::new();
     let mut env = Env::new();
     let _ = env.set(b"SHELL", b"deeproot");
-    let _ = env.set(b"VERSION", b"1.11.0");
+    let _ = env.set(b"VERSION", b"1.12.0");
 
     loop {
         let _ = sys::debug_write("deeproot> ");

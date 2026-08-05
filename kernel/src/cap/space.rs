@@ -93,6 +93,23 @@ impl CapSpace {
         self.slots.iter().filter(|s| s.live).count()
     }
 
+    pub fn dump_to_console(&self) {
+        crate::println!("---- CapSpace ({} live) ----", self.live_count());
+        for (i, s) in self.slots.iter().enumerate() {
+            if !s.live {
+                continue;
+            }
+            crate::println!(
+                "  [{}] ty={} rights={:#x} badge={:#x}",
+                i,
+                s.cap_type as u8,
+                s.rights,
+                s.badge
+            );
+        }
+        crate::println!("---- end caps ----");
+    }
+
     fn alloc_slot(&mut self) -> Result<usize, CapError> {
         self.slots
             .iter()
