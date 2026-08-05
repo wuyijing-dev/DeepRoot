@@ -11,21 +11,22 @@
 #
 # First line above is the CURRENT release. Lines below are the full roadmap.
 #
-# Policy (1.x → 2.0 infrastructure path):
+# Policy (1.x through 1.50 → 2.0):
 #   - DeepRoot-native capability ABI — NOT Linux/POSIX binary compatible.
 #   - Prefer additive syscalls; note any calling-convention break in the series.
 #   - **Slow the version clock:** do NOT mint a new PATCHLEVEL for every feature
 #     chunk. Prefer several SUBLEVEL tags while a theme is still growing.
 #   - Do not mint a new SUBLEVEL for every commit; finish a chunk, then release.
 #   - Shell stays DeepRoot-native (learn from xv6/BusyBox structure; do NOT port bash).
-#   - **Infrastructure first, Linux-shaped:** IRQ, drivers, FS peel, TTY, net,
-#     mmap/faults — learn Linux *roles* (drivers/, virtio, VFS, irq) not clone
-#     the kernel or glibc. Framebuffer pixels landed in 1.15 as optional HW;
-#     **no further UI / compositor / Wayland-inspired series on the roadmap.**
+#   - **Infrastructure first, Linux-shaped through 1.50:** IRQ, sched, mm, VFS/block,
+#     tty, net, timers, SMP, accounting — learn Linux *roles* (drivers/, virtio,
+#     irq, mm, netdev) not clone the kernel or glibc. Framebuffer pixels landed
+#     in 1.15 as optional HW; **no UI / compositor / Wayland series on the roadmap.**
 #   - **Userspace first:** loadable modules / servers over growing the kernel.
 #     Kernel keeps thin primitives (IPC, sched, mm, caps, IRQ mint); drivers and
 #     FS policy live in userspace (`drivers/`, servers) when possible.
-#   - MAJOR 2.0 = platform integration of the infra stack (not a desktop OS).
+#   - **1.50** = declared 1.x infra teaching milestone (checklist below).
+#   - **MAJOR 2.0** = platform integration of that stack (not a desktop OS).
 #
 
 # =====================================================================
@@ -502,13 +503,398 @@
 # Out of scope for 1.20: Linux mmap flags soup, THP, swap, shared file maps
 #   beyond what 1.14 grants already teach.
 
+# ---------------------------------------------------------------------
+# 1.21.x  Timers & clocks (Linux timekeeping / hrtimer shaped)
+# Goal: monotonic + realtime clocks; userspace oneshot/periodic timers;
+#       sleep_ms backed by real timer IRQs. Teach clocksource/clockevent roles.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.21.0  Monotonic clock + oneshot timer wake
+# 1.21.1  Periodic tick optional; shell `sleep` accuracy
+# 1.21.y  Clock drift / multi-hart time polish
+#
+# Out of scope for 1.21: NTP full stack, POSIX clock_nanosleep ABI.
+
+# ---------------------------------------------------------------------
+# 1.22.x  Scheduler policy (Linux sched / nice shaped)
+# Goal: priorities or nice-like weights; fair-ish multi-task on SMP; idle
+#       class clear. Still round-robin capable — not a CFS clone.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.22.0  Priority / weight fields + pick_next policy
+# 1.22.1  Shell or syscall to adjust priority; smoke fairness demo
+# 1.22.y  Starvation / boost polish
+#
+# Out of scope for 1.22: full CFS, SCHED_DEADLINE, cgroup cpu controller.
+
+# ---------------------------------------------------------------------
+# 1.23.x  Async notify / signals-lite (Linux signal shaped)
+# Goal: deliver a small set of async events to a task (IRQ complete, child
+#       exit, user-defined). Cap-checked; not POSIX signal numbers.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.23.0  Notify queue + block/wait for event
+# 1.23.1  Wire child-exit and one driver event
+# 1.23.y  Mask / coalesce polish
+#
+# Out of scope for 1.23: full POSIX signals, realtime signals, signalfd.
+
+# ---------------------------------------------------------------------
+# 1.24.x  Process model polish (Linux task / wait shaped)
+# Goal: wait status bits, orphan reaping, optional process-group lite;
+#       clearer zombie lifecycle for shell job control later.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.24.0  Richer wait status + orphan to init
+# 1.24.1  Process-group or session stub for shell
+# 1.24.y  Exit code / core-dump stub polish
+#
+# Out of scope for 1.24: full POSIX jobs, ptrace, namespaces (see 1.40).
+
+# ---------------------------------------------------------------------
+# 1.25.x  poll / multiplex I/O (Linux poll/epoll shaped, tiny)
+# Goal: wait on multiple fds/caps (pipe, console, net) without busy spin.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.25.0  SYS_POLL (or cap-set wait) for ≥2 objects
+# 1.25.1  Shell or demo multiplex
+# 1.25.y  Edge/level / timeout polish
+#
+# Out of scope for 1.25: full epoll ABI, io_uring.
+
+# ---------------------------------------------------------------------
+# 1.26.x  Local IPC sockets (Linux AF_UNIX shaped, DeepRoot-native)
+# Goal: named connection-oriented IPC between tasks via service registry;
+#       stream of bytes with caps — teach Unix-socket *role*.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.26.0  Connect/listen/accept-style caps over IPC
+# 1.26.1  Demo client/server byte stream
+# 1.26.y  Creds / abstract-name polish
+#
+# Out of scope for 1.26: Linux AF_UNIX path ABI, SCM_RIGHTS fd passing clone.
+
+# ---------------------------------------------------------------------
+# 1.27.x  Mount table (Linux VFS mount shaped)
+# Goal: bind userspace FS servers into a mount namespace tree; path walk
+#       crosses mounts. Teach mount/umount roles.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.27.0  Mount table + path walk across one mount
+# 1.27.1  umount / multiple mounts smoke
+# 1.27.y  Bind-mount lite polish
+#
+# Out of scope for 1.27: mount namespaces full (see 1.40), FUSE ABI.
+
+# ---------------------------------------------------------------------
+# 1.28.x  Block extents & larger volumes (Linux block/FS shaped)
+# Goal: multi-extent or larger DRFS/volumes; >64KiB teaching images;
+#       userspace FS can grow files without flat toy limits.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.28.0  Extent or multi-block file layout
+# 1.28.1  Larger QEMU disk smoke
+# 1.28.y  Fragmentation / free-space polish
+#
+# Out of scope for 1.28: ext4/xfs, LVM, RAID.
+
+# ---------------------------------------------------------------------
+# 1.29.x  Page / buffer cache lite (Linux pagecache shaped)
+# Goal: cache blk sectors in memory; invalidate on write; FS server benefits.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.29.0  Sector cache + hit/miss counters in ledger
+# 1.29.1  Writeback or write-through policy (pick one, document)
+# 1.29.y  Eviction polish
+#
+# Out of scope for 1.29: Linux address_space, writeback threads, fscache.
+
+# ---------------------------------------------------------------------
+# 1.30.x  DMA helpers (Linux dma-mapping shaped, capability)
+# Goal: coherent Frame alloc helpers for virtio DMA; document cache/alias
+#       rules on RISC-V virt. Builds on 1.14 grants.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.30.0  DMA Frame helper API in kernel + abi docs
+# 1.30.1  virtioblk/net use helpers
+# 1.30.y  Alignment / bounce-buffer polish
+#
+# Out of scope for 1.30: IOMMU full, Linux dma-buf ABI, GPU.
+
+# ---------------------------------------------------------------------
+# 1.31.x  PCI + virtio-pci (Linux PCI shaped)
+# Goal: optional PCI config walk on QEMU; virtio-pci transport alongside
+#       mmio — teach PCI enumeration roles.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.31.0  PCI probe stub + one virtio-pci device
+# 1.31.1  Prefer mmio or pci via FDT/cmdline
+# 1.31.y  BAR / MSI polish (keep tiny)
+#
+# Out of scope for 1.31: full PCI hotplug, SR-IOV, endpoint framework.
+
+# ---------------------------------------------------------------------
+# 1.32.x  Entropy (Linux RNG shaped)
+# Goal: virtio-rng or timer jitter; SYS_GETRANDOM-shaped syscall; seed
+#       for future net/crypto teaching.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.32.0  Entropy source + getrandom
+# 1.32.1  virtio-rng driver in drivers/
+# 1.32.y  Mix / credit polish
+#
+# Out of scope for 1.32: full /dev/random semantics, DRBG, TLS.
+
+# ---------------------------------------------------------------------
+# 1.33.x  RTC / wall clock (Linux RTC shaped)
+# Goal: read QEMU RTC or goldfish; set realtime offset; date in shell.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.33.0  RTC read + wall clock
+# 1.33.1  Shell `date` builtin
+# 1.33.y  Set-time privilege polish
+#
+# Out of scope for 1.33: NTP client, timezone database.
+
+# ---------------------------------------------------------------------
+# 1.34.x  Idle & power stubs (Linux cpuidle shaped)
+# Goal: deeper idle (WFI + timer), optional “suspend to idle” teaching
+#       path; document hart parking already in SMP.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.34.0  Idle governor stub + metrics
+# 1.34.1  Suspend-to-idle demo (wake on IRQ)
+# 1.34.y  Multi-hart idle polish
+#
+# Out of scope for 1.34: ACPI, cpufreq, real SoC PMIC.
+
+# ---------------------------------------------------------------------
+# 1.35.x  SMP TLB / IPI harden (Linux smp/tlb shaped)
+# Goal: remote TLB shootdown correctness; IPI storms under grant/map;
+#       document memory ordering for caps.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.35.0  Explicit shootdown on unmap/revoke
+# 1.35.1  Stress smoke under SMP=2+
+# 1.35.y  Batch IPI polish
+#
+# Out of scope for 1.35: RCU clone, full Linux mm_struct.
+
+# ---------------------------------------------------------------------
+# 1.36.x  Hotplug drivers registry (Linux driver-core / udev shaped)
+# Goal: FDT/virtio devices appear → userspace driver bind by match table;
+#       unbind/unload path. Teach probe/remove roles.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.36.0  Match table + bind notification
+# 1.36.1  Unbind / respawn smoke
+# 1.36.y  Deferred probe polish
+#
+# Out of scope for 1.36: full Linux driver model, sysfs, udev netlink ABI.
+
+# ---------------------------------------------------------------------
+# 1.37.x  Capability MAC lite (Linux LSM shaped, tiny)
+# Goal: optional label on caps/tasks; simple allow/deny for IPC/Frame;
+#       teach MAC *idea* without SELinux.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.37.0  Label field + check on one syscall class
+# 1.37.1  Demo deny path in smoke
+# 1.37.y  Policy doc polish
+#
+# Out of scope for 1.37: SELinux/AppArmor, seccomp BPF.
+
+# ---------------------------------------------------------------------
+# 1.38.x  Resource limits (Linux rlimit shaped)
+# Goal: caps on open fds, address-space size, CPU time; enforce in kernel.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.38.0  Soft limits for fd + AS
+# 1.38.1  Shell ulimit-shaped builtin
+# 1.38.y  Hard/soft + signals-lite on exceed
+#
+# Out of scope for 1.38: full POSIX rlimit set, cgroup (see 1.39).
+
+# ---------------------------------------------------------------------
+# 1.39.x  Memory / CPU accounting (Linux cgroup shaped, tiny)
+# Goal: per-task or per-service counters; optional kill on mem max.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.39.0  RSS / IPC count in cap dump or ledger
+# 1.39.1  Mem max enforce demo
+# 1.39.y  CPU time accumulate polish
+#
+# Out of scope for 1.39: full cgroup v2, freezer, io controller.
+
+# ---------------------------------------------------------------------
+# 1.40.x  Isolation namespaces lite (Linux ns shaped)
+# Goal: separate mount view and/or PID view for a spawned server tree;
+#       teach namespace *role* for containers later.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.40.0  Mount-ns or pid-ns stub (one is enough to start)
+# 1.40.1  Second ns type or combined demo
+# 1.40.y  Enter/leave polish
+#
+# Out of scope for 1.40: full Linux ns set, user ns, containers product.
+
+# ---------------------------------------------------------------------
+# 1.41.x  IPv4/UDP lite (Linux inet shaped)
+# Goal: on top of 1.19 virtio-net — Ethernet → IPv4 → UDP echo server/
+#       client in userspace. Teach stack layering without sockets ABI.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.41.0  IPv4 parse/build + UDP echo
+# 1.41.1  ARP lite or QEMU user-net path documented
+# 1.41.y  Checksum / fragmentation polish
+#
+# Out of scope for 1.41: TCP (see 1.42), routing tables, IPsec.
+
+# ---------------------------------------------------------------------
+# 1.42.x  TCP lite (Linux tcp shaped, minimal)
+# Goal: single-connection TCP state machine for echo/HTTP-hello teaching;
+#       still DeepRoot-native API.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.42.0  Active open + passive listen one connection
+# 1.42.1  Tiny HTTP or line server demo
+# 1.42.y  Retransmit / window polish
+#
+# Out of scope for 1.42: congestion control zoo, BSD sockets, TLS.
+
+# ---------------------------------------------------------------------
+# 1.43.x  Net config server (Linux netlink/ifconfig shaped, tiny)
+# Goal: userspace netcfg sets IP/MAC/up; shell `ifconfig`-like builtin.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.43.0  Static IP config IPC
+# 1.43.1  Shell netcfg builtin
+# 1.43.y  Multi-iface polish if needed
+#
+# Out of scope for 1.43: DHCP client mandatory, netlink ABI, wifi.
+
+# ---------------------------------------------------------------------
+# 1.44.x  Logging server (Linux syslog/kmsg shaped)
+# Goal: central log ring in a server; kernel + userspace feed; shell
+#       `dmesg`-like reader. Complements Root Ledger.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.44.0  Log server + levels
+# 1.44.1  dmesg-shaped dump tool
+# 1.44.y  Persist log to blk optional
+#
+# Out of scope for 1.44: rsyslog, journald, structured logging ABI.
+
+# ---------------------------------------------------------------------
+# 1.45.x  Profiling lite (Linux perf shaped, tiny)
+# Goal: cycle/instruction counters via SBI or CSR; sample ledger events;
+#       teaching “where time goes.”
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.45.0  Counter read syscall + shell tool
+# 1.45.1  Sample IRQ/sched events
+# 1.45.y  Doc lab polish
+#
+# Out of scope for 1.45: full perf_events, eBPF, DWARF unwinder.
+
+# ---------------------------------------------------------------------
+# 1.46.x  Crash dump (Linux pstore/crash shaped, tiny)
+# Goal: on panic, append reason + recent ledger to blk or reserved RAM;
+#       recover on next boot for teaching postmortems.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.46.0  Panic sink to reserved area or DRFS file
+# 1.46.1  Boot-time “last panic” print
+# 1.46.y  Multi-hart panic sync polish
+#
+# Out of scope for 1.46: kexec, full crashkernel, FIDEDUPERANGE jokes.
+
+# ---------------------------------------------------------------------
+# 1.47.x  Measured boot stub (Linux IMA/secure-boot shaped, teaching)
+# Goal: hash embedded init/drivers at boot; print measurements; optional
+#       deny load if hash mismatch (lab mode).
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.47.0  Boot measurement log
+# 1.47.1  Optional enforce mode for smoke
+# 1.47.y  Doc threat-model (teaching only)
+#
+# Out of scope for 1.47: real UEFI Secure Boot, TPM hierarchy, IMA appraisal.
+
+# ---------------------------------------------------------------------
+# 1.48.x  Second platform port (Linux arch/platform shaped)
+# Goal: one more board or virt machine (e.g. spike, or another DTS) beyond
+#       qemu-virt — prove FDT + drivers/ portability.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.48.0  Second platform boots to shell
+# 1.48.1  Smoke subset on second platform
+# 1.48.y  Shared driver peel docs
+#
+# Out of scope for 1.48: every RISC-V SBC, vendor BSPs.
+
+# ---------------------------------------------------------------------
+# 1.49.x  Syscall & ABI audit (Linux uapi hygiene shaped)
+# Goal: document every SYS_*; errno consistency; freeze additive rules
+#       toward 1.50; remove dead demo-only syscalls if any.
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.49.0  ABI chapter + table in book
+# 1.49.1  Errno / edge-case fixes from audit
+# 1.49.y  Deprecation notes only
+#
+# Out of scope for 1.49: Linux UAPI headers, musl port.
+
+# ---------------------------------------------------------------------
+# 1.50.x  Infra teaching milestone (1.x feature-complete for labs)
+# Goal: declare 1.x infrastructure “good enough to teach Linux-shaped
+#       systems” end-to-end: IRQ, peel drivers, FS/TTY/net slices, mmap,
+#       timers, sched policy, poll, mounts, accounting lite, ABI docs.
+#       Smoke + book checklist all green (or explicitly deferred with reason).
+# ---------------------------------------------------------------------
+#
+# Releases:
+# 1.50.0  Milestone tag: docs + smoke gate for 1.16–1.49 themes landed or waived
+# 1.50.y  Errata only until MAJOR 2.0
+#
+# Out of scope for 1.50: desktop UI, Wayland, Linux binary compat, production HA.
+
 # =====================================================================
-# 2.0 — platform integration (infrastructure)
+# 2.0 — platform integration (after 1.50)
 # =====================================================================
 #
-# 2.0.0  Integrate teaching defaults through at least: DT + virtio-blk + SMP
-#        + shell + FS depth + modules/drivers + IRQ wait + storage peel slice
-#        + console server direction + (if landed) net/mmap. Docs / smoke.
+# 2.0.0  Integrate teaching defaults across the 1.16–1.50 infra stack:
+#        DT + virtio + SMP + shell + FS/TTY/net + IRQ wait + mmap + timers
+#        + docs/smoke as one “platform” release.
 # 2.0.y  Integration and doc fixes only after the jump.
 #
 # MAJOR 2 = deliberate platform milestone, not desktop OS, not version inflation.
@@ -531,13 +917,13 @@
 
 # ---------------------------------------------------------------------
 # 2.2.x  Observability & ops (Linux debugging shaped)
-# Goal: richer Root Ledger / cap dump / optional printk levels; tools that
+# Goal: richer Root Ledger / log server / optional printk levels; tools that
 #       feel like learning Linux debugging without copying ftrace wholesale.
 # ---------------------------------------------------------------------
 #
 # Releases:
-# 2.2.0  Ledger / debug filters or levels
-# 2.2.1  Book labs for inspecting IPC/IRQ/mm events
+# 2.2.0  Ledger / log filters or levels
+# 2.2.1  Book labs for inspecting IPC/IRQ/mm/net events
 # 2.2.y  Tooling polish
 #
 # Out of scope for 2.2: full ftrace/perf, eBPF, kgdb clone.
@@ -546,14 +932,14 @@
 # Backlog (not scheduled — reopen only explicitly)
 # =====================================================================
 #   Graphics beyond 1.15 ramfb, compositor, Wayland-inspired protocol,
-#   GPU, desktop session. Prefer infra above unless teaching needs change.
+#   GPU, desktop session. Prefer infra 1.16–1.50 unless teaching needs change.
 #
 # Out of scope forever unless explicitly reopened:
 #   claiming Linux ABI compatibility; shipping real Wayland compositors;
 #   desktop Linux distribution goals.
 
 # =====================================================================
-# Checklist (infrastructure path)
+# Checklist (1.x infrastructure through 1.50)
 # =====================================================================
 # [1.1]  Runtime spawn of a DeepRoot ELF into its own task/AS
 # [1.2]  Human types at a prompt; shell spawns programs over serial
@@ -569,12 +955,42 @@
 # [1.12] Practical I/O and shell utilities
 # [1.13] Service naming / discovery + runtime polish
 # [1.14] Shared-memory grants (buffer / DMA foundation)
-# [1.15] Framebuffer map / draw (optional HW — closed for UI themes) ← done
+# [1.15] Framebuffer map / draw (optional HW — UI themes closed) ← done
 # [1.16] Userspace IRQ wait
 # [1.17] Storage peel / userspace FS server
 # [1.18] Console / TTY server
 # [1.19] virtio-net + packet I/O
 # [1.20] mmap / anon faults
+# [1.21] Timers & clocks
+# [1.22] Scheduler policy / nice-shaped
+# [1.23] Async notify / signals-lite
+# [1.24] Process / wait polish
+# [1.25] poll multiplex
+# [1.26] Local IPC sockets-shaped
+# [1.27] Mount table
+# [1.28] Block extents / larger volumes
+# [1.29] Page/buffer cache lite
+# [1.30] DMA helpers
+# [1.31] PCI + virtio-pci
+# [1.32] Entropy / getrandom
+# [1.33] RTC / wall clock
+# [1.34] Idle & power stubs
+# [1.35] SMP TLB / IPI harden
+# [1.36] Hotplug driver registry
+# [1.37] Capability MAC lite
+# [1.38] Resource limits
+# [1.39] Memory/CPU accounting
+# [1.40] Isolation namespaces lite
+# [1.41] IPv4/UDP lite
+# [1.42] TCP lite
+# [1.43] Net config server
+# [1.44] Logging server
+# [1.45] Profiling lite
+# [1.46] Crash dump
+# [1.47] Measured boot stub
+# [1.48] Second platform port
+# [1.49] Syscall & ABI audit
+# [1.50] 1.x infra teaching milestone
 # [2.0]  Platform integration of the infra stack
 # [2.1]  Driver / platform polish
 # [2.2]  Observability / debug labs
