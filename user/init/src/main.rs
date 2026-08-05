@@ -154,6 +154,31 @@ pub extern "C" fn main() {
     let _ = sys::cap_dump();
     let _ = sys::debug_write("init: caps dumped\n");
 
+    /* Drivers first (userspace servers under drivers/) — finish before grant demo. */
+    const VIRTIOBLK_BADGE: u64 = 0xD015;
+    if sys::spawn_server(b"virtioblk", VIRTIOBLK_BADGE) >= 0 {
+        let mut i = 0usize;
+        while i < 48 {
+            let _ = sys::yield_now();
+            i += 1;
+        }
+        let _ = sys::debug_write("init: virtioblk loaded\n");
+    } else {
+        let _ = sys::debug_write("init: virtioblk load failed\n");
+    }
+
+    const FBDEMO_BADGE: u64 = 0xD016;
+    if sys::spawn_server(b"fbdemo", FBDEMO_BADGE) >= 0 {
+        let mut i = 0usize;
+        while i < 48 {
+            let _ = sys::yield_now();
+            i += 1;
+        }
+        let _ = sys::debug_write("init: fbdemo loaded\n");
+    } else {
+        let _ = sys::debug_write("init: fbdemo load failed\n");
+    }
+
     /* 1.14: shared frame — map into grantpeer, peer verifies magic. */
     const GRANTPEER_BADGE: u64 = 0xD014;
     let gpslot = sys::spawn_server(b"grantpeer", GRANTPEER_BADGE);
@@ -196,17 +221,6 @@ pub extern "C" fn main() {
         }
     } else {
         let _ = sys::debug_write("init: grantpeer load failed\n");
-    }
-
-    /* 1.14.2: peel — userspace virtio-mmio probe (kernel blk still owns I/O). */
-    const VIRTIOBLK_BADGE: u64 = 0xD015;
-    if sys::spawn_server(b"virtioblk", VIRTIOBLK_BADGE) >= 0 {
-        let _ = sys::yield_now();
-        let _ = sys::yield_now();
-        let _ = sys::yield_now();
-        let _ = sys::debug_write("init: virtioblk loaded\n");
-    } else {
-        let _ = sys::debug_write("init: virtioblk load failed\n");
     }
 
     let _ = sys::yield_now();

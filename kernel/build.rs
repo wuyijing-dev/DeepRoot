@@ -24,11 +24,14 @@ fn main() {
         ("deeproot-moddemo", "deeproot-moddemo", "user/moddemo"),
         ("deeproot-modnote", "deeproot-modnote", "user/modnote"),
         ("deeproot-grantpeer", "deeproot-grantpeer", "user/grantpeer"),
-        ("deeproot-virtioblk", "deeproot-virtioblk", "user/virtioblk"),
+        ("deeproot-virtioblk", "deeproot-virtioblk", "drivers/virtioblk"),
+        ("deeproot-fbdemo", "deeproot-fbdemo", "drivers/fbdemo"),
     ] {
         println!("cargo:rerun-if-changed=../{}/src/main.rs", src_dir);
         println!("cargo:rerun-if-changed=../{}/linker.ld", src_dir);
         println!("cargo:rerun-if-changed=../{}/build.rs", src_dir);
+        println!("cargo:rerun-if-changed=../libs/deeproot-user/src/lib.rs");
+        println!("cargo:rerun-if-changed=../libs/deeproot-abi/src/lib.rs");
         if src_dir == "user/badapple" {
             println!("cargo:rerun-if-changed=../user/badapple/frames.ba01");
         }

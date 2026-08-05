@@ -1,19 +1,17 @@
 # 下一步可以看什么
 
-你已经走完 DeepRoot **1.14.3**（当前推荐 **`v1.14.3`**）：Frame grant + userspace virtio-blk peel（hd1）。  
+你已经走完 DeepRoot **1.15.0**（当前推荐 **`v1.15.0`**）：ramfb + `/fbdemo` 像素绘制。  
 
-下一主题 **1.15** framebuffer 像素。
+下一站 **1.15.1** 简单菜单，或 **1.16** 输入。
 
 ## 巩固
 
-- [1.14 章](../path/18-grant14.md)
+- [1.15 章](../path/20-fb15.md)：`fbdemo: fill_rect ok`
 - [剥离章](../path/19-peel.md)：`virtioblk: rw ok`
 
 ## 下一站
 
 | 系列 | 目标 |
 |---|---|
-| **1.15** | Framebuffer 像素 / 简单 UI |
+| **1.15.1** | 简单菜单 / 图形终端 |
 | **1.16+** | 输入 → 合成器 → 显示协议 |
-
-心态：DeepRoot 是**自研能力微内核**；优先 userspace 模块，内核只留薄原语。

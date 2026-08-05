@@ -14,7 +14,7 @@ use crate::smp::{self, MAX_HARTS};
 use crate::sync::SpinLock;
 use crate::timer;
 
-pub const MAX_UTASKS: usize = 12;
+pub const MAX_UTASKS: usize = 16;
 pub const USER_STACK_PAGES: usize = 4;
 pub const KSTACK_PAGES: usize = 2;
 
@@ -1206,6 +1206,15 @@ pub fn handle_syscall(
             let Some(sched_id) = spawn_elf_bytes(name, bytes, stack, cap) else {
                 return ERR_GENERIC;
             };
+            /*
+             * Pin to the spawning hart so init's yield loops can observe
+             * driver progress (RR is per-home_hart).
+             */
+            {
+                let s = inner();
+                let h = smp::hart_id().min(MAX_HARTS - 1);
+                s.tasks[sched_id].home_hart = h;
+            }
             let cs = match tasks.cspace_mut(current) {
                 Some(c) => c,
                 None => return ERR_GENERIC,
@@ -1469,6 +1478,19 @@ pub fn handle_syscall(
             }
             let irq = plat.virtio[idx].irq;
             match crate::grant::mint_irq(tasks, current, irq) {
+                Some(slot) => slot as isize,
+                None => ERR_GENERIC,
+            }
+        }
+        SYS_MMIO_FWCFG => {
+            let Some(plat) = crate::fdt::get() else {
+                return ERR_GENERIC;
+            };
+            let Some(fc) = plat.fw_cfg else {
+                return ERR_GENERIC;
+            };
+            let base = fc.base & !(PAGE_SIZE - 1);
+            match crate::grant::mint_mmio(tasks, current, base) {
                 Some(slot) => slot as isize,
                 None => ERR_GENERIC,
             }

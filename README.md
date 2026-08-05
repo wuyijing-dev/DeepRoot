@@ -34,7 +34,8 @@ Shell: `help`, `ls`, `mkdir`, `cd`, `modload`, `run hello`, `|`, `>`, `&`.
 ```
 kernel/           # microkernel (no_std)
 libs/             # deeproot-abi, deeproot-user
-user/             # init, console, ping, shell, hello…
+drivers/          # userspace device servers (virtioblk, fbdemo, …)
+user/             # init, console, ping, shell, hello, demos…
 platform/         # DeepRoot board DTS (qemu-virt/deeproot.dts)
 book/             # mdBook source (Chinese learning notes)
 docs/             # built site for GitHub Pages (/docs)

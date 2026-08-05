@@ -59,7 +59,8 @@ pub extern "C" fn main() {
             let _ = sys::debug_write("grantpeer: magic mismatch\n");
             let _ = sys::ipc_reply(GRANTPEER_BADGE, 0x4752, 0);
         }
-        let _ = sys::yield_now();
+        /* Init will unmap SHARE_VA — exit so we never touch it again. */
+        sys::exit(0);
     }
 }
 

@@ -1,4 +1,4 @@
-1.14.3
+1.15.0
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -405,7 +405,7 @@
 #   W4  Smoke: scripted proof of FB writes
 #
 # Releases:
-# 1.15.0  Framebuffer map + draw primitives
+# 1.15.0  Framebuffer map + draw primitives (ramfb + /fbdemo)
 # 1.15.1  Simple menu / graphical terminal demo
 # 1.15.y  Display path fixes only
 #

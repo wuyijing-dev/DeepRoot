@@ -7,7 +7,7 @@
 | 盘 | 谁驱动 | 用途 |
 |---|---|---|
 | hd0 / `virtio-mmio-bus.0` | 内核 `virtio_blk` | DRFS |
-| hd1 / `virtio-mmio-bus.1` | `/virtioblk` | peel 演示读写 |
+| hd1 / `virtio-mmio-bus.1` | `drivers/virtioblk` → `/virtioblk` | peel 演示读写 |
 
 ## 内核原语（1.14.3）
 
@@ -18,7 +18,7 @@
 
 `FRAME_MAP` 会按 span 映射全部页（queue 两页一次 map）。
 
-## userspace `/virtioblk`
+## userspace `drivers/virtioblk`
 
 1. 扫描 FDT virtio；**跳过**第一个 `device_id==2`（内核占用）
 2. 认领第二个块设备；mint IRQ cap → `virtioblk: irq cap`

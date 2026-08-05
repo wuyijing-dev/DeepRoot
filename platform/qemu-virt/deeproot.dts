@@ -87,6 +87,13 @@
 			clock-frequency = <3686400>;
 		};
 
+		/* QEMU virt fw_cfg — ramfb (1.15) configures etc/ramfb via DMA. */
+		fw_cfg: fw-cfg@10100000 {
+			compatible = "qemu,fw-cfg-mmio";
+			reg = <0x0 0x10100000 0x0 0x18>;
+			dma-coherent;
+		};
+
 		/* QEMU virt: eight virtio-mmio transports @ 0x10001000 + n*0x1000 */
 		virtio_mmio@10001000 {
 			compatible = "virtio,mmio";

@@ -434,10 +434,7 @@ pub extern "C" fn main() {
     } else {
         let _ = sys::debug_write("virtioblk: rw mismatch\n");
     }
-
-    loop {
-        let _ = sys::yield_now();
-    }
+    sys::exit(0);
 }
 
 #[panic_handler]

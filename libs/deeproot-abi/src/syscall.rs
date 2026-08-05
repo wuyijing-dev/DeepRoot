@@ -123,6 +123,8 @@ pub const SYS_FRAME_ALLOC_N: usize = 48;
 pub const SYS_FRAME_PHYS: usize = 49;
 /// `a0`=FDT virtio-mmio index → Irq cap (badge = interrupt number)
 pub const SYS_IRQ_VIRTIO: usize = 50;
+/// Mint Frame for FDT `qemu,fw-cfg-mmio` (1.15 ramfb)
+pub const SYS_MMIO_FWCFG: usize = 51;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

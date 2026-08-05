@@ -22,6 +22,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "deeproot-fbdemo"
+version = "1.4.0"
+dependencies = [
+ "deeproot-abi",
+ "deeproot-user",
+]
+
+[[package]]
 name = "deeproot-grantpeer"
 version = "1.4.0"
 dependencies = [

@@ -65,6 +65,9 @@ pub extern "C" fn kernel_main(hartid: usize, dtb_pa: usize) -> ! {
         if let Some(fb) = p.framebuffer {
             mm::sv39::map_mmio_range(fb.reg.base, fb.reg.size.max(mm::layout::PAGE_SIZE));
         }
+        if let Some(fc) = p.fw_cfg {
+            mm::sv39::map_mmio_range(fc.base, fc.size.max(mm::layout::PAGE_SIZE));
+        }
     }
 
     /* Secondaries may now activate the shared kernel page tables. */

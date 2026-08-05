@@ -16,13 +16,15 @@ use crate::sched;
 use crate::sync::SpinLock;
 use deeproot_abi::{rights, CapReason, CapType, LedgerKind};
 
+/// Teaching VA for mapping one virtio-mmio page (userspace; high VA).
 /// Shared teaching VA window (per-AS; same number in producer and peer).
-pub const SHARE_VA: usize = 0x1A00_0000;
+/// High VA — must not overlap spawn stacks (`0x15000000 + id<<24`).
+pub const SHARE_VA: usize = 0x4400_0000;
 pub const MAGIC: &[u8] = b"DeepRoot 1.14 grant\n";
 
 const MAX_MAPS: usize = 64;
 const MAX_SPANS: usize = 32;
-pub const MAX_SPAN_PAGES: usize = 8;
+pub const MAX_SPAN_PAGES: usize = 512;
 
 #[derive(Clone, Copy)]
 struct MapEnt {

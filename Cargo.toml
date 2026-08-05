@@ -13,7 +13,8 @@ members = [
     "user/moddemo",
     "user/modnote",
     "user/grantpeer",
-    "user/virtioblk",
+    "drivers/virtioblk",
+    "drivers/fbdemo",
 ]
 default-members = ["kernel"]
 

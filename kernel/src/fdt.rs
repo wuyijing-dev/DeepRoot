@@ -53,6 +53,8 @@ pub struct Platform {
     pub virtio: [VirtioMmio; MAX_VIRTIO],
     pub virtio_count: usize,
     pub framebuffer: Option<FramebufferHint>,
+    /// QEMU `qemu,fw-cfg-mmio` (1.15 ramfb setup).
+    pub fw_cfg: Option<Reg>,
     /// Count of `device_type = "cpu"` nodes (1.7 SMP).
     pub cpu_count: usize,
 }
@@ -73,6 +75,7 @@ static mut PLATFORM: Platform = Platform {
     }; MAX_VIRTIO],
     virtio_count: 0,
     framebuffer: None,
+    fw_cfg: None,
     cpu_count: 0,
 };
 
@@ -98,6 +101,7 @@ pub fn probe(dtb_pa: usize) {
         }; MAX_VIRTIO],
         virtio_count: 0,
         framebuffer: None,
+        fw_cfg: None,
         cpu_count: 0,
     };
 
@@ -207,6 +211,14 @@ fn log_summary(p: &Platform) {
             "fdt: framebuffer hint @ {:#x} size={:#x}",
             fb.reg.base, fb.reg.size
         );
+    }
+    if let Some(fc) = p.fw_cfg {
+        println!(
+            "fdt: fw-cfg @ {:#x} size={:#x}",
+            fc.base, fc.size
+        );
+    } else {
+        println!("fdt: fw-cfg not found");
     }
 }
 
@@ -417,6 +429,13 @@ fn finish_node(
                 compatible: ucompat,
                 compatible_len: label.len(),
             });
+        }
+        return;
+    }
+
+    if plat.fw_cfg.is_none() && compat_contains(compat, b"qemu,fw-cfg-mmio") {
+        if let Some(r) = reg {
+            plat.fw_cfg = Some(r);
         }
         return;
     }

@@ -220,16 +220,32 @@ pub mod sys {
         unsafe { ecall(SYS_IRQ_VIRTIO, idx, 0, 0, 0) }
     }
 
+    /// Mint Frame for FDT `qemu,fw-cfg-mmio` (1.15 ramfb).
+    pub fn mmio_fwcfg() -> isize {
+        unsafe { ecall(SYS_MMIO_FWCFG, 0, 0, 0, 0) }
+    }
+
     pub fn cap_revoke(slot: usize) -> isize {
         unsafe { ecall(SYS_CAP_REVOKE, slot, 0, 0, 0) }
     }
 
     /// Shared teaching VA for 1.14 grant demos (matches kernel `grant::SHARE_VA`).
-    pub const SHARE_VA: usize = 0x1A00_0000;
-    /// Teaching VA for mapping one virtio-mmio page (1.14.2).
-    pub const MMIO_VA: usize = 0x1B00_0000;
-    /// Contiguous DMA window for userspace virtqueue (1.14.3).
-    pub const DMA_VA: usize = 0x1C00_0000;
+    /// Must stay clear of spawn stacks at `0x15000000 + id * 0x01000000`.
+    pub const SHARE_VA: usize = 0x4400_0000;
+    /*
+     * Device / DMA windows must stay clear of spawn stacks
+     * (0x15000000 + sched_id * 0x01000000).
+     */
+    /// Teaching VA for mapping one virtio-mmio page.
+    pub const MMIO_VA: usize = 0x4000_0000;
+    /// Contiguous DMA window for userspace virtqueue.
+    pub const DMA_VA: usize = 0x4100_0000;
+    /// Pixel framebuffer map base (1.15).
+    pub const FB_VA: usize = 0x4200_0000;
+    /// Scratch page for fw_cfg DMA descriptors (1.15).
+    pub const FWCFG_SCRATCH_VA: usize = 0x4300_0000;
+    /// fw-cfg MMIO map (1.15).
+    pub const FWCFG_MMIO_VA: usize = 0x4310_0000;
     pub const PAGE_SIZE: usize = 4096;
 
     pub const O_RDONLY: u32 = 0;

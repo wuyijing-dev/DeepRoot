@@ -9,11 +9,13 @@
 #![no_std]
 
 pub mod cap;
+pub mod fb;
 pub mod ipc;
 pub mod rights;
 pub mod syscall;
 
 pub use cap::{CapReason, CapType, CapView};
+pub use fb::{FB_BPP, FB_BYTES, FB_FOURCC_XR24, FB_HEIGHT, FB_PAGES, FB_STRIDE, FB_WIDTH};
 pub use ipc::{IpcMessage, IPC_WORDS};
 pub use rights::{rights_name, Rights};
 

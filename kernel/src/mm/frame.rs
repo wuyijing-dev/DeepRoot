@@ -68,10 +68,10 @@ pub fn alloc() -> Option<PhysAddr> {
 }
 
 /*
- * alloc_contiguous - take @count consecutive free frames (1..=8)
+ * alloc_contiguous - take @count consecutive free frames (1..=512)
  */
 pub fn alloc_contiguous(count: usize) -> Option<PhysAddr> {
-    if count == 0 || count > 8 {
+    if count == 0 || count > 512 {
         return None;
     }
     let _g = FRAME_LOCK.lock();

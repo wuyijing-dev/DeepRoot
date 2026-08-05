@@ -51,13 +51,14 @@ QEMU_COMMON=(
   -device virtio-blk-device,drive=hd0,bus=virtio-mmio-bus.0
   -drive "file=${PEEL_IMG},if=none,format=raw,id=hd1"
   -device virtio-blk-device,drive=hd1,bus=virtio-mmio-bus.1
+  -device ramfb
 )
 
 if [[ "${MODE}" == "--smoke" ]]; then
   # Fresh image so boot1 formats DRFS; boot2 proves durable.txt survived.
   dd if=/dev/zero of="${DISK_IMG}" bs=1M count=1 status=none
   dd if=/dev/zero of="${PEEL_IMG}" bs=1M count=1 status=none
-  echo "smoke: boot1 (format + write durable.txt, 30s)…"
+  echo "smoke: boot1 (format + write durable.txt, 45s)…"
   LOG1="$(mktemp)"
   LOG2="$(mktemp)"
   cleanup() { rm -f "${LOG1}" "${LOG2}"; }
@@ -77,14 +78,14 @@ if [[ "${MODE}" == "--smoke" ]]; then
   }
 
   set +e
-  timeout 30 qemu-system-riscv64 \
+  timeout 45 qemu-system-riscv64 \
     "${QEMU_ACCEL[@]}" \
     "${QEMU_COMMON[@]}" \
     >"${LOG1}" 2>&1
   set -e
 
   COMMON_NEEDLES=(
-    "DeepRoot microkernel 1.14.3"
+    "DeepRoot microkernel 1.15.0"
     "fdt: model \"DeepRoot QEMU virt\""
     "fdt: board deeproot,qemu-virt"
     "fdt: cpu count=2"
@@ -136,6 +137,11 @@ if [[ "${MODE}" == "--smoke" ]]; then
     "virtioblk: rw ok"
     "virtioblk: probe ok"
     "init: virtioblk loaded"
+    "fdt: fw-cfg @ "
+    "fbdemo: ramfb ok"
+    "fbdemo: clear ok"
+    "fbdemo: fill_rect ok"
+    "init: fbdemo loaded"
     "shell: DeepRoot shell 1.14 ready"
     "init: handing off to shell"
   )
@@ -151,9 +157,9 @@ if [[ "${MODE}" == "--smoke" ]]; then
     exit 1
   fi
 
-  echo "smoke: boot2 (existing DRFS + survived reboot, 30s)…"
+  echo "smoke: boot2 (existing DRFS + survived reboot, 45s)…"
   set +e
-  timeout 30 qemu-system-riscv64 \
+  timeout 45 qemu-system-riscv64 \
     "${QEMU_ACCEL[@]}" \
     "${QEMU_COMMON[@]}" \
     >"${LOG2}" 2>&1
