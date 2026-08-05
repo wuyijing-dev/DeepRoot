@@ -118,7 +118,7 @@ if [[ "${SMOKE}" -eq 1 ]]; then
   set -e
 
   COMMON_NEEDLES=(
-    "DeepRoot microkernel 1.17.0"
+    "DeepRoot microkernel 1.18.0"
     "fdt: model \"DeepRoot QEMU virt\""
     "fdt: board deeproot,qemu-virt"
     "fdt: cpu count=2"
@@ -130,6 +130,7 @@ if [[ "${SMOKE}" -eq 1 ]]; then
     "vfs: in-RAM tree ready"
     "DRFS"
     "canopy ready"
+    "console: tty read ready"
     "ping: pong"
     "hello: spawned ELF says hi"
     "module: loaded 'moddemo'"

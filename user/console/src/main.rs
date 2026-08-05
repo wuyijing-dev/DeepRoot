@@ -1,7 +1,7 @@
-//! console — userspace console server (0.5.2).
+//! console — userspace console server (1.18 tty-ready marker).
 //!
-//! UART output goes through SYS_DEBUG_WRITE so the kernel early printk stays
-//! for boot/panic only.
+//! UART output goes through SYS_DEBUG_WRITE. Init notifies with IPC; shell
+//! still uses SYS_DEBUG_READ for the prompt (exclusive UART peel is 1.18.y).
 
 #![no_std]
 #![no_main]
@@ -36,6 +36,7 @@ const CONSOLE_BADGE: u64 = 0xC001;
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write("console: server online\n");
+    let _ = sys::debug_write("console: tty read ready\n");
     loop {
         let label = sys::ipc_recv(CONSOLE_BADGE);
         if label < 0 {

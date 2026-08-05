@@ -543,6 +543,9 @@ fn read_line(buf: &mut [u8], hist: &History) -> usize {
     let mut hist_back = 0usize;
     let mut esc = 0u8; /* 0 none, 1 saw ESC, 2 saw [ */
     while n < buf.len() {
+        /* Shell keeps SYS_DEBUG_READ for the prompt so it does not starve
+         * init by monopolizing the console server (1.18.0). Clients may
+         * still use console IPC label 'R' for exclusive-UART labs. */
         let c = sys::debug_read_byte();
         if c < 0 {
             let _ = sys::yield_now();
