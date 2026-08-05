@@ -1,27 +1,24 @@
-# 1.14 共享内存 grant（对齐 v1.14.2）
+# 1.14 共享内存 grant（对齐 v1.14.3）
 
-对齐：**v1.14.2**（含 1.14.0–1.14.1 grant，外加 peel 起步）。
+对齐：**v1.14.3**（Frame 系列收官）。
 
-## 1.14.0
+## 1.14.0–1.14.1
 
-- `SYS_FRAME_ALLOC` / `MAP` / `MAP_INTO` / `GRANT`（40–43）
-- `/grantpeer` 在 `SHARE_VA`（`0x1A00_0000`）读 magic
-
-## 1.14.1
-
-- `SYS_FRAME_UNMAP` / `UNMAP_INTO`（45–46）
-- `SYS_CAP_REVOKE` 对 Frame：拆掉已跟踪映射并 `frame::free`
-- Root Ledger：`FrameMap` / `FrameUnmap` kind
+- `SYS_FRAME_ALLOC` / `MAP` / `MAP_INTO` / `GRANT` / `UNMAP` / revoke
 
 ## 1.14.2
 
-见 [剥离章](19-peel.md)：`SYS_MMIO_VIRTIO` + `/virtioblk` probe。
+- `SYS_MMIO_VIRTIO` + 探测-only `/virtioblk`
+
+## 1.14.3
+
+见 [剥离章](19-peel.md)：`ALLOC_N` / `PHYS` / `IRQ_VIRTIO` + hd1 完整 userspace 驱动。
 
 ## 验收
 
 ```bash
-git checkout v1.14.2
+git checkout v1.14.3
 ./scripts/run-qemu.sh --smoke
 ```
 
-应见 `grantpeer: saw magic`、`init: frame revoke ok`、`virtioblk: probe ok`。
+应见 `grantpeer: saw magic`、`virtioblk: rw ok`、`init: frame revoke ok`。

@@ -117,6 +117,12 @@ pub const SYS_FRAME_UNMAP: usize = 45;
 pub const SYS_FRAME_UNMAP_INTO: usize = 46;
 /// `a0`=FDT virtio-mmio index → Frame cap for that MMIO page (1.14.2 peel)
 pub const SYS_MMIO_VIRTIO: usize = 47;
+/// `a0`=n (1..=8) → Frame cap for contiguous DMA span (1.14.3)
+pub const SYS_FRAME_ALLOC_N: usize = 48;
+/// `a0`=Frame slot → physical address (badge)
+pub const SYS_FRAME_PHYS: usize = 49;
+/// `a0`=FDT virtio-mmio index → Irq cap (badge = interrupt number)
+pub const SYS_IRQ_VIRTIO: usize = 50;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

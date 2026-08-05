@@ -64,21 +64,41 @@ pub fn init(start: PhysAddr, end: PhysAddr) {
  * alloc - take one free frame; returns physical address of page or None
  */
 pub fn alloc() -> Option<PhysAddr> {
+    alloc_contiguous(1)
+}
+
+/*
+ * alloc_contiguous - take @count consecutive free frames (1..=8)
+ */
+pub fn alloc_contiguous(count: usize) -> Option<PhysAddr> {
+    if count == 0 || count > 8 {
+        return None;
+    }
     let _g = FRAME_LOCK.lock();
     let n = ALLOC.nframes.load(Ordering::Relaxed);
     let words = unsafe { &mut *ALLOC.words.get() };
-    for i in 0..n {
-        let w = i / 64;
-        let b = i % 64;
-        let mask = 1u64 << b;
-        if words[w] & mask != 0 {
-            words[w] &= !mask;
-            ALLOC.free.fetch_sub(1, Ordering::Relaxed);
-            let ppn = ALLOC.base_ppn.load(Ordering::Relaxed) + i;
-            let pa = PhysAddr::new(ppn << PAGE_SHIFT);
-            zero_page(pa);
-            return Some(pa);
+    let base_ppn = ALLOC.base_ppn.load(Ordering::Relaxed);
+    'outer: for i in 0..=(n.saturating_sub(count)) {
+        for j in 0..count {
+            let idx = i + j;
+            let w = idx / 64;
+            let b = idx % 64;
+            if words[w] & (1u64 << b) == 0 {
+                continue 'outer;
+            }
         }
+        for j in 0..count {
+            let idx = i + j;
+            let w = idx / 64;
+            let b = idx % 64;
+            words[w] &= !(1u64 << b);
+        }
+        ALLOC.free.fetch_sub(count, Ordering::Relaxed);
+        let pa = PhysAddr::new((base_ppn + i) << PAGE_SHIFT);
+        for j in 0..count {
+            zero_page(PhysAddr::new(pa.as_usize() + j * PAGE_SIZE));
+        }
+        return Some(pa);
     }
     None
 }
@@ -102,19 +122,32 @@ pub fn contains(pa: PhysAddr) -> bool {
  * free - return a frame previously obtained from alloc()
  */
 pub fn free(pa: PhysAddr) {
+    free_contiguous(pa, 1);
+}
+
+/*
+ * free_contiguous - return @count pages starting at @pa
+ */
+pub fn free_contiguous(pa: PhysAddr, count: usize) {
+    if count == 0 {
+        return;
+    }
     let _g = FRAME_LOCK.lock();
-    let ppn = pa.page_index();
     let base = ALLOC.base_ppn.load(Ordering::Relaxed);
     let n = ALLOC.nframes.load(Ordering::Relaxed);
-    assert!(ppn >= base && ppn < base + n);
-    let i = ppn - base;
     let words = unsafe { &mut *ALLOC.words.get() };
-    let w = i / 64;
-    let b = i % 64;
-    let mask = 1u64 << b;
-    assert!(words[w] & mask == 0, "double free frame");
-    words[w] |= mask;
-    ALLOC.free.fetch_add(1, Ordering::Relaxed);
+    for j in 0..count {
+        let page = PhysAddr::new(pa.as_usize() + j * PAGE_SIZE);
+        let ppn = page.page_index();
+        assert!(ppn >= base && ppn < base + n);
+        let i = ppn - base;
+        let w = i / 64;
+        let b = i % 64;
+        let mask = 1u64 << b;
+        assert!(words[w] & mask == 0, "double free frame");
+        words[w] |= mask;
+    }
+    ALLOC.free.fetch_add(count, Ordering::Relaxed);
 }
 
 pub fn stats() -> (usize, usize) {

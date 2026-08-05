@@ -82,7 +82,7 @@
 - [1.11–1.12 fd 与实用工具](path/16-lab12.md)
 - [1.13 服务命名 / 发现](path/17-svc13.md)
 - [1.14 共享内存 grant](path/18-grant14.md)
-- [1.14.2 剥离：MMIO 与 virtioblk](path/19-peel.md)
+- [1.14.3 剥离：Frame 收官与 virtioblk](path/19-peel.md)
 
 # 动手玩
 

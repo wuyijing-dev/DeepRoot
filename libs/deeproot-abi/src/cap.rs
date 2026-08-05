@@ -17,6 +17,8 @@ pub enum CapType {
     CNode = 3,
     /// Physical frame (pager / frame server ownership).
     Frame = 4,
+    /// Device interrupt (badge = IRQ number; 1.14.3 — no PLIC bind yet).
+    Irq = 5,
 }
 
 /// Reason codes recorded in capability provenance.

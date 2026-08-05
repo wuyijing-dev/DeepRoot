@@ -205,6 +205,21 @@ pub mod sys {
         unsafe { ecall(SYS_MMIO_VIRTIO, idx, 0, 0, 0) }
     }
 
+    /// Allocate @n contiguous frames (1..=8) → Frame cap (badge = base PA).
+    pub fn frame_alloc_n(n: usize) -> isize {
+        unsafe { ecall(SYS_FRAME_ALLOC_N, n, 0, 0, 0) }
+    }
+
+    /// Physical address of a Frame cap (for virtio DMA descriptors).
+    pub fn frame_phys(slot: usize) -> isize {
+        unsafe { ecall(SYS_FRAME_PHYS, slot, 0, 0, 0) }
+    }
+
+    /// Mint Irq cap for FDT virtio[@idx] (badge = interrupt number).
+    pub fn irq_virtio(idx: usize) -> isize {
+        unsafe { ecall(SYS_IRQ_VIRTIO, idx, 0, 0, 0) }
+    }
+
     pub fn cap_revoke(slot: usize) -> isize {
         unsafe { ecall(SYS_CAP_REVOKE, slot, 0, 0, 0) }
     }
@@ -213,6 +228,9 @@ pub mod sys {
     pub const SHARE_VA: usize = 0x1A00_0000;
     /// Teaching VA for mapping one virtio-mmio page (1.14.2).
     pub const MMIO_VA: usize = 0x1B00_0000;
+    /// Contiguous DMA window for userspace virtqueue (1.14.3).
+    pub const DMA_VA: usize = 0x1C00_0000;
+    pub const PAGE_SIZE: usize = 4096;
 
     pub const O_RDONLY: u32 = 0;
     pub const O_WRONLY: u32 = 1;

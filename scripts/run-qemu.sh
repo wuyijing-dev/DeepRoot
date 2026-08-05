@@ -12,6 +12,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TARGET="riscv64gc-unknown-none-elf"
 KERNEL_ELF="${ROOT}/target/${TARGET}/release/deeproot-kernel"
 DISK_IMG="${ROOT}/build/deeproot-disk.img"
+PEEL_IMG="${ROOT}/build/deeproot-peel.img"
 DTB="${ROOT}/build/deeproot-qemu-virt.dtb"
 MODE="${1:-}"
 
@@ -29,6 +30,10 @@ if [[ ! -f "${DISK_IMG}" ]]; then
   dd if=/dev/zero of="${DISK_IMG}" bs=1M count=1 status=none
   echo "run-qemu: created ${DISK_IMG}"
 fi
+if [[ ! -f "${PEEL_IMG}" ]]; then
+  dd if=/dev/zero of="${PEEL_IMG}" bs=1M count=1 status=none
+  echo "run-qemu: created ${PEEL_IMG}"
+fi
 
 # Host is usually x86_64: RISC-V guests run under TCG. Prefer multi-thread TCG
 # and a large TB cache so ASCII playback is less jerky.
@@ -44,11 +49,14 @@ QEMU_COMMON=(
   -dtb "${DTB}"
   -drive "file=${DISK_IMG},if=none,format=raw,id=hd0"
   -device virtio-blk-device,drive=hd0,bus=virtio-mmio-bus.0
+  -drive "file=${PEEL_IMG},if=none,format=raw,id=hd1"
+  -device virtio-blk-device,drive=hd1,bus=virtio-mmio-bus.1
 )
 
 if [[ "${MODE}" == "--smoke" ]]; then
   # Fresh image so boot1 formats DRFS; boot2 proves durable.txt survived.
   dd if=/dev/zero of="${DISK_IMG}" bs=1M count=1 status=none
+  dd if=/dev/zero of="${PEEL_IMG}" bs=1M count=1 status=none
   echo "smoke: boot1 (format + write durable.txt, 30s)…"
   LOG1="$(mktemp)"
   LOG2="$(mktemp)"
@@ -76,7 +84,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
   set -e
 
   COMMON_NEEDLES=(
-    "DeepRoot microkernel 1.14.2"
+    "DeepRoot microkernel 1.14.3"
     "fdt: model \"DeepRoot QEMU virt\""
     "fdt: board deeproot,qemu-virt"
     "fdt: cpu count=2"
@@ -122,8 +130,10 @@ if [[ "${MODE}" == "--smoke" ]]; then
     "grant: revoked frame"
     "init: frame revoke ok"
     "grant: mmio frame pa="
+    "grant: alloc frame pa="
     "virtioblk: probe start"
-    "virtioblk: found block device"
+    "virtioblk: irq cap"
+    "virtioblk: rw ok"
     "virtioblk: probe ok"
     "init: virtioblk loaded"
     "shell: DeepRoot shell 1.14 ready"

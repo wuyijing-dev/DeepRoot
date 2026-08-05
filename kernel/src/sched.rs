@@ -789,6 +789,7 @@ pub fn handle_syscall(
                 x if x == CapType::Endpoint as u8 => CapType::Endpoint,
                 x if x == CapType::Frame as u8 => CapType::Frame,
                 x if x == CapType::CNode as u8 => CapType::CNode,
+                x if x == CapType::Irq as u8 => CapType::Irq,
                 _ => return ERR_GENERIC,
             };
             match cs.mint_badged(a0 as usize, a1 as u32, cap_ty, a3, CapReason::Mint) {
@@ -1440,6 +1441,34 @@ pub fn handle_syscall(
             }
             let base = plat.virtio[idx].reg.base & !(PAGE_SIZE - 1);
             match crate::grant::mint_mmio(tasks, current, base) {
+                Some(slot) => slot as isize,
+                None => ERR_GENERIC,
+            }
+        }
+        SYS_FRAME_ALLOC_N => {
+            let n = a0 as usize;
+            match crate::grant::alloc_n(tasks, current, n) {
+                Some(slot) => slot as isize,
+                None => ERR_GENERIC,
+            }
+        }
+        SYS_FRAME_PHYS => {
+            let slot = a0 as usize;
+            match crate::grant::phys(tasks, current, slot) {
+                Some(pa) => pa as isize,
+                None => ERR_GENERIC,
+            }
+        }
+        SYS_IRQ_VIRTIO => {
+            let idx = a0 as usize;
+            let Some(plat) = crate::fdt::get() else {
+                return ERR_GENERIC;
+            };
+            if idx >= plat.virtio_count {
+                return ERR_GENERIC;
+            }
+            let irq = plat.virtio[idx].irq;
+            match crate::grant::mint_irq(tasks, current, irq) {
                 Some(slot) => slot as isize,
                 None => ERR_GENERIC,
             }

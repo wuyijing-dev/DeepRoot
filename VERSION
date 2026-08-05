@@ -1,4 +1,4 @@
-1.14.2
+1.14.3
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -387,7 +387,8 @@
 # 1.14.0  Shared-memory grant between tasks
 # 1.14.1  Revoke / unmap + ledger visibility
 # 1.14.2  Peel start: SYS_MMIO_VIRTIO + /virtioblk probe (kernel blk kept)
-# 1.14.y  Grant polish (size limits, multi-page); IRQ caps; more peel
+# 1.14.3  Frame close: ALLOC_N / PHYS, IRQ mint, userspace blk on hd1
+#         (1.14 series done — next theme 1.15 framebuffer)
 #
 # Out of scope for 1.14: framebuffer attach, GPU, Linux dma-buf ABI.
 

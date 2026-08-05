@@ -27,15 +27,15 @@ struct File {
 static FILES: &[File] = &[
     File {
         name: "readme.txt",
-        data: b"DeepRoot 1.14.2 - userspace virtioblk probe; kernel blk still DRFS\n",
+        data: b"DeepRoot 1.14.3 - userspace virtioblk on hd1; Frame ALLOC_N/PHYS\n",
     },
     File {
         name: "hello.txt",
-        data: b"ELF: /hello /moddemo /virtioblk - peel: SYS_MMIO_VIRTIO\n",
+        data: b"ELF: /hello /virtioblk - peel disk + Frame DMA\n",
     },
     File {
         name: "version",
-        data: b"1.14.2\n",
+        data: b"1.14.3\n",
     },
     File {
         name: "hello",
