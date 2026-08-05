@@ -38,4 +38,4 @@ git checkout v1.15.2
 
 ## 下一步
 
-**1.16** virtio-input / seat（真正键盘指针，不再只靠 `SYS_DEBUG_READ`）。
+**1.16** 用户态 IRQ wait（对标 Linux irq 角色）。UI / seat / 合成器已从路线图移除，见根目录 `VERSION`。

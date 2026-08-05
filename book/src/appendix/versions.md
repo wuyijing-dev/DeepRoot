@@ -43,12 +43,14 @@ git checkout v1.15.2
 | 1.12 | 实用 I/O 工具（sleep/ledger/hexdump；console 延后） |
 | **1.13** | 服务命名 / 发现 |
 | 1.14 | 共享内存 grant（缓冲基础） |
-| 1.15 | Framebuffer 像素 |
-| 1.16–1.18 | 输入 → output/buffer → 小合成器 |
-| 1.19–1.20 | DeepRoot 显示协议 + 教学客户端（Wayland **启发**） |
-| 2.0–2.2 | 平台集成 → 图形实验会话 → 协议打磨 |
-| **3.0** | 最接近「像用 Wayland」的教学里程碑（仍非 Linux Wayland ABI） |
-
+| 1.15 | Framebuffer 映射（可选 HW；UI 主题至此关闭） |
+| 1.16 | 用户态 IRQ wait |
+| 1.17 | 存储 peel / 用户态 FS |
+| 1.18 | Console / TTY 服务器 |
+| 1.19 | virtio-net + 报文 I/O |
+| 1.20 | mmap / anon 缺页 |
+| 2.0–2.2 | 平台集成 → 驱动打磨 → 可观测性 |
+|
 当前 **current** 见 `VERSION` 第一行。完整分期与 out-of-scope 以根目录 `VERSION` 为准。
 
 ## 4. 和 GitHub Releases
