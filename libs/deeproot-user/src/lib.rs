@@ -200,12 +200,19 @@ pub mod sys {
         unsafe { ecall(SYS_FRAME_UNMAP_INTO, target_sched, va, 0, 0) }
     }
 
+    /// Mint a Frame for FDT `virtio-mmio`[@idx] (device PA, not RAM).
+    pub fn mmio_virtio(idx: usize) -> isize {
+        unsafe { ecall(SYS_MMIO_VIRTIO, idx, 0, 0, 0) }
+    }
+
     pub fn cap_revoke(slot: usize) -> isize {
         unsafe { ecall(SYS_CAP_REVOKE, slot, 0, 0, 0) }
     }
 
     /// Shared teaching VA for 1.14 grant demos (matches kernel `grant::SHARE_VA`).
     pub const SHARE_VA: usize = 0x1A00_0000;
+    /// Teaching VA for mapping one virtio-mmio page (1.14.2).
+    pub const MMIO_VA: usize = 0x1B00_0000;
 
     pub const O_RDONLY: u32 = 0;
     pub const O_WRONLY: u32 = 1;

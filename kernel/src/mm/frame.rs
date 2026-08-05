@@ -84,6 +84,21 @@ pub fn alloc() -> Option<PhysAddr> {
 }
 
 /*
+ * contains - true if @pa is a RAM page owned by this allocator
+ *
+ * Device MMIO Frame badges are CapType::Frame too but must never hit free().
+ */
+pub fn contains(pa: PhysAddr) -> bool {
+    if pa.as_usize() % PAGE_SIZE != 0 {
+        return false;
+    }
+    let ppn = pa.page_index();
+    let base = ALLOC.base_ppn.load(Ordering::Relaxed);
+    let n = ALLOC.nframes.load(Ordering::Relaxed);
+    ppn >= base && ppn < base + n
+}
+
+/*
  * free - return a frame previously obtained from alloc()
  */
 pub fn free(pa: PhysAddr) {

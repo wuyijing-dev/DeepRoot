@@ -198,6 +198,17 @@ pub extern "C" fn main() {
         let _ = sys::debug_write("init: grantpeer load failed\n");
     }
 
+    /* 1.14.2: peel — userspace virtio-mmio probe (kernel blk still owns I/O). */
+    const VIRTIOBLK_BADGE: u64 = 0xD015;
+    if sys::spawn_server(b"virtioblk", VIRTIOBLK_BADGE) >= 0 {
+        let _ = sys::yield_now();
+        let _ = sys::yield_now();
+        let _ = sys::yield_now();
+        let _ = sys::debug_write("init: virtioblk loaded\n");
+    } else {
+        let _ = sys::debug_write("init: virtioblk load failed\n");
+    }
+
     let _ = sys::yield_now();
     let _ = sys::yield_now();
     let _ = sys::debug_write("init: handing off to shell\n");

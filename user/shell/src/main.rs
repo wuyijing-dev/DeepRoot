@@ -906,7 +906,7 @@ pub extern "C" fn main() {
     let mut hist = History::new();
     let mut env = Env::new();
     let _ = env.set(b"SHELL", b"deeproot");
-    let _ = env.set(b"VERSION", b"1.14.1");
+    let _ = env.set(b"VERSION", b"1.14.2");
 
     loop {
         let _ = sys::debug_write("deeproot> ");

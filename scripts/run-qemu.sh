@@ -76,7 +76,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
   set -e
 
   COMMON_NEEDLES=(
-    "DeepRoot microkernel 1.14.1"
+    "DeepRoot microkernel 1.14.2"
     "fdt: model \"DeepRoot QEMU virt\""
     "fdt: board deeproot,qemu-virt"
     "fdt: cpu count=2"
@@ -121,6 +121,11 @@ if [[ "${MODE}" == "--smoke" ]]; then
     "grant: unmapped sched="
     "grant: revoked frame"
     "init: frame revoke ok"
+    "grant: mmio frame pa="
+    "virtioblk: probe start"
+    "virtioblk: found block device"
+    "virtioblk: probe ok"
+    "init: virtioblk loaded"
     "shell: DeepRoot shell 1.14 ready"
     "init: handing off to shell"
   )

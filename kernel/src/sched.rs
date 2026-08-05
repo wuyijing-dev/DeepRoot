@@ -1430,6 +1430,20 @@ pub fn handle_syscall(
                 ERR_GENERIC
             }
         }
+        SYS_MMIO_VIRTIO => {
+            let idx = a0 as usize;
+            let Some(plat) = crate::fdt::get() else {
+                return ERR_GENERIC;
+            };
+            if idx >= plat.virtio_count {
+                return ERR_GENERIC;
+            }
+            let base = plat.virtio[idx].reg.base & !(PAGE_SIZE - 1);
+            match crate::grant::mint_mmio(tasks, current, base) {
+                Some(slot) => slot as isize,
+                None => ERR_GENERIC,
+            }
+        }
         _ => ERR_NOSYS,
     }
 }

@@ -259,16 +259,45 @@ pub fn grant_cap(
 }
 
 /*
+ * mint_mmio - mint a Frame cap for a device MMIO page (badge = PA)
+ *
+ * Not from the RAM allocator — revoke unmaps only; never frame::free.
+ */
+pub fn mint_mmio(tasks: &mut TaskTable, owner: TaskId, pa: usize) -> Option<usize> {
+    if pa == 0 || pa % PAGE_SIZE != 0 {
+        return None;
+    }
+    if frame::contains(PhysAddr::new(pa)) {
+        /* Refuse accidental mint of RAM as "MMIO". */
+        return None;
+    }
+    let cs = tasks.cspace_mut(owner)?;
+    let r = rights::READ | rights::WRITE | rights::GRANT;
+    match cs.install_copy(CapType::Frame, r, pa as u64, CapReason::Mint) {
+        Ok(slot) => {
+            println!("grant: mmio frame pa={:#x} slot={}", pa, slot);
+            Some(slot)
+        }
+        Err(_) => None,
+    }
+}
+
+/*
  * on_revoke_frame - after CapSpace::revoke of a Frame: unmap + free PA
  *
- * Teaching: frees the page even if other tasks still held copies (their
- * caps become stale; 1.14.y may refcount).
+ * Teaching: frees RAM pages even if other tasks still held copies (their
+ * caps become stale; 1.14.y may refcount). Device MMIO badges skip free().
  */
 pub fn on_revoke_frame(pa: usize) -> usize {
     let n = unmap_all_pa(pa);
     if pa != 0 && pa % PAGE_SIZE == 0 {
-        frame::free(PhysAddr::new(pa));
-        println!("grant: revoked frame pa={:#x} unmaps={}", pa, n);
+        let phys = PhysAddr::new(pa);
+        if frame::contains(phys) {
+            frame::free(phys);
+            println!("grant: revoked frame pa={:#x} unmaps={}", pa, n);
+        } else {
+            println!("grant: revoked mmio pa={:#x} unmaps={}", pa, n);
+        }
     }
     n
 }

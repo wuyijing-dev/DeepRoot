@@ -1,4 +1,4 @@
-1.14.1
+1.14.2
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -306,9 +306,9 @@
 # Releases:
 # 1.10.0  First loadable module path (SYS_SPAWN_SERVER + /moddemo)
 # 1.10.1  Load ELF from VFS file (cp + FILE_MAX); second module /modnote
-# 1.10.2  Userspace driver load: mint MMIO (and later IRQ) caps into loaded ELF
-# 1.10.3  First bound demo driver (e.g. virtio-mmio probe) + smoke
-# 1.10.y  More drivers / unload / registry polish (stay on 1.10 until solid)
+# 1.10.2  (landed as 1.14.2) MMIO Frame mint — SYS_MMIO_VIRTIO
+# 1.10.3  (landed as 1.14.2) Userspace virtio-mmio probe module /virtioblk
+# 1.10.y  More drivers / unload / registry polish; full blk peel still later
 #
 # Out of scope for 1.10: Linux kmod ABI, live kernel patching, signed modules,
 #   shipping Linux driver binaries, moving all in-kernel virtio-blk at once.
@@ -386,7 +386,8 @@
 # Releases:
 # 1.14.0  Shared-memory grant between tasks
 # 1.14.1  Revoke / unmap + ledger visibility
-# 1.14.y  Grant polish (size limits, multi-page)
+# 1.14.2  Peel start: SYS_MMIO_VIRTIO + /virtioblk probe (kernel blk kept)
+# 1.14.y  Grant polish (size limits, multi-page); IRQ caps; more peel
 #
 # Out of scope for 1.14: framebuffer attach, GPU, Linux dma-buf ABI.
 

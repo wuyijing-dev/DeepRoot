@@ -115,6 +115,8 @@ pub const SYS_SERVICE_SCHED: usize = 44;
 pub const SYS_FRAME_UNMAP: usize = 45;
 /// `a0`=target_sched, `a1`=va — unmap in another task
 pub const SYS_FRAME_UNMAP_INTO: usize = 46;
+/// `a0`=FDT virtio-mmio index → Frame cap for that MMIO page (1.14.2 peel)
+pub const SYS_MMIO_VIRTIO: usize = 47;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

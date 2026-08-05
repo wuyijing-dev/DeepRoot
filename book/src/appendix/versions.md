@@ -2,21 +2,21 @@
 
 ## 1. 文档对齐哪一版？
 
-本学习笔记默认对齐 **`v1.14.1`**（共享内存 grant）。  
+本学习笔记默认对齐 **`v1.14.2`**（grant + MMIO peel / virtioblk probe）。  
 页首选择器还可打开更早冻结快照（如 `v1.11.0`、`v1.10.1`…）。
 
 核对三处：
 
 1. 仓库根 `VERSION` 第一行非注释内容  
 2. QEMU 横幅：`DeepRoot microkernel …`  
-3. Git 标签（若你按标签检出）：`git checkout v1.14.1`
+3. Git 标签（若你按标签检出）：`git checkout v1.14.2`
 
 ## 2. 标签怎么用？
 
 ```bash
 git fetch --tags
 git tag -l 'v*'
-git checkout v1.14.1
+git checkout v1.14.2
 ```
 
 冻结教程 HTML 在站点的 `/DeepRoot/<tag>/`（由标签工作流发布）。  

@@ -13,6 +13,7 @@ members = [
     "user/moddemo",
     "user/modnote",
     "user/grantpeer",
+    "user/virtioblk",
 ]
 default-members = ["kernel"]
 
