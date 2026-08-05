@@ -1,0 +1,18 @@
+[
+  {"version": "v1.14.2", "label": "1.14.2（当前 · MMIO peel / virtioblk）"},
+  {"version": "v1.14.1", "label": "1.14.1（Frame unmap/revoke）"},
+  {"version": "v1.14.0", "label": "1.14.0（共享内存 grant）"},
+  {"version": "v1.13.0", "label": "1.13.0（服务名查找）"},
+  {"version": "v1.12.0", "label": "1.12.0（实用工具+fd）"},
+  {"version": "v1.11.0", "label": "1.11.0（DRFS 持久写）"},
+  {"version": "v1.10.1", "label": "1.10.1（VFS 模块加载）"},
+  {"version": "v1.10.0", "label": "1.10.0（可加载模块）"},
+  {"version": "v1.9.1", "label": "1.9.1（重定向修复）"},
+  {"version": "v1.9.0", "label": "1.9.0（FS 目录）"},
+  {"version": "v1.8.0", "label": "1.8.0（自研 shell+）"},
+  {"version": "v1.7.0", "label": "1.7.0（SMP）"},
+  {"version": "v1.6.1", "label": "1.6.1（自有 DTS）"},
+  {"version": "v1.6.0", "label": "1.6.0（FDT + virtio-blk）"},
+  {"version": "v1.4.1", "label": "1.4.1（DRFS 基线）"},
+  {"version": "v1.4.0", "label": "1.4.0（块层替身）"}
+]
