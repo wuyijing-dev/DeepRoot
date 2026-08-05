@@ -31,6 +31,10 @@ pub enum LedgerKind {
     Panic = 5,
     CapRevoke = 6,
     CapMint = 7,
+    /// Shared frame map (1.14): a0=sched/pa, a1=va/slot, a2=pa
+    FrameMap = 8,
+    /// Shared frame unmap (1.14.1)
+    FrameUnmap = 9,
 }
 
 /// One ledger record — fixed size for easy dumping over UART.

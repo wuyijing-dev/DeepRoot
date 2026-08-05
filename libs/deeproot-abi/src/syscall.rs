@@ -111,6 +111,10 @@ pub const SYS_FRAME_MAP_INTO: usize = 42;
 pub const SYS_FRAME_GRANT: usize = 43;
 /// `a0`=name, `a1`=nlen → sched id of registered service
 pub const SYS_SERVICE_SCHED: usize = 44;
+/// `a0`=va — unmap Frame mapping in current AS (1.14.1)
+pub const SYS_FRAME_UNMAP: usize = 45;
+/// `a0`=target_sched, `a1`=va — unmap in another task
+pub const SYS_FRAME_UNMAP_INTO: usize = 46;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

@@ -1,35 +1,23 @@
-# 1.14 共享内存 grant（对齐 v1.14.0）
+# 1.14 共享内存 grant（对齐 v1.14.1）
 
-对齐：**v1.14.0**。
+对齐：**v1.14.1**。
 
-## 这一站解决什么？
-
-显示合成器需要「一块缓冲两边看」。  
-**1.14.0** 先做：分配 Frame 能力（badge = PA）→ 映射进自己的 AS → `FRAME_MAP_INTO` 映射进另一个任务。
+## 1.14.0
 
 - `SYS_FRAME_ALLOC` / `MAP` / `MAP_INTO` / `GRANT`（40–43）
-- `SYS_SERVICE_SCHED`（44）按名取 sched id
-- 演示：`/grantpeer` 读 `SHARE_VA`（`0x1A00_0000`）上的 magic
+- `/grantpeer` 在 `SHARE_VA`（`0x1A00_0000`）读 magic
 
-## 动手
+## 1.14.1
 
-boot 日志应有：
-
-```text
-grant: alloc frame …
-grant: mapped into sched=…
-grantpeer: saw magic
-init: grant peer ok
-```
+- `SYS_FRAME_UNMAP` / `UNMAP_INTO`（45–46）
+- `SYS_CAP_REVOKE` 对 Frame：拆掉已跟踪映射并 `frame::free`
+- Root Ledger：`FrameMap` / `FrameUnmap` kind
 
 ## 验收
 
 ```bash
-git checkout v1.14.0
+git checkout v1.14.1
 ./scripts/run-qemu.sh --smoke
 ```
 
-## 下一小步
-
-- **1.14.1** unmap / revoke + ledger
-- **1.15** framebuffer 像素
+应见 `grantpeer: saw magic`、`grant: unmapped`、`grant: revoked frame`、`init: frame revoke ok`。

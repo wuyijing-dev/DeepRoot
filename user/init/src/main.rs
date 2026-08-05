@@ -180,6 +180,14 @@ pub extern "C" fn main() {
                 } else {
                     let _ = sys::debug_write("init: grant peer call failed\n");
                 }
+                /* 1.14.1: unmap peer + self, then revoke Frame (frees PA). */
+                let _ = sys::frame_unmap_into(sid as usize, sys::SHARE_VA);
+                let _ = sys::frame_unmap(sys::SHARE_VA);
+                if sys::cap_revoke(fslot as usize) >= 0 {
+                    let _ = sys::debug_write("init: frame revoke ok\n");
+                } else {
+                    let _ = sys::debug_write("init: frame revoke failed\n");
+                }
             } else {
                 let _ = sys::debug_write("init: frame map failed\n");
             }

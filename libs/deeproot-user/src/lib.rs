@@ -192,6 +192,18 @@ pub mod sys {
         unsafe { ecall(SYS_SERVICE_SCHED, name.as_ptr() as usize, name.len(), 0, 0) }
     }
 
+    pub fn frame_unmap(va: usize) -> isize {
+        unsafe { ecall(SYS_FRAME_UNMAP, va, 0, 0, 0) }
+    }
+
+    pub fn frame_unmap_into(target_sched: usize, va: usize) -> isize {
+        unsafe { ecall(SYS_FRAME_UNMAP_INTO, target_sched, va, 0, 0) }
+    }
+
+    pub fn cap_revoke(slot: usize) -> isize {
+        unsafe { ecall(SYS_CAP_REVOKE, slot, 0, 0, 0) }
+    }
+
     /// Shared teaching VA for 1.14 grant demos (matches kernel `grant::SHARE_VA`).
     pub const SHARE_VA: usize = 0x1A00_0000;
 

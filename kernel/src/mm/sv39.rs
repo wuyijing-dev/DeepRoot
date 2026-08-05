@@ -156,6 +156,37 @@ pub fn map_user_in(root_pa: PhysAddr, va: usize, pa: PhysAddr, exec: bool, write
 }
 
 /*
+ * unmap_user_in - clear the leaf PTE for @va in @root_pa (1.14.1)
+ *
+ * Mid-level tables are left in place (teaching; no mid-level reclaim yet).
+ */
+pub fn unmap_user_in(root_pa: PhysAddr, va: usize) -> bool {
+    if va % PAGE_SIZE != 0 {
+        return false;
+    }
+    let root = root_from(root_pa);
+    let mut table = root as *mut PageTable;
+    for level in (1..=2).rev() {
+        let idx = vpn(va, level);
+        let pte = unsafe { &(*table).entries[idx] };
+        if !pte.is_valid() || pte.is_leaf() {
+            return false;
+        }
+        table = PageTable::from_pa(PhysAddr::new(pte.ppn() << 12)) as *mut PageTable;
+    }
+    let idx = vpn(va, 0);
+    let pte = unsafe { &mut (*table).entries[idx] };
+    if !pte.is_valid() || !pte.is_leaf() {
+        return false;
+    }
+    *pte = Pte(0);
+    unsafe {
+        core::arch::asm!("sfence.vma", options(nostack));
+    }
+    true
+}
+
+/*
  * map_mmio_range - identity-map @base..@base+@size as device memory (R|W)
  *
  * Used after FDT discovery so virtio-mmio / UART registers are reachable.

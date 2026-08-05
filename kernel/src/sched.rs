@@ -824,20 +824,21 @@ pub fn handle_syscall(
         }
         SYS_CAP_REVOKE => {
             let slot = a0 as usize;
-            let badge = tasks
-                .cspace(current)
-                .and_then(|cs| cs.get(slot))
-                .filter(|s| s.cap_type == CapType::Endpoint)
-                .map(|s| s.badge);
+            let view = tasks.cspace(current).and_then(|cs| cs.get(slot)).map(|s| {
+                (s.cap_type, s.badge)
+            });
             let cs = match tasks.cspace_mut(current) {
                 Some(c) => c,
                 None => return ERR_GENERIC,
             };
             match cs.revoke(slot) {
                 Ok(n) => {
-                    if let Some(b) = badge {
+                    if let Some((CapType::Endpoint, b)) = view {
                         eps.clear_badge(b);
                         abort_ipc_waiters(b, ERR_GENERIC);
+                    }
+                    if let Some((CapType::Frame, badge)) = view {
+                        let _ = crate::grant::on_revoke_frame(badge as usize);
                     }
                     crate::ledger::LEDGER.record(
                         LedgerKind::CapRevoke,
@@ -1409,6 +1410,24 @@ pub fn handle_syscall(
             match crate::module::lookup_sched(name) {
                 Some(id) => id as isize,
                 None => ERR_GENERIC,
+            }
+        }
+        SYS_FRAME_UNMAP => {
+            let sid = current_sched_id();
+            let va = a0 as usize;
+            if crate::grant::unmap(sid, va) {
+                0
+            } else {
+                ERR_GENERIC
+            }
+        }
+        SYS_FRAME_UNMAP_INTO => {
+            let target = a0 as usize;
+            let va = a1 as usize;
+            if crate::grant::unmap(target, va) {
+                0
+            } else {
+                ERR_GENERIC
             }
         }
         _ => ERR_NOSYS,
