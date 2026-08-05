@@ -50,14 +50,14 @@
 
 ## 文档对应哪个版本？
 
-**当前文档默认对齐：`v1.15.1`**（`/fbmenu` 菜单 + `--gui`）。  
+**当前文档默认对齐：`v1.15.2`**（`/fbmenu` 按键选择 + `--gui`）。  
 较早快照仍可通过页首选择器打开。
 
 请核对：
 
 - 仓库根目录 [`VERSION`](https://github.com/wuyijing-dev/DeepRoot/blob/main/VERSION) 第一行  
 - 启动横幅里的版本号  
-- （可选）`git checkout v1.15.1` 与文字严格对齐  
+- （可选）`git checkout v1.15.2` 与文字严格对齐  
 
 若你跟的是更新的 `main`，以仓库里的 `VERSION` 为准；用选择器切换冻结快照。
 

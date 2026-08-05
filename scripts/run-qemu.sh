@@ -118,7 +118,7 @@ if [[ "${SMOKE}" -eq 1 ]]; then
   set -e
 
   COMMON_NEEDLES=(
-    "DeepRoot microkernel 1.15.1"
+    "DeepRoot microkernel 1.15.2"
     "fdt: model \"DeepRoot QEMU virt\""
     "fdt: board deeproot,qemu-virt"
     "fdt: cpu count=2"
@@ -179,6 +179,7 @@ if [[ "${SMOKE}" -eq 1 ]]; then
     "fbmenu: menu ready"
     "fbmenu: select about"
     "fbmenu: terminal demo"
+    "fbmenu: your turn"
     "init: fbmenu loaded"
     "shell: DeepRoot shell 1.14 ready"
     "init: handing off to shell"

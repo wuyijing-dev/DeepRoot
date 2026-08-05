@@ -376,24 +376,35 @@ fn run_bounce(frames: u32) {
     }
 }
 
+/*
+ * Terminal grid lives in .bss — keep it off the user stack. activate() used to
+ * allocate ~800B frames (Term inline) and tripped illegal insn / faults on the
+ * old 4-page spawn stacks when running beside the shell.
+ */
 struct Term {
-    cells: [[u8; COLS]; ROWS],
     row: usize,
     col: usize,
 }
 
+static mut TERM_CELLS: [[u8; COLS]; ROWS] = [[b' '; COLS]; ROWS];
+
 impl Term {
-    fn new() -> Self {
-        Self {
-            cells: [[b' '; COLS]; ROWS],
-            row: 0,
-            col: 0,
+    fn reset() -> Self {
+        unsafe {
+            for r in 0..ROWS {
+                for c in 0..COLS {
+                    TERM_CELLS[r][c] = b' ';
+                }
+            }
         }
+        Self { row: 0, col: 0 }
     }
 
     fn clear_row(&mut self, r: usize) {
-        for c in 0..COLS {
-            self.cells[r][c] = b' ';
+        unsafe {
+            for c in 0..COLS {
+                TERM_CELLS[r][c] = b' ';
+            }
         }
     }
 
@@ -403,8 +414,10 @@ impl Term {
             self.row += 1;
             self.clear_row(self.row);
         } else {
-            for r in 0..ROWS - 1 {
-                self.cells[r] = self.cells[r + 1];
+            unsafe {
+                for r in 0..ROWS - 1 {
+                    TERM_CELLS[r] = TERM_CELLS[r + 1];
+                }
             }
             self.clear_row(ROWS - 1);
         }
@@ -418,12 +431,16 @@ impl Term {
         if b == 0x08 || b == 0x7f {
             if self.col > 0 {
                 self.col -= 1;
-                self.cells[self.row][self.col] = b' ';
+                unsafe {
+                    TERM_CELLS[self.row][self.col] = b' ';
+                }
             }
             return;
         }
         let ch = if (32..=126).contains(&b) { b } else { b'?' };
-        self.cells[self.row][self.col] = ch;
+        unsafe {
+            TERM_CELLS[self.row][self.col] = ch;
+        }
         self.col += 1;
         if self.col >= COLS {
             self.newline();
@@ -437,7 +454,8 @@ impl Term {
             let y = 20 + (r as u32) * 10;
             for c in 0..COLS {
                 let x = 8 + (c as u32) * 8;
-                draw_char(x, y, self.cells[r][c], FG, BG);
+                let ch = unsafe { TERM_CELLS[r][c] };
+                draw_char(x, y, ch, FG, BG);
             }
         }
     }
@@ -461,7 +479,7 @@ fn poll_quit() -> bool {
 
 fn run_terminal(auto_demo: bool) {
     let _ = sys::debug_write("fbmenu: terminal demo\n");
-    let mut t = Term::new();
+    let mut t = Term::reset();
     for &b in b"DeepRoot fb terminal\nType on serial; q/Esc exits.\n" {
         t.put(b);
     }
@@ -470,9 +488,9 @@ fn run_terminal(auto_demo: bool) {
         for &b in b"hello from auto\n" {
             t.put(b);
             t.draw();
-            let _ = sys::sleep_ms(40);
+            let _ = sys::sleep_ms(20);
         }
-        let _ = sys::sleep_ms(200);
+        let _ = sys::sleep_ms(80);
         return;
     }
     loop {
@@ -488,22 +506,27 @@ fn run_terminal(auto_demo: bool) {
     }
 }
 
-fn activate(sel: usize, auto: bool) {
+fn activate(sel: usize) {
     match sel {
         0 => {
             show_about();
-            if auto {
-                let _ = sys::sleep_ms(400);
-            } else {
-                while !poll_quit() {
-                    let _ = sys::sleep_ms(50);
-                }
+            while !poll_quit() {
+                let _ = sys::sleep_ms(50);
             }
         }
-        1 => run_bounce(if auto { 45 } else { 10_000 }),
-        2 => run_terminal(auto),
+        1 => run_bounce(10_000),
+        2 => run_terminal(false),
         _ => {}
     }
+}
+
+/// Brief smoke walk so CI needles appear; then the menu waits for keys only.
+fn smoke_markers() {
+    show_about();
+    let _ = sys::debug_write("fbmenu: select about\n");
+    let _ = sys::sleep_ms(80);
+    run_terminal(true);
+    let _ = sys::sleep_ms(40);
 }
 
 #[no_mangle]
@@ -518,12 +541,16 @@ pub extern "C" fn main() {
     draw_menu(sel);
     let _ = sys::debug_write("fbmenu: menu ready\n");
 
+    /* One-shot smoke markers, then human owns selection (no timer hijack). */
+    smoke_markers();
+    draw_menu(sel);
+    let _ = sys::debug_write("fbmenu: your turn (w/s Enter, q in view)\n");
+
     /*
-     * Smoke path: timer auto-walks About then Terminal so needles appear
-     * without a human on the UART. Interactive: w/s/Enter (q inside views).
+     * Interactive loop. Under `./scripts/run-qemu.sh --gui`, type on this
+     * serial while fbmenu is foreground (`run fbmenu`). At the shell prompt
+     * the shell consumes UART bytes — fbmenu will not see them.
      */
-    let mut auto_ticks: u32 = 0;
-    let mut auto_done = false;
     loop {
         if let Some(b) = poll_byte() {
             match b {
@@ -536,32 +563,11 @@ pub extern "C" fn main() {
                     draw_menu(sel);
                 }
                 b'\n' | b'\r' | b' ' => {
-                    activate(sel, false);
+                    activate(sel);
                     draw_menu(sel);
                 }
                 _ => {}
             }
-            auto_done = true;
-        } else if !auto_done {
-            auto_ticks += 1;
-            /* ~1.5s at 50ms → move highlight; then auto-select demos. */
-            if auto_ticks == 30 {
-                sel = 0;
-                draw_menu(sel);
-                activate(0, true);
-                draw_menu(sel);
-            } else if auto_ticks == 45 {
-                sel = 2;
-                draw_menu(sel);
-                activate(2, true);
-                draw_menu(sel);
-                auto_done = true;
-                let _ = sys::debug_write("fbmenu: auto demo done\n");
-            } else if auto_ticks % 15 == 0 && auto_ticks < 30 {
-                sel = (sel + 1) % MENU_N;
-                draw_menu(sel);
-            }
-            let _ = sys::sleep_ms(50);
         } else {
             let _ = sys::sleep_ms(50);
         }

@@ -3,11 +3,11 @@
 Rust capability microkernel for RISC-V.
 
 Repository: https://github.com/wuyijing-dev/DeepRoot  
-Version: see [`VERSION`](VERSION) — current **1.15.1**
+Version: see [`VERSION`](VERSION) — current **1.15.2**
 
 ## Learning docs
 
-面向新手的逐步教程（基线 **v1.15.1**）：
+面向新手的逐步教程（基线 **v1.15.2**）：
 
 - 在线：https://wuyijing-dev.github.io/DeepRoot/
 - 本地：`cargo install mdbook && cd book && mdbook serve --open`

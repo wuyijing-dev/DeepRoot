@@ -15,7 +15,8 @@ use crate::sync::SpinLock;
 use crate::timer;
 
 pub const MAX_UTASKS: usize = 16;
-pub const USER_STACK_PAGES: usize = 4;
+/* fbmenu Term/draw nests need headroom (was 4; illegal insn / faults under pressure). */
+pub const USER_STACK_PAGES: usize = 8;
 pub const KSTACK_PAGES: usize = 2;
 
 static SCHED_LOCK: SpinLock = SpinLock::new();
