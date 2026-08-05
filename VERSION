@@ -25,6 +25,9 @@
 #   - **Wayland stance:** learn concepts (surface, buffer, seat, compositor IPC).
 #     Do NOT ship Linux libwayland / weston binary compat. Closest teaching goal
 #     is a DeepRoot compositor + small clients that *feel* like using Wayland.
+#   - **Userspace first:** prefer loadable modules / servers over growing the
+#     kernel. Kernel keeps thin primitives (IPC, sched, mm, caps); drivers,
+#     FS policy, UI, demos live in userspace when possible.
 #   - MAJOR 2.0 = platform integration (no full desktop). MAJOR 3.0 = first
 #     “use the display protocol like Wayland labs” milestone — do not rush.
 #
