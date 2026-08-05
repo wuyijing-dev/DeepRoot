@@ -1,0 +1,458 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>1.0 冻结 ABI - DeepRoot 学习笔记</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="面向新手的 DeepRoot 微内核学习文档（基于 v1.6.1）">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">DeepRoot 学习笔记</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/wuyijing-dev/DeepRoot" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/wuyijing-dev/DeepRoot/edit/main/book/src/path/05-abi.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="10-冻结-abi详细表"><a class="header" href="#10-冻结-abi详细表">1.0 冻结 ABI（详细表）</a></h1>
+<p>ABI = Application Binary Interface：用户程序与内核之间的「接线标准」。<br />
+1.0 把底座钉住；1.1–1.4 只<strong>追加</strong>新号码。</p>
+<h2 id="本章拆读顺序"><a class="header" href="#本章拆读顺序">本章拆读顺序</a></h2>
+<ol>
+<li><a href="abi/01-registers.html">1.0.1 寄存器调用约定</a></li>
+<li><a href="abi/02-errors-core-syscalls.html">1.0.2 错误码与核心 syscall</a></li>
+<li><a href="abi/03-trap-decode.html">1.0.3 <code>trap.rs</code> 如何解码 ecall</a></li>
+<li><a href="abi/04-guided-syscalls.html">1.0.4 四个 syscall 实战跟读</a></li>
+</ol>
+<h2 id="1-调用约定risc-v-用户态"><a class="header" href="#1-调用约定risc-v-用户态">1. 调用约定（RISC-V 用户态）</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>寄存器</th><th>用途</th></tr></thead><tbody>
+<tr><td><code>a7</code></td><td>syscall 号 <code>SYS_*</code></td></tr>
+<tr><td><code>a0</code>–<code>a3</code></td><td>参数（不够再扩展，当前够用）</td></tr>
+<tr><td><code>a0</code></td><td>返回值（负号常表示 <code>ERR_*</code>）</td></tr>
+</tbody></table>
+</div>
+<p>封装见 <code>libs/deeproot-user/src/lib.rs</code> 的 <code>ecall</code>。</p>
+<h2 id="11-用户态怎么发-ecall跟源码对齐"><a class="header" href="#11-用户态怎么发-ecall跟源码对齐">1.1 用户态怎么“发 ecall”（跟源码对齐）</a></h2>
+<p>你在 <code>libs/deeproot-user/src/lib.rs</code> 里能看到用户态统一封装：</p>
+<pre><code class="language-text">ecall(nr, a0, a1, a2, a3):
+  让 a7 = nr
+  让 a0..a3 = 参数
+  执行 ecall
+  从返回寄存器取回 ret（约定为 isize）
+</code></pre>
+<p>例如：</p>
+<ul>
+<li><code>sys::debug_write(s)</code>：<code>SYS_DEBUG_WRITE</code>，参数放到 <code>a0=s.as_ptr()</code>、<code>a1=s.len()</code></li>
+<li><code>sys::debug_read_byte()</code>：<code>SYS_DEBUG_READ</code>，参数全 0</li>
+<li><code>sys::exec(path)</code>：<code>SYS_EXEC</code>，参数放到 <code>a0=path.as_ptr()</code>、<code>a1=path.len()</code></li>
+</ul>
+<p><strong>关键点</strong>：用户态并不知道“内核用哪个寄存器怎么解析”，它只负责把 <code>a7/a0..a3</code> 摆好，内核 trap 路径再按约定读出来。</p>
+<h2 id="12-你可以把-abi-想成插头定义"><a class="header" href="#12-你可以把-abi-想成插头定义">1.2 你可以把 ABI 想成“插头定义”</a></h2>
+<p>同样一条 <code>ecall</code> 指令，内核之所以知道你是想：</p>
+<ul>
+<li>打印字符串</li>
+<li>从 ramfs 执行 ELF</li>
+<li>查询时间</li>
+<li>等待子任务结束</li>
+</ul>
+<p>不是因为 CPU 懂“高级语义”，而是因为<strong>双方事先约好</strong>：</p>
+<pre><code class="language-text">a7 放 syscall 号
+a0..a3 放参数
+a0 收返回值
+负值表示错误
+</code></pre>
+<p>所以 ABI 最怕的不是“代码写得丑”，而是<strong>内核和用户态对同一组寄存器有不同理解</strong>。<br />
+一旦一边觉得 <code>a0</code> 是路径指针、另一边把它当 sched id，系统往往不会优雅报错，而是直接跑向 <code>ERR_GENERIC</code>、page fault，甚至乱码输出。</p>
+<h2 id="2-错误码"><a class="header" href="#2-错误码">2. 错误码</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>常量</th><th>值</th><th>含义</th></tr></thead><tbody>
+<tr><td><code>ERR_GENERIC</code></td><td>-1</td><td>泛型失败</td></tr>
+<tr><td><code>ERR_AGAIN</code></td><td>-11</td><td>暂时没有（如串口无新字节、wait 子任务还在跑）</td></tr>
+<tr><td><code>ERR_NOSYS</code></td><td>-38</td><td>未知 syscall</td></tr>
+</tbody></table>
+</div>
+<p>在学习时你可以用一个经验法则判断“这是策略问题还是数据问题”：</p>
+<ul>
+<li><code>ERR_AGAIN</code>：通常是“还没准备好”，按协议 <code>yield_now()</code> / 再试即可（例如 <code>SYS_DEBUG_READ</code>、<code>SYS_WAIT</code> 的轮询语义）</li>
+<li><code>ERR_NOSYS</code>：ABI 不匹配（syscall 号写错、或用户库/内核没一起重编）</li>
+<li><code>ERR_GENERIC</code>：多半是参数/路径/ELF 映射失败（比如 <code>SYS_EXEC</code> 找不到 ramfs 文件，或 ELF magic 不对）</li>
+</ul>
+<h3 id="21-为什么-deeproot-喜欢返回负数"><a class="header" href="#21-为什么-deeproot-喜欢返回负数">2.1 为什么 DeepRoot 喜欢返回负数？</a></h3>
+<p>因为用户态封装统一把 <code>ecall</code> 返回值视为 <code>isize</code>。<br />
+这让调用者只需要做一个非常朴素的判断：</p>
+<pre><code class="language-text">ret &gt;= 0   → 成功，正数/0 可能自带业务含义
+ret &lt; 0    → 出错或暂不可用
+</code></pre>
+<p>例如：</p>
+<ul>
+<li><code>SYS_DEBUG_WRITE</code> 成功时返回写出的长度</li>
+<li><code>SYS_EXEC</code> 成功时返回 child sched id</li>
+<li><code>SYS_WAIT</code> 成功回收时返回 <code>0</code></li>
+<li><code>SYS_DEBUG_READ</code> 暂时没键时返回 <code>-11</code></li>
+</ul>
+<p>这对新手很友好，因为它把 syscall 学习门槛压到了“先区分正负号”。</p>
+<h2 id="3-系统调用一览v14-教学树"><a class="header" href="#3-系统调用一览v14-教学树">3. 系统调用一览（v1.4 教学树）</a></h2>
+<blockquote>
+<p>下表以 <code>libs/deeproot-abi/src/syscall.rs</code> 为准；学的时候请打开文件核对。</p>
+</blockquote>
+<h3 id="31-10-基线09"><a class="header" href="#31-10-基线09">3.1 1.0 基线（0–9）</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>号</th><th>名字</th><th>参数直觉</th><th>典型用途</th></tr></thead><tbody>
+<tr><td>0</td><td><code>SYS_DEBUG_WRITE</code></td><td>ptr, len</td><td>调试打印</td></tr>
+<tr><td>1</td><td><code>SYS_LEDGER_DUMP</code></td><td>—</td><td>打印账本</td></tr>
+<tr><td>2</td><td><code>SYS_CAP_DERIVE</code></td><td>…</td><td>派生能力</td></tr>
+<tr><td>3</td><td><code>SYS_IPC_CALL</code></td><td>slot, label, word0</td><td>同步调用</td></tr>
+<tr><td>4</td><td><code>SYS_CAP_REVOKE</code></td><td>…</td><td>收回</td></tr>
+<tr><td>5</td><td><code>SYS_CAP_MINT</code></td><td>…</td><td>签发</td></tr>
+<tr><td>6</td><td><code>SYS_IPC_RECV</code></td><td>badge</td><td>接收</td></tr>
+<tr><td>7</td><td><code>SYS_IPC_REPLY</code></td><td>badge, label, word0</td><td>回复</td></tr>
+<tr><td>8</td><td><code>SYS_YIELD</code></td><td>—</td><td>让出 CPU</td></tr>
+<tr><td>9</td><td><code>SYS_EXIT</code></td><td>code</td><td>退出并变僵尸</td></tr>
+</tbody></table>
+</div>
+<h3 id="32-1114-追加"><a class="header" href="#32-1114-追加">3.2 1.1–1.4 追加</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>号</th><th>名字</th><th>参数直觉</th><th>系列</th></tr></thead><tbody>
+<tr><td>10</td><td><code>SYS_SPAWN</code></td><td>blob_id（0=hello）</td><td>1.1</td></tr>
+<tr><td>11</td><td><code>SYS_DEBUG_READ</code></td><td>— → 字节或 <code>-11</code></td><td>1.2</td></tr>
+<tr><td>12</td><td><code>SYS_FS_LIST</code></td><td>—</td><td>1.3</td></tr>
+<tr><td>13</td><td><code>SYS_FS_CAT</code></td><td>path_ptr, len</td><td>1.3</td></tr>
+<tr><td>14</td><td><code>SYS_EXEC</code></td><td>path_ptr, len → sched id</td><td>1.3</td></tr>
+<tr><td>15</td><td><code>SYS_TIME</code></td><td>— → 毫秒</td><td>彩蛋/节奏</td></tr>
+<tr><td>16</td><td><code>SYS_WAIT</code></td><td>sched_id → 0 / <code>-11</code></td><td>shell 等待子任务</td></tr>
+</tbody></table>
+</div>
+<h3 id="33-先记住-5-个最常用-syscall"><a class="header" href="#33-先记住-5-个最常用-syscall">3.3 先记住 5 个最常用 syscall</a></h3>
+<p>如果你是第一次读 DeepRoot，不要一上来背完整 syscall 表。<br />
+先把下面 5 个吃透，基本就能走完整条用户态交互链：</p>
+<div class="table-wrapper"><table><thead><tr><th>名字</th><th>你在哪最容易遇到它</th><th>成功返回</th><th>常见失败/特殊值</th></tr></thead><tbody>
+<tr><td><code>SYS_DEBUG_WRITE</code></td><td>所有用户程序打印</td><td>写出长度</td><td><code>-1</code> 参数异常</td></tr>
+<tr><td><code>SYS_DEBUG_READ</code></td><td>shell 读键盘</td><td>一个字节</td><td><code>-11</code> 暂无输入</td></tr>
+<tr><td><code>SYS_EXEC</code></td><td>shell <code>run xxx</code></td><td>child sched id</td><td><code>-1</code> 找不到/非 ELF/映射失败</td></tr>
+<tr><td><code>SYS_WAIT</code></td><td>shell 前台等待子任务</td><td><code>0</code></td><td><code>-11</code> 还没退出</td></tr>
+<tr><td><code>SYS_YIELD</code></td><td>轮询或主动让出</td><td><code>0</code></td><td>通常不失败</td></tr>
+</tbody></table>
+</div>
+<h2 id="4-从-ecall-到-handle_syscall跟读-traprs"><a class="header" href="#4-从-ecall-到-handle_syscall跟读-traprs">4. 从 ecall 到 handle_syscall（跟读 trap.rs）</a></h2>
+<p>用户态执行 <code>ecall</code> 后，<code>kernel/src/trap.rs</code> 会走到 <code>trap_handler()</code>。</p>
+<p>当它判定这是用户态 ecall（<code>scause</code> 的异常码对应）时，会做这些事：</p>
+<ol>
+<li>读取 syscall 号：<code>nr = tf.x[17]</code>（也就是用户态的 <code>a7</code>）</li>
+<li>读取参数：<code>a0=tf.x[10]</code>、<code>a1=tf.x[11]</code>、<code>a2=tf.x[12]</code>、<code>a3=tf.x[13]</code></li>
+<li><code>tf.sepc += 4</code>：跳过 ecall 指令，避免回到同一条 ecall 反复触发</li>
+<li>调度器分发：<code>ret = sched::handle_syscall(&amp;mut ctx.tasks, &amp;mut ctx.eps, nr, a0, a1, a2, a3)</code></li>
+<li>把返回值写回“发起 syscall 的那个任务”：<code>sched::set_syscall_return(issuer, ret)</code></li>
+<li><code>sched::restore_user()</code>：恢复用户寄存器并 <code>sret</code> 回到用户态</li>
+</ol>
+<p>因此你能理解两件事：</p>
+<ul>
+<li><code>SYS_WAIT</code> 结束后，<code>wait(id)</code> 返回的值是写回给“调用 wait 的那一个任务”的 <code>a0</code></li>
+<li>如果你看到返回值异常（比如一直是 <code>-11</code>），通常不是用户库错了，而是内核调度/阻塞路径没发生你预期的状态切换</li>
+</ul>
+<h2 id="41-trap-frame-里为什么是-x17--x10"><a class="header" href="#41-trap-frame-里为什么是-x17--x10">4.1 trap frame 里为什么是 <code>x[17]</code> / <code>x[10]</code>？</a></h2>
+<p>调度器保存的是一个通用寄存器数组 <code>x[0..31]</code>。<br />
+RISC-V 的 ABI 名字（<code>a0</code>/<code>a1</code>/<code>a7</code>）只是这些整数寄存器的“别名”：</p>
+<div class="table-wrapper"><table><thead><tr><th>ABI 名</th><th>实际整数寄存器</th><th>trap frame 下标</th></tr></thead><tbody>
+<tr><td><code>a0</code></td><td><code>x10</code></td><td><code>tf.x[10]</code></td></tr>
+<tr><td><code>a1</code></td><td><code>x11</code></td><td><code>tf.x[11]</code></td></tr>
+<tr><td><code>a2</code></td><td><code>x12</code></td><td><code>tf.x[12]</code></td></tr>
+<tr><td><code>a3</code></td><td><code>x13</code></td><td><code>tf.x[13]</code></td></tr>
+<tr><td><code>a7</code></td><td><code>x17</code></td><td><code>tf.x[17]</code></td></tr>
+</tbody></table>
+</div>
+<p>所以你在 <code>trap_handler()</code> 里看到：</p>
+<pre><code class="language-text">nr = tf.x[17]
+a0 = tf.x[10]
+...
+</code></pre>
+<p>并不是“写死魔法数字”，而是在直接用 RISC-V 调用约定读寄存器。</p>
+<h2 id="42-sepc--4-为什么不能少"><a class="header" href="#42-sepc--4-为什么不能少">4.2 <code>sepc += 4</code> 为什么不能少？</a></h2>
+<p><code>ecall</code> 本身是一条指令。<br />
+如果 trap 返回前不把 <code>sepc</code> 前移 4 字节，CPU 回到用户态后会再次执行<strong>同一条</strong> <code>ecall</code>，然后再进 trap，形成“无限重复系统调用”。</p>
+<p>这就是很多新手在自己写 trap 路径时最容易漏掉的一步。</p>
+<h2 id="43-从-handle_syscall-里跟-4-个真实例子"><a class="header" href="#43-从-handle_syscall-里跟-4-个真实例子">4.3 从 <code>handle_syscall()</code> 里跟 4 个真实例子</a></h2>
+<p>打开 <code>kernel/src/sched.rs</code> 的 <code>handle_syscall()</code>，建议按下面四个分支跟一遍：</p>
+<h3 id="例-1sys_debug_write"><a class="header" href="#例-1sys_debug_write">例 1：<code>SYS_DEBUG_WRITE</code></a></h3>
+<p>大意是：</p>
+<pre><code class="language-text">读 a0=ptr, a1=len
+len 太大 → ERR_GENERIC
+把 [ptr, ptr+len) 当用户缓冲区
+调用 console::write_bytes(slice)
+返回 len
+</code></pre>
+<p>这能解释为什么用户程序打印成功时常得到“写出长度”而不是简单的 0。</p>
+<h3 id="例-2sys_debug_read"><a class="header" href="#例-2sys_debug_read">例 2：<code>SYS_DEBUG_READ</code></a></h3>
+<p>它不是阻塞等待，而是：</p>
+<pre><code class="language-text">sbi::console_getchar()
+有字节 → 返回字节值
+没字节 → ERR_AGAIN
+</code></pre>
+<p>所以 shell 的读输入循环必须自己处理 <code>-11</code> 并 <code>yield_now()</code>。</p>
+<h3 id="例-3sys_exec"><a class="header" href="#例-3sys_exec">例 3：<code>SYS_EXEC</code></a></h3>
+<p>它会：</p>
+<pre><code class="language-text">读取 path 指针与长度
+校验长度范围
+utf8 解析 path
+fs::lookup(path)
+校验前 4 字节是不是 ELF
+spawn_elf_bytes(...)
+返回 child sched id
+</code></pre>
+<p>这解释了为什么 <code>run hello</code> 的失败点其实很多，不只是“文件不存在”：</p>
+<ul>
+<li>路径长度非法</li>
+<li>非 UTF-8</li>
+<li>ramfs 查不到</li>
+<li>文件存在但不是 ELF</li>
+<li>ELF 太大/映射失败</li>
+</ul>
+<h3 id="例-4sys_wait"><a class="header" href="#例-4sys_wait">例 4：<code>SYS_WAIT</code></a></h3>
+<p>这个分支非常值得新手背下来：</p>
+<pre><code class="language-text">child 越界            → ERR_GENERIC
+child == Zombie       → 清空槽位并返回 0
+child == Empty        → ERR_GENERIC
+其他状态（还在跑）    → ERR_AGAIN
+</code></pre>
+<p>于是 shell 的前台运行模型就清楚了：<code>run</code> 不是靠中断通知，而是靠 <code>wait -&gt; -11 -&gt; yield -&gt; wait</code> 轮询收尸。</p>
+<h2 id="44-abi-与调度为什么绑得这么紧"><a class="header" href="#44-abi-与调度为什么绑得这么紧">4.4 ABI 与调度为什么绑得这么紧？</a></h2>
+<p>很多教材会把“syscall”讲成纯接口，把“scheduler”讲成另一个主题。<br />
+但在 DeepRoot 里，两者是连着的：</p>
+<ul>
+<li><code>SYS_EXIT</code> 会把当前任务标成 <code>Zombie</code></li>
+<li><code>SYS_IPC_RECV</code> 在收不到消息时会阻塞当前任务</li>
+<li><code>SYS_WAIT</code> 读的是调度器里的任务状态</li>
+<li><code>SYS_YIELD</code> 直接推动下一个任务运行</li>
+</ul>
+<p>所以当你调一个“看起来只是 ABI 的问题”时，经常真正的根因在调度状态机里。</p>
+<h2 id="5-动手验证"><a class="header" href="#5-动手验证">5. 动手验证</a></h2>
+<ol>
+<li>在 <code>deeproot-user</code> 给 <code>debug_write</code> 临时打日志（或在内核 <code>SYS_DEBUG_WRITE</code> 分支计数）。</li>
+<li>自己写用户程序调用非法 <code>a7</code>，确认得到 <code>ERR_NOSYS</code>。</li>
+<li>对比：<code>SYS_SPAWN(0)</code> 与 <code>SYS_EXEC("hello")</code> 都能跑 hello，但路径不同——一个吃嵌入 blob id，一个吃 ramfs 名字。</li>
+</ol>
+<h3 id="51-建议你亲自跑的最小实验"><a class="header" href="#51-建议你亲自跑的最小实验">5.1 建议你亲自跑的最小实验</a></h3>
+<h4 id="实验-a确认-err_again-不是错误而是暂时没准备好"><a class="header" href="#实验-a确认-err_again-不是错误而是暂时没准备好">实验 A：确认 <code>ERR_AGAIN</code> 不是“错误”，而是“暂时没准备好”</a></h4>
+<p>在 shell 读一行之前，串口通常大部分时间是空的。<br />
+如果你在 <code>SYS_DEBUG_READ</code> 分支临时加计数，会看到它反复走到：</p>
+<pre><code class="language-text">None =&gt; ERR_AGAIN
+</code></pre>
+<p>而 shell 并不会 panic，只是继续 <code>yield_now()</code> 再读。</p>
+<h4 id="实验-b让-sys_exec-因不同原因失败"><a class="header" href="#实验-b让-sys_exec-因不同原因失败">实验 B：让 <code>SYS_EXEC</code> 因不同原因失败</a></h4>
+<p>分别试：</p>
+<pre><code class="language-text">deeproot&gt; run nosuch
+deeproot&gt; cat hello
+deeproot&gt; run readme.txt
+</code></pre>
+<p>你要能分清：</p>
+<ul>
+<li><code>nosuch</code>：ramfs 查不到</li>
+<li><code>readme.txt</code>：文件存在，但不是 ELF</li>
+<li><code>cat hello</code>：不是 exec 路径，而是 fs 文本显示路径</li>
+</ul>
+<h4 id="实验-c观察-wait-收尸"><a class="header" href="#实验-c观察-wait-收尸">实验 C：观察 <code>wait</code> 收尸</a></h4>
+<pre><code class="language-text">deeproot&gt; run hello
+deeproot&gt; run hello
+</code></pre>
+<p>如果第二次仍能正常运行，说明第一次的 child 已被 <code>SYS_WAIT</code> 回收掉了，而不是永久占着槽位。</p>
+<h2 id="6-易错点"><a class="header" href="#6-易错点">6. 易错点</a></h2>
+<ul>
+<li>改了 ABI 却只重编用户或只重编内核 → 必炸。应整仓构建。</li>
+<li>把 Linux 的 <code>write(1, …)</code> 脑补进来——号码和语义都对不上。</li>
+<li>看到 <code>-11</code> 就当成“失败” → 对 <code>read</code> / <code>wait</code> 这类接口来说，它常常只是“再等等”。</li>
+<li>以为 syscall 返回值总是马上写回当前 CPU 正在跑的那个任务 → IPC/阻塞路径下，返回值归属要看“谁发起了那次 syscall”。</li>
+<li>只记 syscall 名字，不记参数放在哪个寄存器 → 一到 trap frame 就会完全看不懂 <code>tf.x[10]</code> / <code>tf.x[17]</code> 这些代码。</li>
+</ul>
+<p>下一章：<a href="06-as-spawn.html">1.1 地址空间与 spawn</a>。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../path/user-sched/05-syscall-return.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../path/abi/01-registers.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../path/user-sched/05-syscall-return.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../path/abi/01-registers.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
