@@ -118,7 +118,7 @@ if [[ "${SMOKE}" -eq 1 ]]; then
   set -e
 
   COMMON_NEEDLES=(
-    "DeepRoot microkernel 1.15.2"
+    "DeepRoot microkernel 1.16.0"
     "fdt: model \"DeepRoot QEMU virt\""
     "fdt: board deeproot,qemu-virt"
     "fdt: cpu count=2"
@@ -167,6 +167,8 @@ if [[ "${SMOKE}" -eq 1 ]]; then
     "grant: alloc frame pa="
     "virtioblk: probe start"
     "virtioblk: irq cap"
+    "virtioblk: irq wait ok"
+    "plic: ready"
     "virtioblk: rw ok"
     "virtioblk: probe ok"
     "init: virtioblk loaded"

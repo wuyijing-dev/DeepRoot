@@ -1,8 +1,8 @@
-//! virtioblk — userspace virtio-mmio block driver on peel disk (1.14.3).
+//! virtioblk — userspace virtio-mmio block driver on peel disk (1.16).
 //!
 //! Claims the **second** FDT virtio-blk (QEMU `virtio-mmio-bus.1` / hd1).
-//! Kernel DRFS keeps the first. Uses Frame DMA spans + polled completions;
-//! IRQ cap is minted for handoff teaching (no PLIC wait yet).
+//! Kernel DRFS keeps the first. Completions use SYS_IRQ_WAIT (PLIC) with a
+//! short poll fallback so smoke still passes if an IRQ is coalesced.
 
 #![no_std]
 #![no_main]
@@ -147,9 +147,10 @@ struct Disk {
     free: [bool; QUEUE_NUM],
     last_used: u16,
     capacity: u64,
+    irq_slot: isize,
 }
 
-fn setup_queue(mmio: usize, queue_pa: usize, data_pa: usize) -> Option<Disk> {
+fn setup_queue(mmio: usize, queue_pa: usize, data_pa: usize, irq_slot: isize) -> Option<Disk> {
     w32(mmio, MMIO_STATUS, 0);
     let mut status = S_ACKNOWLEDGE | S_DRIVER;
     w32(mmio, MMIO_STATUS, status);
@@ -192,6 +193,7 @@ fn setup_queue(mmio: usize, queue_pa: usize, data_pa: usize) -> Option<Disk> {
         free: [true; QUEUE_NUM],
         last_used: 0,
         capacity: cap,
+        irq_slot,
     })
 }
 
@@ -311,19 +313,34 @@ fn rw_sector(disk: &mut Disk, sector: u64, buf: &mut [u8], write: bool) -> bool 
     }
     w32(disk.mmio, MMIO_QUEUE_NOTIFY, 0);
 
+    /* Brief poll, then SYS_IRQ_WAIT, then poll again (1.16). */
     let mut spins = 0u32;
+    let mut waited = false;
     loop {
         core::sync::atomic::fence(core::sync::atomic::Ordering::SeqCst);
         let uidx = unsafe { core::ptr::read_volatile(disk.used_idx) };
         if disk.last_used != uidx {
             break;
         }
+        if !waited && disk.irq_slot >= 0 && spins > 64 {
+            let _ = sys::irq_wait(disk.irq_slot as usize);
+            waited = true;
+            spins = 0;
+            continue;
+        }
         spins += 1;
         if spins > 50_000_000 {
             free_chain(disk, i0);
             return false;
         }
-        core::hint::spin_loop();
+        if spins & 0xff == 0 {
+            let _ = sys::yield_now();
+        } else {
+            core::hint::spin_loop();
+        }
+    }
+    if waited {
+        let _ = sys::debug_write("virtioblk: irq wait ok\n");
     }
 
     let isr = r32(disk.mmio, MMIO_INTERRUPT_STATUS);
@@ -393,7 +410,8 @@ pub extern "C" fn main() {
 
     /* MMIO still mapped at MMIO_VA from find_second_blk. */
     let _ = mmio_slot;
-    let Some(mut disk) = setup_queue(sys::MMIO_VA, queue_pa as usize, data_pa as usize) else {
+    let Some(mut disk) = setup_queue(sys::MMIO_VA, queue_pa as usize, data_pa as usize, irq_slot)
+    else {
         loop {
             let _ = sys::yield_now();
         }

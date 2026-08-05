@@ -30,6 +30,7 @@ mod trap;
 mod version;
 mod virtio_blk;
 mod pipe;
+mod plic;
 
 use deeproot_abi::LedgerKind;
 use ledger::LEDGER;
@@ -78,7 +79,9 @@ pub extern "C" fn kernel_main(hartid: usize, dtb_pa: usize) -> ! {
     block::init();
     fs::init();
     timer::init(hartid);
+    plic::init(fdt::cpu_count().max(2));
     sbi::enable_supervisor_soft_irq();
+    sbi::enable_supervisor_ext_irq();
     servers::bring_up();
 }
 

@@ -171,6 +171,20 @@ pub extern "C" fn trap_handler() {
         sched::restore_user();
     }
 
+    /* Supervisor external interrupt (PLIC) — 1.16 IRQ wait. */
+    if is_interrupt && code == 9 {
+        let hart = smp::hart_id();
+        let irq = crate::plic::claim(hart);
+        if irq != 0 {
+            crate::plic::latch(irq);
+            sched::wakeup_irq(irq);
+            crate::plic::complete(hart, irq);
+            LEDGER.record(LedgerKind::Trap, scause as u32, irq, 0x4952); /* 'IR' */
+        }
+        let _ = sched::yield_now();
+        sched::restore_user();
+    }
+
     let mut stval: usize;
     unsafe {
         core::arch::asm!("csrr {}, stval", out(reg) stval, options(nostack));

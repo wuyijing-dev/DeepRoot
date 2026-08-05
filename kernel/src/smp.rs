@@ -161,6 +161,7 @@ pub extern "C" fn secondary_main(hartid: usize) -> ! {
     trap::init_secondary();
     timer::init(hartid);
     sbi::enable_supervisor_soft_irq();
+    sbi::enable_supervisor_ext_irq();
 
     mark_online(hartid);
     println!("smp: secondary hart={} ready", hartid);

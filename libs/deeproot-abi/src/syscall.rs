@@ -125,6 +125,8 @@ pub const SYS_FRAME_PHYS: usize = 49;
 pub const SYS_IRQ_VIRTIO: usize = 50;
 /// Mint Frame for FDT `qemu,fw-cfg-mmio` (1.15 ramfb)
 pub const SYS_MMIO_FWCFG: usize = 51;
+/// `a0`=Irq cap slot — block until that PLIC IRQ is delivered (1.16)
+pub const SYS_IRQ_WAIT: usize = 52;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

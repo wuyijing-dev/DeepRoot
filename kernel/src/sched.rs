@@ -60,6 +60,8 @@ pub enum BlockReason {
     None,
     IpcRecv { badge: u64 },
     IpcCall { badge: u64 },
+    /// Waiting for PLIC IRQ number (Irq cap badge) — 1.16.
+    Irq { irq: u32 },
 }
 
 /// Thread Control Block.
@@ -209,7 +211,7 @@ pub fn abort_ipc_waiters(badge: u64, err: isize) {
             }
             let match_b = match t.block {
                 BlockReason::IpcRecv { badge: b } | BlockReason::IpcCall { badge: b } => b == badge,
-                BlockReason::None => false,
+                BlockReason::None | BlockReason::Irq { .. } => false,
             };
             if match_b {
                 t.tf.x[10] = err as usize;
@@ -499,6 +501,50 @@ pub fn wakeup_ipc(badge: u64) {
             if t.state == TaskState::Blocked {
                 if let BlockReason::IpcRecv { badge: b } = t.block {
                     if b == badge {
+                        t.state = TaskState::Ready;
+                        t.block = BlockReason::None;
+                        if t.home_hart < MAX_HARTS {
+                            wake[t.home_hart] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for h in 0..MAX_HARTS {
+        if wake[h] {
+            smp::ipi_wake(h);
+        }
+    }
+}
+
+/*
+ * block_current_irq - Blocked until PLIC delivers @irq (1.16)
+ */
+pub fn block_current_irq(irq: u32) {
+    let _g = SCHED_LOCK.lock();
+    let s = inner();
+    let h = smp::hart_id().min(MAX_HARTS - 1);
+    let id = s.current[h];
+    if s.tasks[id].is_idle {
+        return;
+    }
+    s.tasks[id].state = TaskState::Blocked;
+    s.tasks[id].block = BlockReason::Irq { irq };
+}
+
+/*
+ * wakeup_irq - Ready tasks blocked on PLIC @irq
+ */
+pub fn wakeup_irq(irq: u32) {
+    let mut wake = [false; MAX_HARTS];
+    {
+        let _g = SCHED_LOCK.lock();
+        let s = inner();
+        for t in s.tasks.iter_mut() {
+            if t.state == TaskState::Blocked {
+                if let BlockReason::Irq { irq: w } = t.block {
+                    if w == irq {
                         t.state = TaskState::Ready;
                         t.block = BlockReason::None;
                         if t.home_hart < MAX_HARTS {
@@ -1482,6 +1528,33 @@ pub fn handle_syscall(
                 Some(slot) => slot as isize,
                 None => ERR_GENERIC,
             }
+        }
+        SYS_IRQ_WAIT => {
+            /* a0 = Irq cap slot; block until PLIC delivers badge IRQ. */
+            let slot = a0 as usize;
+            let cs = match tasks.cspace(current) {
+                Some(c) => c,
+                None => return ERR_GENERIC,
+            };
+            let cap = match cs.get(slot) {
+                Some(c) if c.live && c.cap_type == CapType::Irq => c,
+                _ => return ERR_GENERIC,
+            };
+            let irq = cap.badge as u32;
+            if irq == 0 || irq > 63 {
+                return ERR_GENERIC;
+            }
+            /* Already latched (IRQ before wait) — return immediately. */
+            if crate::plic::take(irq) {
+                println!("irq: wait irq={} ready", irq);
+                return 0;
+            }
+            block_current_irq(irq);
+            let _ = yield_now();
+            /* After wake, consume latch if still set. */
+            let _ = crate::plic::take(irq);
+            println!("irq: wait irq={} woken", irq);
+            0
         }
         SYS_MMIO_FWCFG => {
             let Some(plat) = crate::fdt::get() else {

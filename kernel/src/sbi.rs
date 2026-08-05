@@ -24,6 +24,8 @@ const SBI_IPI_SEND_IPI: usize = 0;
 /// Supervisor software interrupt enable / pending (sip/sie bit 1).
 pub const SIE_SSIE: usize = 1 << 1;
 pub const SIP_SSIP: usize = 1 << 1;
+/// Supervisor external interrupt enable (sie bit 9) — PLIC / 1.16.
+pub const SIE_SEIE: usize = 1 << 9;
 
 #[repr(C)]
 struct Sbiret {
@@ -170,6 +172,16 @@ pub fn enable_supervisor_soft_irq() {
         core::arch::asm!(
             "csrs sie, {}",
             in(reg) SIE_SSIE,
+            options(nomem, nostack),
+        );
+    }
+}
+
+pub fn enable_supervisor_ext_irq() {
+    unsafe {
+        core::arch::asm!(
+            "csrs sie, {}",
+            in(reg) SIE_SEIE,
             options(nomem, nostack),
         );
     }

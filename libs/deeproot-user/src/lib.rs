@@ -220,6 +220,11 @@ pub mod sys {
         unsafe { ecall(SYS_IRQ_VIRTIO, idx, 0, 0, 0) }
     }
 
+    /// Block until PLIC delivers the IRQ for this Irq cap (1.16).
+    pub fn irq_wait(slot: usize) -> isize {
+        unsafe { ecall(SYS_IRQ_WAIT, slot, 0, 0, 0) }
+    }
+
     /// Mint Frame for FDT `qemu,fw-cfg-mmio` (1.15 ramfb).
     pub fn mmio_fwcfg() -> isize {
         unsafe { ecall(SYS_MMIO_FWCFG, 0, 0, 0, 0) }

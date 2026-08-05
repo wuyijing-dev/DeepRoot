@@ -17,7 +17,7 @@ pub enum CapType {
     CNode = 3,
     /// Physical frame (pager / frame server ownership).
     Frame = 4,
-    /// Device interrupt (badge = IRQ number; 1.14.3 — no PLIC bind yet).
+    /// Device interrupt (badge = IRQ number; PLIC wait via SYS_IRQ_WAIT in 1.16).
     Irq = 5,
 }
 
