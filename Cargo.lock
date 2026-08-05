@@ -30,6 +30,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "deeproot-fbmenu"
+version = "1.4.0"
+dependencies = [
+ "deeproot-abi",
+ "deeproot-user",
+]
+
+[[package]]
 name = "deeproot-grantpeer"
 version = "1.4.0"
 dependencies = [

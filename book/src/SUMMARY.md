@@ -84,6 +84,7 @@
 - [1.14 共享内存 grant](path/18-grant14.md)
 - [1.14.3 剥离：Frame 收官与 virtioblk](path/19-peel.md)
 - [1.15 Framebuffer](path/20-fb15.md)
+- [1.15.1 fbmenu / GUI](path/21-fbmenu.md)
 
 # 动手玩
 

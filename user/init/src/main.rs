@@ -179,6 +179,18 @@ pub extern "C" fn main() {
         let _ = sys::debug_write("init: fbdemo load failed\n");
     }
 
+    const FBMENU_BADGE: u64 = 0xD017;
+    if sys::spawn_server(b"fbmenu", FBMENU_BADGE) >= 0 {
+        let mut i = 0usize;
+        while i < 64 {
+            let _ = sys::yield_now();
+            i += 1;
+        }
+        let _ = sys::debug_write("init: fbmenu loaded\n");
+    } else {
+        let _ = sys::debug_write("init: fbmenu load failed\n");
+    }
+
     /* 1.14: shared frame — map into grantpeer, peer verifies magic. */
     const GRANTPEER_BADGE: u64 = 0xD014;
     let gpslot = sys::spawn_server(b"grantpeer", GRANTPEER_BADGE);

@@ -2,9 +2,11 @@
 # run-qemu.sh - boot DeepRoot on QEMU virt + OpenSBI
 #
 # Usage:
-#   ./scripts/run-qemu.sh           # build + run (interactive)
+#   ./scripts/run-qemu.sh           # build + run (serial, -nographic)
+#   ./scripts/run-qemu.sh --gui     # GTK window + serial on stdio (see ramfb)
 #   ./scripts/run-qemu.sh --gdb     # wait for gdb on :1234
 #   ./scripts/run-qemu.sh --smoke   # timed boot; exit 0 if markers appear
+#   ./scripts/run-qemu.sh --gui --gdb
 
 set -euo pipefail
 
@@ -14,7 +16,30 @@ KERNEL_ELF="${ROOT}/target/${TARGET}/release/deeproot-kernel"
 DISK_IMG="${ROOT}/build/deeproot-disk.img"
 PEEL_IMG="${ROOT}/build/deeproot-peel.img"
 DTB="${ROOT}/build/deeproot-qemu-virt.dtb"
-MODE="${1:-}"
+
+GUI=0
+GDB=0
+SMOKE=0
+for arg in "$@"; do
+  case "${arg}" in
+    --gui) GUI=1 ;;
+    --gdb) GDB=1 ;;
+    --smoke) SMOKE=1 ;;
+    -h|--help)
+      sed -n '2,10p' "$0"
+      exit 0
+      ;;
+    *)
+      echo "run-qemu: unknown option: ${arg}" >&2
+      echo "try: ./scripts/run-qemu.sh [--gui] [--gdb] | --smoke" >&2
+      exit 1
+      ;;
+  esac
+done
+if [[ "${SMOKE}" -eq 1 && "${GUI}" -eq 1 ]]; then
+  echo "run-qemu: --smoke stays -nographic (ignore --gui)" >&2
+  GUI=0
+fi
 
 cd "${ROOT}"
 
@@ -38,12 +63,20 @@ fi
 # Host is usually x86_64: RISC-V guests run under TCG. Prefer multi-thread TCG
 # and a large TB cache so ASCII playback is less jerky.
 QEMU_ACCEL=(-accel tcg,thread=multi)
+# -nographic: serial on this terminal, no window (smoke / default).
+# --gui: GTK shows ramfb; keep UART on stdio via -serial mon:stdio.
+if [[ "${GUI}" -eq 1 ]]; then
+  echo "run-qemu: GUI mode (GTK + ramfb); serial on this terminal"
+  QEMU_DISPLAY=(-serial mon:stdio -display gtk)
+else
+  QEMU_DISPLAY=(-nographic)
+fi
 QEMU_COMMON=(
   -machine virt
   -cpu rv64
   -smp 2
   -m 256M
-  -nographic
+  "${QEMU_DISPLAY[@]}"
   -bios default
   -kernel "${KERNEL_ELF}"
   -dtb "${DTB}"
@@ -54,7 +87,7 @@ QEMU_COMMON=(
   -device ramfb
 )
 
-if [[ "${MODE}" == "--smoke" ]]; then
+if [[ "${SMOKE}" -eq 1 ]]; then
   # Fresh image so boot1 formats DRFS; boot2 proves durable.txt survived.
   dd if=/dev/zero of="${DISK_IMG}" bs=1M count=1 status=none
   dd if=/dev/zero of="${PEEL_IMG}" bs=1M count=1 status=none
@@ -85,7 +118,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
   set -e
 
   COMMON_NEEDLES=(
-    "DeepRoot microkernel 1.15.0"
+    "DeepRoot microkernel 1.15.1"
     "fdt: model \"DeepRoot QEMU virt\""
     "fdt: board deeproot,qemu-virt"
     "fdt: cpu count=2"
@@ -142,6 +175,11 @@ if [[ "${MODE}" == "--smoke" ]]; then
     "fbdemo: clear ok"
     "fbdemo: fill_rect ok"
     "init: fbdemo loaded"
+    "fbmenu: ramfb ok"
+    "fbmenu: menu ready"
+    "fbmenu: select about"
+    "fbmenu: terminal demo"
+    "init: fbmenu loaded"
     "shell: DeepRoot shell 1.14 ready"
     "init: handing off to shell"
   )
@@ -178,7 +216,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
 fi
 
 GDB_ARGS=()
-if [[ "${MODE}" == "--gdb" ]]; then
+if [[ "${GDB}" -eq 1 ]]; then
   GDB_ARGS=(-S -s)
   echo "QEMU waiting for GDB on :1234"
 fi

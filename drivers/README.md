@@ -8,7 +8,7 @@ implementation:
 
 | Directory | Role |
 |---|---|
-| `drivers/` | Device protocol / hardware servers (`virtioblk`, `fbdemo`, …) |
+| `drivers/` | Device protocol / hardware servers (`virtioblk`, `fbdemo`, `fbmenu`, …) |
 | `user/` | Apps and canopy tasks (`init`, `shell`, `hello`, demos) |
 | `kernel/` | Thin primitives only (sched, mm, caps, IPC) |
 

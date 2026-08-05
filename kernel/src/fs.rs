@@ -19,6 +19,7 @@ static MODNOTE_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-m
 static GRANTPEER_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-grantpeer"));
 static VIRTIOBLK_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-virtioblk"));
 static FBDEMO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-fbdemo"));
+static FBMENU_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-fbmenu"));
 
 struct File {
     name: &'static str,
@@ -28,15 +29,15 @@ struct File {
 static FILES: &[File] = &[
     File {
         name: "readme.txt",
-        data: b"DeepRoot 1.15.0 - ramfb + fbdemo clear/fill_rect\n",
+        data: b"DeepRoot 1.15.1 - ramfb + fbmenu menu/terminal\n",
     },
     File {
         name: "hello.txt",
-        data: b"ELF: /hello /virtioblk /fbdemo - Framebuffer 1.15\n",
+        data: b"ELF: /hello /virtioblk /fbdemo /fbmenu - Framebuffer 1.15\n",
     },
     File {
         name: "version",
-        data: b"1.15.0\n",
+        data: b"1.15.1\n",
     },
     File {
         name: "hello",
@@ -65,6 +66,10 @@ static FILES: &[File] = &[
     File {
         name: "fbdemo",
         data: FBDEMO_ELF,
+    },
+    File {
+        name: "fbmenu",
+        data: FBMENU_ELF,
     },
 ];
 

@@ -38,7 +38,8 @@ DeepRoot/
 │   └── deeproot-user/      # 用户态 ecall 封装
 ├── drivers/                # 用户态设备驱动（对齐 Linux drivers/ 角色）
 │   ├── virtioblk/          # peel 盘 virtio-blk
-│   └── fbdemo/             # ramfb 像素演示
+│   ├── fbdemo/             # ramfb 像素演示
+│   └── fbmenu/             # 菜单 / 图形终端
 └── user/                   # 应用与 canopy（init / shell / demos）
     ├── init/
     ├── console/
@@ -63,7 +64,7 @@ DeepRoot/
 | 用户程序怎么进内核 | `libs/deeproot-user/src/lib.rs` |
 | shell / ramfs | `user/shell/`、`kernel/src/fs.rs`、`kernel/build.rs` |
 | 块 / virtio（内核 DRFS） | `kernel/src/block.rs`、`virtio_blk.rs` |
-| 用户态驱动 | `drivers/virtioblk`、`drivers/fbdemo` |
+| 用户态驱动 | `drivers/virtioblk`、`drivers/fbdemo`、`drivers/fbmenu` |
 
 ## 3. 构建时发生了什么？（必读）
 

@@ -1,5 +1,6 @@
 [
-  {"version": "v1.15.0", "label": "1.15.0（当前 · ramfb / fbdemo）"},
+  {"version": "v1.15.1", "label": "1.15.1（当前 · fbmenu / GUI）"},
+  {"version": "v1.15.0", "label": "1.15.0（ramfb / fbdemo）"},
   {"version": "v1.14.3", "label": "1.14.3（Frame 收官 / hd1 驱动）"},
   {"version": "v1.14.2", "label": "1.14.2（MMIO peel / virtioblk probe）"},
   {"version": "v1.14.1", "label": "1.14.1（Frame unmap/revoke）"},

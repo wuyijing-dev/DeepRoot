@@ -2,21 +2,21 @@
 
 ## 1. 文档对齐哪一版？
 
-本学习笔记默认对齐 **`v1.15.0`**（ramfb + fbdemo 像素）。  
-页首选择器还可打开更早冻结快照（如 `v1.11.0`、`v1.10.1`…）。
+本学习笔记默认对齐 **`v1.15.1`**（fbmenu 菜单 / 图形终端）。  
+页首选择器还可打开更早冻结快照（如 `v1.15.0`、`v1.14.3`…）。
 
 核对三处：
 
 1. 仓库根 `VERSION` 第一行非注释内容  
 2. QEMU 横幅：`DeepRoot microkernel …`  
-3. Git 标签（若你按标签检出）：`git checkout v1.15.0`
+3. Git 标签（若你按标签检出）：`git checkout v1.15.1`
 
 ## 2. 标签怎么用？
 
 ```bash
 git fetch --tags
 git tag -l 'v*'
-git checkout v1.15.0
+git checkout v1.15.1
 ```
 
 冻结教程 HTML 在站点的 `/DeepRoot/<tag>/`（由标签工作流发布）。  

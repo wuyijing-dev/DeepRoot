@@ -2,6 +2,7 @@
 //!
 //! Configures `etc/ramfb`, maps a contiguous Frame buffer, then clear /
 //! put_pixel / fill_rect. Serial markers for smoke under `-nographic`.
+//! Exits after the draw demo so `/fbmenu` (1.15.1) can own the display.
 
 #![no_std]
 #![no_main]
@@ -322,6 +323,7 @@ pub extern "C" fn main() {
         }
     }
     let _ = sys::debug_write("fbdemo: fill_rect ok\n");
+    /* GUI refresh / menu ownership continues in /fbmenu (1.15.1). */
     sys::exit(0);
 }
 
