@@ -29,6 +29,7 @@ git checkout v1.15.2
 - **MAJOR**：刻意的平台里程碑（**2.0** = 集成发布，不是桌面 OS）  
 - **PATCHLEVEL**：一个**主题系列**（FS、模块…）；**不要**每个小功能都跳一级  
 - **SUBLEVEL**：同一主题内的分段落地与打磨（优先多打 `1.9.y`）
+- **1.x** 基础设施路线延伸到 **1.50**（对标 Linux 角色，非 ABI）
 
 | PATCHLEVEL | 主题 |
 |---|---|
@@ -44,13 +45,12 @@ git checkout v1.15.2
 | **1.13** | 服务命名 / 发现 |
 | 1.14 | 共享内存 grant（缓冲基础） |
 | 1.15 | Framebuffer 映射（可选 HW；UI 主题至此关闭） |
-| 1.16 | 用户态 IRQ wait |
-| 1.17 | 存储 peel / 用户态 FS |
-| 1.18 | Console / TTY 服务器 |
-| 1.19 | virtio-net + 报文 I/O |
-| 1.20 | mmap / anon 缺页 |
+| 1.16–1.20 | IRQ / 存储 peel / TTY / virtio-net / mmap |
+| 1.21–1.30 | 时钟·调度·notify·poll·mount·cache·DMA… |
+| 1.31–1.40 | PCI·熵·RTC·SMP·热插拔·MAC/rlimit/cgroup/ns-lite |
+| 1.41–1.50 | UDP/TCP lite·日志·profiling·crash·第二平台·ABI·**1.50 里程碑** |
 | 2.0–2.2 | 平台集成 → 驱动打磨 → 可观测性 |
-|
+
 当前 **current** 见 `VERSION` 第一行。完整分期与 out-of-scope 以根目录 `VERSION` 为准。
 
 ## 4. 和 GitHub Releases
