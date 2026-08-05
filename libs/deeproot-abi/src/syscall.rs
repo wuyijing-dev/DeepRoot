@@ -1,4 +1,4 @@
-//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.12.
+//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.13.
 //!
 //! 0..9 frozen at 1.0.0. New numbers are additive only.
 
@@ -93,6 +93,11 @@ pub const SYS_LSEEK: usize = 36;
 pub const SYS_SLEEP_MS: usize = 37;
 /// Dump current task CapSpace to console
 pub const SYS_CAP_DUMP: usize = 38;
+
+/* ---- 1.13 service naming ---- */
+
+/// `a0`=name, `a1`=nlen — resolve registry name → mint Endpoint → cap slot
+pub const SYS_SERVICE_LOOKUP: usize = 39;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

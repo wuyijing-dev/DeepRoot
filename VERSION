@@ -1,4 +1,4 @@
-1.12.0
+1.13.0
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -579,8 +579,8 @@
 # [1.9]  Filesystem depth (dirs first; durable/fds continue in 1.11)
 # [1.10] Loadable modules / dynamic servers (+ userspace driver load)
 # [1.11] FS durability + minimal fd table
-# [1.12] Practical I/O and shell utilities ← current
-# [1.13] Service naming / discovery + runtime polish
+# [1.12] Practical I/O and shell utilities
+# [1.13] Service naming / discovery + runtime polish ← current
 # [1.14] Shared-memory grants (buffer foundation)
 # [1.15] Framebuffer pixels / simple UI
 # [1.16] Input seat (keyboard / pointer)

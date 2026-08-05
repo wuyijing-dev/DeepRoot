@@ -527,16 +527,15 @@ fn run_exec(
 }
 
 fn help() {
-    let _ = sys::debug_write("DeepRoot shell 1.12 — builtins:\n");
+    let _ = sys::debug_write("DeepRoot shell 1.13 — builtins:\n");
     let _ = sys::debug_write("  help / ls [DIR] / cat FILE / cp SRC DST / run ELF / exit\n");
     let _ = sys::debug_write("  mkdir DIR / rmdir DIR / rm FILE / hexdump FILE / stat FILE\n");
     let _ = sys::debug_write("  sleep MS / time / ledger / caps\n");
-    let _ = sys::debug_write("  modload PATH [badge] / modules / moddemo / modnote\n");
+    let _ = sys::debug_write("  lookup NAME / modules / modload PATH [badge]\n");
     let _ = sys::debug_write("  echo ARGS   pwd   cd DIR   env   export KEY=VAL   history\n");
     let _ = sys::debug_write("Operators:  |  pipe   > file   >> append   &  background\n");
-    let _ = sys::debug_write("Root `>` / `>>` write durable DRFS; fds: open/read via hexdump.\n");
     let _ = sys::debug_write("Examples:\n");
-    let _ = sys::debug_write("  echo hello > note.txt; hexdump note.txt; sleep 100; ledger\n");
+    let _ = sys::debug_write("  lookup ping; lookup mynote; modules\n");
 }
 
 fn read_line(buf: &mut [u8], hist: &History) -> usize {
@@ -682,6 +681,36 @@ fn run_stage(
         return 0;
     } else if cmd == b"modules" {
         let _ = sys::module_list();
+        return 0;
+    } else if cmd == b"lookup" || cmd == b"svc" {
+        let Some(name) = st.argv.get(1) else {
+            let _ = sys::debug_write("shell: lookup <service-name>\n");
+            return 0;
+        };
+        let slot = sys::service_lookup(name);
+        if slot < 0 {
+            let _ = sys::debug_write("shell: lookup failed\n");
+            return 0;
+        }
+        let _ = sys::debug_write("shell: lookup ok slot=");
+        write_u32(slot as u32);
+        let _ = sys::debug_write("\n");
+        let _ = sys::yield_now();
+        let label = if name == b"ping" {
+            0x5049u64
+        } else if name == b"console" {
+            0xC045
+        } else if name == b"modnote" || name == b"mynote" {
+            0x4E4F
+        } else {
+            0x4D44
+        };
+        let rc = sys::ipc_call(slot as usize, label, 1);
+        if rc >= 0 {
+            let _ = sys::debug_write("shell: lookup call ok\n");
+        } else {
+            let _ = sys::debug_write("shell: lookup call failed\n");
+        }
         return 0;
     } else if cmd == b"sleep" {
         let ms = st
@@ -871,13 +900,13 @@ fn run_stage(
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write(
-        "shell: DeepRoot shell 1.12 ready (help, sleep, ledger, hexdump)\n",
+        "shell: DeepRoot shell 1.13 ready (help, lookup, modules)\n",
     );
     let mut buf = [0u8; LINE_MAX];
     let mut hist = History::new();
     let mut env = Env::new();
     let _ = env.set(b"SHELL", b"deeproot");
-    let _ = env.set(b"VERSION", b"1.12.0");
+    let _ = env.set(b"VERSION", b"1.13.0");
 
     loop {
         let _ = sys::debug_write("deeproot> ");

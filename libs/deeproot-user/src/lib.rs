@@ -159,6 +159,11 @@ pub mod sys {
         unsafe { ecall(SYS_CAP_DUMP, 0, 0, 0, 0) }
     }
 
+    /// Resolve registered service name → Endpoint cap slot in this task.
+    pub fn service_lookup(name: &[u8]) -> isize {
+        unsafe { ecall(SYS_SERVICE_LOOKUP, name.as_ptr() as usize, name.len(), 0, 0) }
+    }
+
     pub const O_RDONLY: u32 = 0;
     pub const O_WRONLY: u32 = 1;
     pub const O_RDWR: u32 = 2;

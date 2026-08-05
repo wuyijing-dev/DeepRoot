@@ -31,7 +31,7 @@ sudo apt-get install -y qemu-system-misc
 ```bash
 git clone git@github.com:wuyijing-dev/DeepRoot.git
 cd DeepRoot
-git checkout v1.12.0   # 与本教程文字对齐；更早快照用选择器或其它标签
+git checkout v1.13.0   # 与本教程文字对齐；更早快照用选择器或其它标签
 ```
 
 ## 2. `run-qemu.sh` 实际做了什么？
@@ -75,7 +75,7 @@ git checkout v1.12.0   # 与本教程文字对齐；更早快照用选择器或�
 ### 4.2 内核横幅
 
 ```text
-  DeepRoot microkernel 1.12.0
+  DeepRoot microkernel 1.13.0
   RISC-V S-mode · capability microkernel
   remote: git@github.com:wuyijing-dev/DeepRoot.git
 ```

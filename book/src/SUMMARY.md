@@ -80,6 +80,7 @@
   - [1.10.2 moddemo 与 init](path/modules/02-moddemo-init.md)
 - [1.11 文件系统持久化](path/15-fs11.md)
 - [1.11–1.12 fd 与实用工具](path/16-lab12.md)
+- [1.13 服务命名 / 发现](path/17-svc13.md)
 
 # 动手玩
 

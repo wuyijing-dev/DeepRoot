@@ -1293,6 +1293,36 @@ pub fn handle_syscall(
                 ERR_GENERIC
             }
         }
+        SYS_SERVICE_LOOKUP => {
+            use deeproot_abi::rights;
+            let mut nbuf = [0u8; 96];
+            let name = match copy_user_path(a0 as usize, a1 as usize, &mut nbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            if name.is_empty() {
+                return ERR_GENERIC;
+            }
+            let Some(badge) = crate::module::lookup_badge(name) else {
+                return ERR_GENERIC;
+            };
+            let cs = match tasks.cspace_mut(current) {
+                Some(c) => c,
+                None => return ERR_GENERIC,
+            };
+            match cs.install_copy(CapType::Endpoint, rights::IPC, badge, CapReason::Mint) {
+                Ok(slot) => {
+                    crate::println!(
+                        "service: resolved '{}' → slot={} badge={:#x}",
+                        name,
+                        slot,
+                        badge
+                    );
+                    slot as isize
+                }
+                Err(_) => ERR_GENERIC,
+            }
+        }
         _ => ERR_NOSYS,
     }
 }

@@ -36,12 +36,30 @@ const MODNOTE_BADGE: u64 = 0xD002;
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write("init: root server online\n");
-    let rc = sys::ipc_call(0, 0x5049, 1);
-    let _ = sys::debug_write("init: ping call done\n");
-    if rc >= 0 {
-        let _ = sys::debug_write("init: ping accepted\n");
+
+    /* 1.13: resolve canopy by name (not only hard-coded slot 0). */
+    let ping_slot = sys::service_lookup(b"ping");
+    if ping_slot >= 0 {
+        let rc = sys::ipc_call(ping_slot as usize, 0x5049, 1);
+        let _ = sys::debug_write("init: lookup ping ok\n");
+        let _ = sys::debug_write("init: ping call done\n");
+        if rc >= 0 {
+            let _ = sys::debug_write("init: ping accepted\n");
+        }
+    } else {
+        let rc = sys::ipc_call(0, 0x5049, 1);
+        let _ = sys::debug_write("init: ping call done\n");
+        if rc >= 0 {
+            let _ = sys::debug_write("init: ping accepted\n");
+        }
     }
-    let _ = sys::ipc_call(1, 0xC045, 0);
+
+    let cons = sys::service_lookup(b"console");
+    if cons >= 0 {
+        let _ = sys::ipc_call(cons as usize, 0xC045, 0);
+    } else {
+        let _ = sys::ipc_call(1, 0xC045, 0);
+    }
     let _ = sys::debug_write("init: console notified\n");
     let hid = sys::spawn(0);
     if hid >= 0 {
@@ -86,6 +104,20 @@ pub extern "C" fn main() {
         }
     } else {
         let _ = sys::debug_write("init: cp modnote failed\n");
+    }
+
+    /* 1.13: look up loaded module by name and call again. */
+    let look = sys::service_lookup(b"mynote");
+    if look >= 0 {
+        let _ = sys::yield_now();
+        let lrc = sys::ipc_call(look as usize, 0x4E4F, 1);
+        if lrc >= 0 {
+            let _ = sys::debug_write("init: lookup mynote ok\n");
+        } else {
+            let _ = sys::debug_write("init: lookup mynote call failed\n");
+        }
+    } else {
+        let _ = sys::debug_write("init: lookup mynote failed\n");
     }
 
     /* 1.11: seed a durable DRFS file (survives QEMU restart on disk.img). */

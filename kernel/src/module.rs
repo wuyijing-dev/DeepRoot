@@ -1,15 +1,15 @@
-//! Loadable module registry (1.10) — dynamic userspace servers after boot.
+//! Loadable module / service registry (1.10–1.13).
 //!
-//! Boot canopy (ping/console/init/shell) stays build-time. Optional servers
-//! such as `/moddemo` are path-spawned via [`SYS_SPAWN_SERVER`] and recorded
-//! here for inspection. Not a Linux kmod ABI.
+//! Boot canopy + path-spawned servers are recorded by **name** so clients can
+//! [`lookup_badge`] a badge and mint a fresh Endpoint into their CapSpace (1.13).
+//! Not D-Bus / not Linux kmod.
 
 use core::cell::UnsafeCell;
 
 use crate::println;
 use crate::sync::SpinLock;
 
-pub const MAX_MODULES: usize = 8;
+pub const MAX_MODULES: usize = 16;
 pub const NAME_MAX: usize = 24;
 
 pub struct Entry {
@@ -54,12 +54,26 @@ fn table() -> &'static mut Table {
     unsafe { &mut *TABLE.0.get() }
 }
 
+fn find_name(t: &Table, name: &str) -> Option<usize> {
+    t.entries.iter().position(|e| e.used && e.name_str() == name)
+}
+
+fn find_badge(t: &Table, badge: u64) -> Option<usize> {
+    t.entries.iter().position(|e| e.used && e.badge == badge)
+}
+
 /*
- * register - record a successfully spawned path server
+ * register - record a named service (unique name + unique badge)
  */
 pub fn register(name: &str, badge: u64, sched_id: usize, cap_slot: usize) -> bool {
+    if name.is_empty() || badge == 0 {
+        return false;
+    }
     let _g = LOCK.lock();
     let t = table();
+    if find_name(t, name).is_some() || find_badge(t, badge).is_some() {
+        return false;
+    }
     let Some(idx) = t.entries.iter().position(|e| !e.used) else {
         return false;
     };
@@ -80,6 +94,15 @@ pub fn register(name: &str, badge: u64, sched_id: usize, cap_slot: usize) -> boo
         cap_slot
     );
     true
+}
+
+/*
+ * lookup_badge - resolve service name → IPC badge
+ */
+pub fn lookup_badge(name: &str) -> Option<u64> {
+    let _g = LOCK.lock();
+    let t = table();
+    find_name(t, name).map(|i| t.entries[i].badge)
 }
 
 /*

@@ -25,7 +25,7 @@ struct File {
 static FILES: &[File] = &[
     File {
         name: "readme.txt",
-        data: b"DeepRoot 1.12.0 - sleep/ledger/hexdump; root > durable  # durable DRFS at /\n",
+        data: b"DeepRoot 1.13.0 - sleep/ledger/hexdump; root > durable  # durable DRFS at /\n",
     },
     File {
         name: "hello.txt",
@@ -33,7 +33,7 @@ static FILES: &[File] = &[
     },
     File {
         name: "version",
-        data: b"1.12.0\n",
+        data: b"1.13.0\n",
     },
     File {
         name: "hello",

@@ -90,6 +90,10 @@ pub fn bring_up() -> ! {
     )
     .expect("spawn shell");
 
+    /* 1.13: publish canopy names for SYS_SERVICE_LOOKUP. */
+    let _ = crate::module::register("ping", PING_BADGE, id_ping, 0);
+    let _ = crate::module::register("console", CONSOLE_BADGE, id_console, 1);
+
     /* Pin a couple of tasks onto hart 1 when SMP is up (exercise RQ + IPI). */
     if smp::hart_count() > 1 {
         sched::set_task_home(id_init, 1);
@@ -113,7 +117,7 @@ pub fn bring_up() -> ! {
         id_shell,
         n_harts
     );
-    println!("servers: teaching path 1.1–1.10 (…/FS dirs/loadable modules)");
+    println!("servers: teaching path 1.1–1.13 (…/modules/service lookup)");
 
     trap::install_ctx(tasks, eps);
     trap::enable_user();

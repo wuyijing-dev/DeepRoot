@@ -2,21 +2,21 @@
 
 ## 1. 文档对齐哪一版？
 
-本学习笔记默认对齐 **`v1.12.0`**（fd + 实用 shell 工具）。  
+本学习笔记默认对齐 **`v1.13.0`**（服务名查找）。  
 页首选择器还可打开更早冻结快照（如 `v1.11.0`、`v1.10.1`…）。
 
 核对三处：
 
 1. 仓库根 `VERSION` 第一行非注释内容  
 2. QEMU 横幅：`DeepRoot microkernel …`  
-3. Git 标签（若你按标签检出）：`git checkout v1.12.0`
+3. Git 标签（若你按标签检出）：`git checkout v1.13.0`
 
 ## 2. 标签怎么用？
 
 ```bash
 git fetch --tags
 git tag -l 'v*'
-git checkout v1.12.0
+git checkout v1.13.0
 ```
 
 冻结教程 HTML 在站点的 `/DeepRoot/<tag>/`（由标签工作流发布）。  
@@ -40,8 +40,8 @@ git checkout v1.12.0
 | 1.9 | 文件系统加深（长系列 `1.9.y`） |
 | 1.10 | 可加载模块 / 动态服务器（含 userspace 驱动） |
 | **1.11** | FS 持久化（DRFS create/append；fd 在 1.11.1） |
-| **1.12** | 实用 I/O 工具（sleep/ledger/hexdump；console 延后） |
-| 1.13 | 服务命名 / 发现 |
+| 1.12 | 实用 I/O 工具（sleep/ledger/hexdump；console 延后） |
+| **1.13** | 服务命名 / 发现 |
 | 1.14 | 共享内存 grant（缓冲基础） |
 | 1.15 | Framebuffer 像素 |
 | 1.16–1.18 | 输入 → output/buffer → 小合成器 |
