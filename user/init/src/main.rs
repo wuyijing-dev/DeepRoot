@@ -88,6 +88,14 @@ pub extern "C" fn main() {
         let _ = sys::debug_write("init: cp modnote failed\n");
     }
 
+    /* 1.11: seed a durable DRFS file (survives QEMU restart on disk.img). */
+    const DURABLE: &[u8] = b"DeepRoot 1.11 durable\n";
+    if sys::fs_write(b"durable.txt", DURABLE) >= 0 {
+        let _ = sys::debug_write("init: durable DRFS written\n");
+    } else {
+        let _ = sys::debug_write("init: durable DRFS write failed\n");
+    }
+
     let _ = sys::yield_now();
     let _ = sys::yield_now();
     let _ = sys::debug_write("init: handing off to shell\n");

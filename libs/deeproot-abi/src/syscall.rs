@@ -1,4 +1,4 @@
-//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.10.
+//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.11.
 //!
 //! 0..9 frozen at 1.0.0. New numbers are additive only.
 
@@ -68,6 +68,11 @@ pub const SYS_SPAWN_SERVER: usize = 28;
 pub const SYS_MODULE_LIST: usize = 29;
 /// `a0`=src, `a1`=slen, `a2`=dst, `a3`=dlen — copy file onto VFS path
 pub const SYS_FS_CP: usize = 30;
+
+/* ---- 1.11 durable FS ---- */
+
+/// `a0`=path, `a1`=plen, `a2`=data, `a3`=dlen — append (root → DRFS)
+pub const SYS_FS_APPEND: usize = 31;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

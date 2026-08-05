@@ -359,6 +359,7 @@ struct Stage {
     argv: Argv,
     redir: Option<[u8; ARG_LEN]>,
     redir_len: usize,
+    redir_append: bool,
 }
 
 impl Stage {
@@ -367,6 +368,7 @@ impl Stage {
             argv: Argv::empty(),
             redir: None,
             redir_len: 0,
+            redir_append: false,
         }
     }
 }
@@ -396,12 +398,14 @@ fn split_pipeline(line: &[u8], stages: &mut [Stage], nstage: &mut usize, bg: &mu
             let chunk = trim(&line[start..i]);
             if !chunk.is_empty() {
                 let mut st = Stage::empty();
-                /* Split trailing `> file` from chunk. */
+                /* Split trailing `>` / `>>` file from chunk. */
                 let mut body = chunk;
                 let mut redir_path: Option<&[u8]> = None;
-                if let Some(pos) = find_redir(chunk) {
+                if let Some((pos, append)) = find_redir(chunk) {
                     body = trim(&chunk[..pos]);
-                    redir_path = Some(trim(&chunk[pos + 1..]));
+                    let after = if append { pos + 2 } else { pos + 1 };
+                    redir_path = Some(trim(&chunk[after.min(chunk.len())..]));
+                    st.redir_append = append;
                 }
                 if !tokenize(body, &mut st.argv) {
                     return false;
@@ -427,7 +431,7 @@ fn split_pipeline(line: &[u8], stages: &mut [Stage], nstage: &mut usize, bg: &mu
     *nstage > 0
 }
 
-fn find_redir(chunk: &[u8]) -> Option<usize> {
+fn find_redir(chunk: &[u8]) -> Option<(usize, bool)> {
     let mut in_q: Option<u8> = None;
     for (i, &c) in chunk.iter().enumerate() {
         if in_q.is_none() && (c == b'"' || c == b'\'') {
@@ -435,7 +439,8 @@ fn find_redir(chunk: &[u8]) -> Option<usize> {
         } else if in_q == Some(c) {
             in_q = None;
         } else if in_q.is_none() && c == b'>' {
-            return Some(i);
+            let append = i + 1 < chunk.len() && chunk[i + 1] == b'>';
+            return Some((i, append));
         }
     }
     None
@@ -522,15 +527,16 @@ fn run_exec(
 }
 
 fn help() {
-    let _ = sys::debug_write("DeepRoot shell 1.10 — builtins:\n");
+    let _ = sys::debug_write("DeepRoot shell 1.11 — builtins:\n");
     let _ = sys::debug_write("  help / ls [DIR] / cat FILE / cp SRC DST / run ELF / exit\n");
     let _ = sys::debug_write("  mkdir DIR / rmdir DIR / rm FILE\n");
     let _ = sys::debug_write("  modload PATH [badge] / modules / moddemo / modnote\n");
     let _ = sys::debug_write("  echo ARGS   pwd   cd DIR   env   export KEY=VAL   history\n");
-    let _ = sys::debug_write("Operators:  |  pipe   > file   &  background\n");
+    let _ = sys::debug_write("Operators:  |  pipe   > file   >> append   &  background\n");
+    let _ = sys::debug_write("Root `>` / `>>` write durable DRFS (survives QEMU restart).\n");
     let _ = sys::debug_write("Examples:\n");
-    let _ = sys::debug_write("  cp modnote mynote; modload mynote 0xd002; modules\n");
-    let _ = sys::debug_write("  modnote\n");
+    let _ = sys::debug_write("  echo hello > note.txt; cat note.txt\n");
+    let _ = sys::debug_write("  echo more >> note.txt\n");
 }
 
 fn read_line(buf: &mut [u8], hist: &History) -> usize {
@@ -759,10 +765,15 @@ fn run_stage(
         return 0;
     }
 
-    /* Redir `>` takes produced bytes (cwd-relative path). */
+    /* Redir `>` / `>>` — root basenames land on durable DRFS (1.11). */
     if let Some(rb) = st.redir {
         let path = &rb[..st.redir_len];
-        if sys::fs_write(path, &produced[..plen]) < 0 {
+        let rc = if st.redir_append {
+            sys::fs_append(path, &produced[..plen])
+        } else {
+            sys::fs_write(path, &produced[..plen])
+        };
+        if rc < 0 {
             let _ = sys::debug_write("shell: write failed\n");
         }
         return 0;
@@ -783,13 +794,13 @@ fn run_stage(
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write(
-        "shell: DeepRoot shell 1.10 ready (help, cp, modload, modnote, mkdir)\n",
+        "shell: DeepRoot shell 1.11 ready (help, >, >> durable at /)\n",
     );
     let mut buf = [0u8; LINE_MAX];
     let mut hist = History::new();
     let mut env = Env::new();
     let _ = env.set(b"SHELL", b"deeproot");
-    let _ = env.set(b"VERSION", b"1.10.1");
+    let _ = env.set(b"VERSION", b"1.11.0");
 
     loop {
         let _ = sys::debug_write("deeproot> ");

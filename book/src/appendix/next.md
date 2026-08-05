@@ -1,29 +1,26 @@
 # 下一步可以看什么
 
-你已经走完 DeepRoot **1.10.1**（当前推荐 **`v1.10.1`**）：自有 DTS、virtio-blk、SMP、自研 shell、VFS 目录、**可加载模块**（含从 VFS 文件加载）。  
+你已经走完 DeepRoot **1.11.0**（当前推荐 **`v1.11.0`**）：模块加载 + **根路径 DRFS 持久写**。  
 
-按根目录 `VERSION`：先实用路径，再显示栈；**最接近 Wayland 用法**的目标是 **3.0**（DeepRoot 自研协议，不是 libwayland 兼容）。接下来仍先做 **1.10.y**（驱动 caps 等）。
+按根目录 `VERSION`：同系列可做 **1.11.1** fd 表；显示/Wayland 启发路径仍很远（约 **3.0**）。
 
 ## 1. 巩固
 
-- `cp modnote mynote` / `modload mynote` / `modules`；对照 [1.10 章](../path/14-modules.md)  
-- 回看 [1.9 FS](../path/13-fs19.md) 与 [1.8 shell](../path/12-shell18.md)
+- `echo hi > note.txt` → 重启 → `cat note.txt`；对照 [1.11 章](../path/15-fs11.md)  
+- 回看 [1.10 模块](../path/14-modules.md) 与 [1.9 FS](../path/13-fs19.md)
 
 ## 2. 官方下一站（摘要）
 
 | 系列 | 目标 | 节奏提示 |
 |---|---|---|
-| **1.10.y** | VFS 加载、驱动 caps、更多 demo | 当前系列 |
-| **1.11–1.13** | FS 持久化 / 工具 / 服务命名 | 仍无图形 |
-| **1.14** | 共享内存 grant | 为缓冲打底 |
-| **1.15–1.18** | FB → 输入 → attach → 小合成器 | 显示栈 |
-| **1.19–1.20** | Wayland **启发**的协议 + 教学客户端 | 非 Linux ABI |
-| **2.0–2.2** | 平台集成 → 图形实验会话 | 不赶 |
-| **3.0** | 最接近「像用 Wayland」的教学里程碑 | 仍非 weston/GTK |
+| **1.11.y** | fd 表、seek/truncate、DRFS 打磨 | 当前系列 |
+| **1.12–1.13** | 实用 I/O / 服务命名 | 仍无图形 |
+| **1.14–1.20** | grant → FB → 输入 → 合成器 → 显示协议 | 长线 |
+| **2.0–3.0** | 平台集成 → 最接近 Wayland 教学里程碑 | 不赶 |
 
 ## 3. 自己玩
 
-- 再写一个 badge 不同的小服务器，用 `modload PATH 0x….` 加载  
-- 给 registry 加简单名字查询  
+- 多写几个根文件，确认 `MAX_FILES=8` 边界  
+- 在子目录 `mkdir d; echo x > d/f`（仍是 VFS，重启会丢——后续主题）
 
-心态：DeepRoot 是**自研能力微内核**；学别人可以，不要搬 Linux kmod。
+心态：DeepRoot 是**自研能力微内核**；学别人可以，不要搬 Linux VFS。

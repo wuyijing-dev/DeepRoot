@@ -1,4 +1,4 @@
-1.10.1
+1.11.0
 
 #
 # DeepRoot versioning (Linux-inspired)
@@ -577,8 +577,8 @@
 # [1.7]  Multi-hart scheduling on QEMU virt
 # [1.8]  Richer native shell (argv/env/history/&/simple pipes) — no bash port
 # [1.9]  Filesystem depth (dirs first; durable/fds continue in 1.11)
-# [1.10] Loadable modules / dynamic servers (+ userspace driver load) ← current
-# [1.11] FS durability + minimal fd table
+# [1.10] Loadable modules / dynamic servers (+ userspace driver load)
+# [1.11] FS durability + minimal fd table ← current
 # [1.12] Practical I/O and shell utilities
 # [1.13] Service naming / discovery + runtime polish
 # [1.14] Shared-memory grants (buffer foundation)

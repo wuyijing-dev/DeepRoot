@@ -47,56 +47,92 @@ QEMU_COMMON=(
 )
 
 if [[ "${MODE}" == "--smoke" ]]; then
-  echo "smoke: running QEMU (30s cap)…"
-  LOG="$(mktemp)"
-  cleanup() { rm -f "${LOG}"; }
+  # Fresh image so boot1 formats DRFS; boot2 proves durable.txt survived.
+  dd if=/dev/zero of="${DISK_IMG}" bs=1M count=1 status=none
+  echo "smoke: boot1 (format + write durable.txt, 30s)…"
+  LOG1="$(mktemp)"
+  LOG2="$(mktemp)"
+  cleanup() { rm -f "${LOG1}" "${LOG2}"; }
   trap cleanup EXIT
+
+  check_needles() {
+    local log="$1"
+    shift
+    local ok=1 needle
+    for needle in "$@"; do
+      if ! grep -q "${needle}" "${log}"; then
+        echo "smoke: FAIL missing: ${needle}"
+        ok=0
+      fi
+    done
+    [[ "${ok}" -eq 1 ]]
+  }
+
   set +e
   timeout 30 qemu-system-riscv64 \
     "${QEMU_ACCEL[@]}" \
     "${QEMU_COMMON[@]}" \
-    >"${LOG}" 2>&1
+    >"${LOG1}" 2>&1
   set -e
-  ok=1
-    for needle in \
-    "DeepRoot microkernel 1.10.1" \
-    "fdt: model \"DeepRoot QEMU virt\"" \
-    "fdt: board deeproot,qemu-virt" \
-    "fdt: cpu count=2" \
-    "smp: 2 hart(s) online" \
-    "smp: secondary hart=" \
-    "fdt: virtio-mmio count=" \
-    "virtio-blk: ready" \
-    "block: virtio-blk ready" \
-    "vfs: in-RAM tree ready" \
-    "DRFS" \
-    "canopy ready" \
-    "ping: pong" \
-    "hello: spawned ELF says hi" \
-    "module: loaded 'moddemo'" \
-    "moddemo: online" \
-    "moddemo: pong" \
-    "init: module loaded" \
-    "init: module call ok" \
-    "init: cp modnote -> mynote ok" \
-    "module: loaded 'mynote'" \
-    "modnote: online" \
-    "modnote: noted" \
-    "init: vfs module loaded" \
-    "init: vfs module call ok" \
-    "shell: DeepRoot shell 1.10 ready" \
+
+  COMMON_NEEDLES=(
+    "DeepRoot microkernel 1.11.0"
+    "fdt: model \"DeepRoot QEMU virt\""
+    "fdt: board deeproot,qemu-virt"
+    "fdt: cpu count=2"
+    "smp: 2 hart(s) online"
+    "smp: secondary hart="
+    "fdt: virtio-mmio count="
+    "virtio-blk: ready"
+    "block: virtio-blk ready"
+    "vfs: in-RAM tree ready"
+    "DRFS"
+    "canopy ready"
+    "ping: pong"
+    "hello: spawned ELF says hi"
+    "module: loaded 'moddemo'"
+    "moddemo: online"
+    "moddemo: pong"
+    "init: module loaded"
+    "init: module call ok"
+    "init: cp modnote -> mynote ok"
+    "module: loaded 'mynote'"
+    "modnote: online"
+    "modnote: noted"
+    "init: vfs module loaded"
+    "init: vfs module call ok"
+    "init: durable DRFS written"
+    "shell: DeepRoot shell 1.11 ready"
     "init: handing off to shell"
-  do
-    if ! grep -q "${needle}" "${LOG}"; then
-      echo "smoke: FAIL missing: ${needle}"
-      ok=0
-    fi
-  done
+  )
+
+  ok=1
+  if ! check_needles "${LOG1}" "${COMMON_NEEDLES[@]}" \
+      "block: formatted DRFS image"; then
+    ok=0
+  fi
   if [[ "${ok}" -ne 1 ]]; then
-    echo "---- qemu log (tail) ----"
-    tail -n 160 "${LOG}"
+    echo "---- qemu boot1 log (tail) ----"
+    tail -n 160 "${LOG1}"
     exit 1
   fi
+
+  echo "smoke: boot2 (existing DRFS + survived reboot, 30s)…"
+  set +e
+  timeout 30 qemu-system-riscv64 \
+    "${QEMU_ACCEL[@]}" \
+    "${QEMU_COMMON[@]}" \
+    >"${LOG2}" 2>&1
+  set -e
+
+  if ! check_needles "${LOG2}" "${COMMON_NEEDLES[@]}" \
+      "block: found existing DRFS image" \
+      "block: durable.txt survived reboot"; then
+    echo "---- qemu boot2 log (tail) ----"
+    tail -n 160 "${LOG2}"
+    exit 1
+  fi
+
   echo "smoke: OK"
   exit 0
 fi

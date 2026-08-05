@@ -66,6 +66,18 @@ pub mod sys {
         }
     }
 
+    pub fn fs_append(path: &[u8], data: &[u8]) -> isize {
+        unsafe {
+            ecall(
+                SYS_FS_APPEND,
+                path.as_ptr() as usize,
+                path.len(),
+                data.as_ptr() as usize,
+                data.len(),
+            )
+        }
+    }
+
     pub fn fs_mkdir(path: &[u8]) -> isize {
         unsafe { ecall(SYS_FS_MKDIR, path.as_ptr() as usize, path.len(), 0, 0) }
     }

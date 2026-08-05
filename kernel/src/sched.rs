@@ -1052,6 +1052,25 @@ pub fn handle_syscall(
                 ERR_GENERIC
             }
         }
+        SYS_FS_APPEND => {
+            let cwd = current_cwd_node();
+            let plen = a1 as usize;
+            let dlen = a3 as usize;
+            if plen == 0 || dlen > crate::vfs::FILE_MAX {
+                return ERR_GENERIC;
+            }
+            let mut pbuf = [0u8; 96];
+            let path = match copy_user_path(a0 as usize, plen, &mut pbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            let data = unsafe { core::slice::from_raw_parts(a2 as usize as *const u8, dlen) };
+            if crate::fs::append_path(cwd, path, data) {
+                dlen as isize
+            } else {
+                ERR_GENERIC
+            }
+        }
         SYS_FS_MKDIR => {
             let cwd = current_cwd_node();
             let mut pbuf = [0u8; 96];

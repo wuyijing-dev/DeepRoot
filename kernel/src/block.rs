@@ -1,4 +1,4 @@
-//! Teaching block layer — DRFS on virtio-blk (1.6) or ramdisk fallback.
+//! Teaching block layer — DRFS on virtio-blk (1.6+) or ramdisk fallback.
 //!
 //! On-disk layout (DeepRoot teaching FS image, magic `DRFS`):
 //!
@@ -15,8 +15,8 @@
 //! then file payloads at the recorded offsets
 //! ```
 //!
-//! Byte read/write go through [`virtio_blk`] when present; otherwise a static
-//! ramdisk. Shell `ls` / `cat` stay on this DRFS API.
+//! 1.11: [`put_file`] / [`append_file`] mutate the image (create / replace /
+//! append). Byte I/O goes through [`virtio_blk`] when present.
 
 use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
@@ -124,6 +124,83 @@ fn has_drfs_magic() -> bool {
     &magic == MAGIC
 }
 
+fn payload_base() -> usize {
+    DIR_OFF + MAX_FILES * ENTRY_SIZE
+}
+
+fn store_lim() -> usize {
+    STORE_SIZE.load(Ordering::Relaxed).min(DRFS_BYTES)
+}
+
+fn file_count_raw() -> usize {
+    if !has_drfs_magic() {
+        return 0;
+    }
+    (read_u32(8) as usize).min(MAX_FILES)
+}
+
+fn dirent_raw(idx: usize) -> Option<DirEnt> {
+    let n = file_count_raw();
+    if idx >= n || idx >= MAX_FILES {
+        return None;
+    }
+    let base = DIR_OFF + idx * ENTRY_SIZE;
+    let mut name = [0u8; NAME_LEN];
+    if backend_read(base, &mut name) < NAME_LEN {
+        return None;
+    }
+    let name_len = name.iter().position(|&c| c == 0).unwrap_or(NAME_LEN);
+    Some(DirEnt {
+        name,
+        name_len,
+        offset: read_u32(base + NAME_LEN),
+        length: read_u32(base + NAME_LEN + 4),
+        flags: read_u32(base + NAME_LEN + 8),
+    })
+}
+
+/*
+ * payload_raw_end - highest offset+length among dirents (unaligned)
+ */
+fn payload_raw_end() -> usize {
+    let mut end = payload_base();
+    for i in 0..file_count_raw() {
+        if let Some(ent) = dirent_raw(i) {
+            let e = ent.offset as usize + ent.length as usize;
+            if e > end {
+                end = e;
+            }
+        }
+    }
+    end
+}
+
+fn used_end() -> usize {
+    (payload_raw_end() + 3) & !3
+}
+
+fn valid_name(name: &str) -> bool {
+    if name.is_empty() || name.len() >= NAME_LEN {
+        return false;
+    }
+    if name.contains('/') || name.contains('\0') {
+        return false;
+    }
+    true
+}
+
+fn find_slot(name: &str) -> Option<usize> {
+    let n = file_count_raw();
+    for i in 0..n {
+        if let Some(ent) = dirent_raw(i) {
+            if ent.name_str() == name {
+                return Some(i);
+            }
+        }
+    }
+    None
+}
+
 fn format_drfs() {
     /* Zero the teaching image window. */
     let zero = [0u8; 512];
@@ -134,17 +211,17 @@ fn format_drfs() {
         off += n;
     }
 
-    let data_base = DIR_OFF + MAX_FILES * ENTRY_SIZE;
+    let data_base = payload_base();
     let files: &[(&str, &[u8])] = &[
         (
             "block.txt",
-            b"DeepRoot 1.9.0 - DRFS on virtio-blk; dirs live in the in-RAM VFS (mkdir).\n",
+            b"DeepRoot 1.11.0 - DRFS create/append; root shell > is durable.\n",
         ),
         (
             "from-block",
-            b"cat from-block  # path served via block::read\n",
+            b"echo hi > note.txt  # survives QEMU restart on deeproot-disk.img\n",
         ),
-        ("blk-version", b"1.9.0\n"),
+        ("blk-version", b"1.11.0\n"),
     ];
 
     put_bytes(0, MAGIC);
@@ -188,6 +265,14 @@ pub fn init() {
         println!("block: formatted DRFS image ({} bytes window)", size());
     } else {
         println!("block: found existing DRFS image");
+        /* 1.11 smoke: prove a prior boot's durable.txt is still here. */
+        let mut probe = [0u8; 32];
+        if let Some((n, _, _)) = lookup("durable.txt", &mut probe) {
+            const MARK: &[u8] = b"DeepRoot 1.11 durable";
+            if n >= MARK.len() && &probe[..MARK.len()] == MARK {
+                println!("block: durable.txt survived reboot");
+            }
+        }
     }
 
     READY.store(true, Ordering::Relaxed);
@@ -241,36 +326,26 @@ pub fn write(off: usize, data: &[u8]) -> usize {
 }
 
 pub fn file_count() -> usize {
-    if !ready() || !has_drfs_magic() {
+    if !ready() {
         return 0;
     }
-    read_u32(8) as usize
+    file_count_raw()
 }
 
 pub fn dirent(idx: usize) -> Option<DirEnt> {
-    let n = file_count();
-    if idx >= n || idx >= MAX_FILES {
+    if !ready() {
         return None;
     }
-    let base = DIR_OFF + idx * ENTRY_SIZE;
-    let mut name = [0u8; NAME_LEN];
-    if backend_read(base, &mut name) < NAME_LEN {
-        return None;
-    }
-    let name_len = name.iter().position(|&c| c == 0).unwrap_or(NAME_LEN);
-    Some(DirEnt {
-        name,
-        name_len,
-        offset: read_u32(base + NAME_LEN),
-        length: read_u32(base + NAME_LEN + 4),
-        flags: read_u32(base + NAME_LEN + 8),
-    })
+    dirent_raw(idx)
 }
 
 pub fn lookup(name: &str, out: &mut [u8]) -> Option<(usize, usize, bool)> {
-    let n = file_count();
+    if !has_drfs_magic() {
+        return None;
+    }
+    let n = file_count_raw();
     for i in 0..n {
-        let Some(ent) = dirent(i) else {
+        let Some(ent) = dirent_raw(i) else {
             continue;
         };
         if ent.name_str() == name {
@@ -278,10 +353,120 @@ pub fn lookup(name: &str, out: &mut [u8]) -> Option<(usize, usize, bool)> {
             let mut nread = 0usize;
             if !out.is_empty() && total > 0 {
                 let cap = out.len().min(total);
-                nread = read(ent.offset as usize, &mut out[..cap]);
+                nread = backend_read(ent.offset as usize, &mut out[..cap]);
             }
             return Some((nread, total, ent.is_text()));
         }
     }
     None
+}
+
+/*
+ * put_file - create or replace a root DRFS file (1.11)
+ *
+ * Replaces in-place when the new payload fits in the old length; otherwise
+ * allocates at used_end (old bytes become dead space until reformat).
+ */
+pub fn put_file(name: &str, data: &[u8], flags: u32) -> bool {
+    if !ready() || !has_drfs_magic() || !valid_name(name) {
+        return false;
+    }
+    let lim = store_lim();
+    if data.len() > lim {
+        return false;
+    }
+
+    if let Some(slot) = find_slot(name) {
+        let Some(ent) = dirent_raw(slot) else {
+            return false;
+        };
+        let off = if data.len() <= ent.length as usize {
+            ent.offset as usize
+        } else {
+            let at = used_end();
+            if at + data.len() > lim {
+                return false;
+            }
+            at
+        };
+        if off + data.len() > lim {
+            return false;
+        }
+        put_bytes(off, data);
+        write_entry(slot, name, off as u32, data.len() as u32, flags);
+        return true;
+    }
+
+    let n = file_count_raw();
+    if n >= MAX_FILES {
+        return false;
+    }
+    let at = used_end();
+    if at + data.len() > lim {
+        return false;
+    }
+    put_bytes(at, data);
+    write_entry(n, name, at as u32, data.len() as u32, flags);
+    write_u32(8, (n + 1) as u32);
+    true
+}
+
+/*
+ * append_file - append bytes to a DRFS file, or create if missing
+ */
+pub fn append_file(name: &str, data: &[u8], flags: u32) -> bool {
+    if !ready() || !has_drfs_magic() || !valid_name(name) || data.is_empty() {
+        return false;
+    }
+    let lim = store_lim();
+
+    let Some(slot) = find_slot(name) else {
+        return put_file(name, data, flags);
+    };
+    let Some(ent) = dirent_raw(slot) else {
+        return false;
+    };
+    let old_off = ent.offset as usize;
+    let old_len = ent.length as usize;
+    let end = old_off + old_len;
+    let raw_end = payload_raw_end();
+    let new_flags = flags | ent.flags;
+
+    /* Contiguous last payload: extend in place. */
+    if end == raw_end {
+        if end + data.len() > lim {
+            return false;
+        }
+        put_bytes(end, data);
+        write_entry(
+            slot,
+            name,
+            old_off as u32,
+            (old_len + data.len()) as u32,
+            new_flags,
+        );
+        return true;
+    }
+
+    /* Not last: copy old+new to a fresh payload (cap 4 KiB stack). */
+    const CAP: usize = 4096;
+    if old_len + data.len() > CAP {
+        return false;
+    }
+    let mut buf = [0u8; CAP];
+    if old_len > 0 {
+        let n = backend_read(old_off, &mut buf[..old_len]);
+        if n != old_len {
+            return false;
+        }
+    }
+    buf[old_len..old_len + data.len()].copy_from_slice(data);
+    let total = old_len + data.len();
+    let at = used_end();
+    if at + total > lim {
+        return false;
+    }
+    put_bytes(at, &buf[..total]);
+    write_entry(slot, name, at as u32, total as u32, new_flags);
+    true
 }

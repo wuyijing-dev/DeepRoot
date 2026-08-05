@@ -78,6 +78,7 @@
 - [1.10 可加载模块](path/14-modules.md)
   - [1.10.1 SYS_SPAWN_SERVER](path/modules/01-spawn-server.md)
   - [1.10.2 moddemo 与 init](path/modules/02-moddemo-init.md)
+- [1.11 文件系统持久化](path/15-fs11.md)
 
 # 动手玩
 
