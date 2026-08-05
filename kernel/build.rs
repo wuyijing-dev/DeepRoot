@@ -23,6 +23,7 @@ fn main() {
         ("deeproot-badapple", "deeproot-badapple", "user/badapple"),
         ("deeproot-moddemo", "deeproot-moddemo", "user/moddemo"),
         ("deeproot-modnote", "deeproot-modnote", "user/modnote"),
+        ("deeproot-grantpeer", "deeproot-grantpeer", "user/grantpeer"),
     ] {
         println!("cargo:rerun-if-changed=../{}/src/main.rs", src_dir);
         println!("cargo:rerun-if-changed=../{}/linker.ld", src_dir);

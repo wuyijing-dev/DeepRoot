@@ -1,4 +1,4 @@
-//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.13.
+//! Syscall numbers and errno — frozen base (1.0) + additive 1.1–1.14.
 //!
 //! 0..9 frozen at 1.0.0. New numbers are additive only.
 
@@ -98,6 +98,19 @@ pub const SYS_CAP_DUMP: usize = 38;
 
 /// `a0`=name, `a1`=nlen — resolve registry name → mint Endpoint → cap slot
 pub const SYS_SERVICE_LOOKUP: usize = 39;
+
+/* ---- 1.14 shared frames ---- */
+
+/// Allocate one frame → Frame cap slot (badge = PA)
+pub const SYS_FRAME_ALLOC: usize = 40;
+/// `a0`=slot, `a1`=va, `a2`=write(0/1) — map Frame into current AS
+pub const SYS_FRAME_MAP: usize = 41;
+/// `a0`=slot, `a1`=target_sched, `a2`=va, `a3`=write — map into another task
+pub const SYS_FRAME_MAP_INTO: usize = 42;
+/// `a0`=slot, `a1`=target_sched, `a2`=write — mint Frame copy into target CSpace
+pub const SYS_FRAME_GRANT: usize = 43;
+/// `a0`=name, `a1`=nlen → sched id of registered service
+pub const SYS_SERVICE_SCHED: usize = 44;
 
 /// Pass as `SYS_TASK_STDOUT` a1 to restore console output.
 pub const STDOUT_CONSOLE: usize = usize::MAX;

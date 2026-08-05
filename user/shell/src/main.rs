@@ -900,13 +900,13 @@ fn run_stage(
 #[no_mangle]
 pub extern "C" fn main() {
     let _ = sys::debug_write(
-        "shell: DeepRoot shell 1.13 ready (help, lookup, modules)\n",
+        "shell: DeepRoot shell 1.14 ready (help, lookup, grantpeer)\n",
     );
     let mut buf = [0u8; LINE_MAX];
     let mut hist = History::new();
     let mut env = Env::new();
     let _ = env.set(b"SHELL", b"deeproot");
-    let _ = env.set(b"VERSION", b"1.13.0");
+    let _ = env.set(b"VERSION", b"1.14.0");
 
     loop {
         let _ = sys::debug_write("deeproot> ");

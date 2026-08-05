@@ -16,6 +16,7 @@ static HELLO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-hel
 static BADAPPLE_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-badapple"));
 static MODDEMO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-moddemo"));
 static MODNOTE_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-modnote"));
+static GRANTPEER_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/deeproot-grantpeer"));
 
 struct File {
     name: &'static str,
@@ -25,7 +26,7 @@ struct File {
 static FILES: &[File] = &[
     File {
         name: "readme.txt",
-        data: b"DeepRoot 1.13.0 - sleep/ledger/hexdump; root > durable  # durable DRFS at /\n",
+        data: b"DeepRoot 1.14.0 - sleep/ledger/hexdump; root > durable  # durable DRFS at /\n",
     },
     File {
         name: "hello.txt",
@@ -33,7 +34,7 @@ static FILES: &[File] = &[
     },
     File {
         name: "version",
-        data: b"1.13.0\n",
+        data: b"1.14.0\n",
     },
     File {
         name: "hello",
@@ -50,6 +51,10 @@ static FILES: &[File] = &[
     File {
         name: "modnote",
         data: MODNOTE_ELF,
+    },
+    File {
+        name: "grantpeer",
+        data: GRANTPEER_ELF,
     },
 ];
 

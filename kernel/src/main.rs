@@ -13,6 +13,7 @@ mod elf;
 mod fdt;
 mod fd;
 mod fs;
+mod grant;
 mod ipc;
 mod vfs;
 mod ledger;

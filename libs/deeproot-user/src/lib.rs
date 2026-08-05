@@ -164,6 +164,37 @@ pub mod sys {
         unsafe { ecall(SYS_SERVICE_LOOKUP, name.as_ptr() as usize, name.len(), 0, 0) }
     }
 
+    pub fn frame_alloc() -> isize {
+        unsafe { ecall(SYS_FRAME_ALLOC, 0, 0, 0, 0) }
+    }
+
+    pub fn frame_map(slot: usize, va: usize, write: bool) -> isize {
+        unsafe { ecall(SYS_FRAME_MAP, slot, va, write as usize, 0) }
+    }
+
+    pub fn frame_map_into(slot: usize, target_sched: usize, va: usize, write: bool) -> isize {
+        unsafe {
+            ecall(
+                SYS_FRAME_MAP_INTO,
+                slot,
+                target_sched,
+                va,
+                write as usize,
+            )
+        }
+    }
+
+    pub fn frame_grant(slot: usize, target_sched: usize, write: bool) -> isize {
+        unsafe { ecall(SYS_FRAME_GRANT, slot, target_sched, write as usize, 0) }
+    }
+
+    pub fn service_sched(name: &[u8]) -> isize {
+        unsafe { ecall(SYS_SERVICE_SCHED, name.as_ptr() as usize, name.len(), 0, 0) }
+    }
+
+    /// Shared teaching VA for 1.14 grant demos (matches kernel `grant::SHARE_VA`).
+    pub const SHARE_VA: usize = 0x1A00_0000;
+
     pub const O_RDONLY: u32 = 0;
     pub const O_WRONLY: u32 = 1;
     pub const O_RDWR: u32 = 2;

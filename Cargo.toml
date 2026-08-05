@@ -12,6 +12,7 @@ members = [
     "user/badapple",
     "user/moddemo",
     "user/modnote",
+    "user/grantpeer",
 ]
 default-members = ["kernel"]
 

@@ -232,6 +232,31 @@ pub fn current_id() -> usize {
     inner().current[h]
 }
 
+/*
+ * root_pa_of - Sv39 root physical address for a sched slot
+ */
+pub fn root_pa_of(sched_id: usize) -> Option<crate::mm::layout::PhysAddr> {
+    let _g = SCHED_LOCK.lock();
+    let s = inner();
+    if sched_id >= MAX_UTASKS || s.tasks[sched_id].state == TaskState::Empty {
+        return None;
+    }
+    let r = s.tasks[sched_id].root_pa;
+    if r == 0 {
+        return None;
+    }
+    Some(crate::mm::layout::PhysAddr::new(r))
+}
+
+pub fn cap_task_of(sched_id: usize) -> Option<TaskId> {
+    let _g = SCHED_LOCK.lock();
+    let s = inner();
+    if sched_id >= MAX_UTASKS || s.tasks[sched_id].state == TaskState::Empty {
+        return None;
+    }
+    Some(s.tasks[sched_id].cap_task)
+}
+
 pub fn current_cap_task() -> TaskId {
     let s = inner();
     let h = smp::hart_id().min(MAX_HARTS - 1);
@@ -1321,6 +1346,69 @@ pub fn handle_syscall(
                     slot as isize
                 }
                 Err(_) => ERR_GENERIC,
+            }
+        }
+        SYS_FRAME_ALLOC => match crate::grant::alloc(tasks, current) {
+            Some(slot) => slot as isize,
+            None => ERR_GENERIC,
+        },
+        SYS_FRAME_MAP => {
+            let sid = current_sched_id();
+            let slot = a0 as usize;
+            let va = a1 as usize;
+            let write = a2 != 0;
+            if crate::grant::map(tasks, current, sid, slot, va, write) {
+                0
+            } else {
+                ERR_GENERIC
+            }
+        }
+        SYS_FRAME_MAP_INTO => {
+            let slot = a0 as usize;
+            let target = a1 as usize;
+            let va = a2 as usize;
+            let write = a3 != 0;
+            if crate::grant::map_into(tasks, current, target, slot, va, write) {
+                crate::println!(
+                    "grant: mapped into sched={} va={:#x} write={}",
+                    target,
+                    va,
+                    write
+                );
+                0
+            } else {
+                ERR_GENERIC
+            }
+        }
+        SYS_FRAME_GRANT => {
+            let slot = a0 as usize;
+            let target_sched = a1 as usize;
+            let write = a2 != 0;
+            let Some(target) = cap_task_of(target_sched) else {
+                return ERR_GENERIC;
+            };
+            match crate::grant::grant_cap(tasks, current, target, slot, write) {
+                Some(remote) => {
+                    crate::println!(
+                        "grant: cap to sched={} remote_slot={} write={}",
+                        target_sched,
+                        remote,
+                        write
+                    );
+                    remote as isize
+                }
+                None => ERR_GENERIC,
+            }
+        }
+        SYS_SERVICE_SCHED => {
+            let mut nbuf = [0u8; 96];
+            let name = match copy_user_path(a0 as usize, a1 as usize, &mut nbuf) {
+                Ok(p) => p,
+                Err(e) => return e,
+            };
+            match crate::module::lookup_sched(name) {
+                Some(id) => id as isize,
+                None => ERR_GENERIC,
             }
         }
         _ => ERR_NOSYS,

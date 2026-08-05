@@ -106,6 +106,15 @@ pub fn lookup_badge(name: &str) -> Option<u64> {
 }
 
 /*
+ * lookup_sched - resolve service name → sched id
+ */
+pub fn lookup_sched(name: &str) -> Option<usize> {
+    let _g = LOCK.lock();
+    let t = table();
+    find_name(t, name).map(|i| t.entries[i].sched_id)
+}
+
+/*
  * list - dump registered modules to the console
  */
 pub fn list() {

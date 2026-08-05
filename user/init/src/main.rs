@@ -154,6 +154,42 @@ pub extern "C" fn main() {
     let _ = sys::cap_dump();
     let _ = sys::debug_write("init: caps dumped\n");
 
+    /* 1.14: shared frame — map into grantpeer, peer verifies magic. */
+    const GRANTPEER_BADGE: u64 = 0xD014;
+    let gpslot = sys::spawn_server(b"grantpeer", GRANTPEER_BADGE);
+    if gpslot >= 0 {
+        let _ = sys::yield_now();
+        let _ = sys::yield_now();
+        let sid = sys::service_sched(b"grantpeer");
+        let fslot = sys::frame_alloc();
+        if sid >= 0 && fslot >= 0 {
+            if sys::frame_map(fslot as usize, sys::SHARE_VA, true) >= 0 {
+                unsafe {
+                    let p = sys::SHARE_VA as *mut u8;
+                    let magic = b"DeepRoot 1.14 grant\n";
+                    for (i, b) in magic.iter().enumerate() {
+                        *p.add(i) = *b;
+                    }
+                }
+                let _ = sys::frame_map_into(fslot as usize, sid as usize, sys::SHARE_VA, false);
+                let _ = sys::frame_grant(fslot as usize, sid as usize, false);
+                let _ = sys::yield_now();
+                let grc = sys::ipc_call(gpslot as usize, 0x4752, 1);
+                if grc >= 0 {
+                    let _ = sys::debug_write("init: grant peer ok\n");
+                } else {
+                    let _ = sys::debug_write("init: grant peer call failed\n");
+                }
+            } else {
+                let _ = sys::debug_write("init: frame map failed\n");
+            }
+        } else {
+            let _ = sys::debug_write("init: grant setup failed\n");
+        }
+    } else {
+        let _ = sys::debug_write("init: grantpeer load failed\n");
+    }
+
     let _ = sys::yield_now();
     let _ = sys::yield_now();
     let _ = sys::debug_write("init: handing off to shell\n");

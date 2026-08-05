@@ -76,7 +76,7 @@ if [[ "${MODE}" == "--smoke" ]]; then
   set -e
 
   COMMON_NEEDLES=(
-    "DeepRoot microkernel 1.13.0"
+    "DeepRoot microkernel 1.14.0"
     "fdt: model \"DeepRoot QEMU virt\""
     "fdt: board deeproot,qemu-virt"
     "fdt: cpu count=2"
@@ -113,7 +113,12 @@ if [[ "${MODE}" == "--smoke" ]]; then
     "init: ledger dumped"
     "CapSpace"
     "init: caps dumped"
-    "shell: DeepRoot shell 1.13 ready"
+    "grant: alloc frame"
+    "grant: mapped into sched="
+    "grantpeer: online"
+    "grantpeer: saw magic"
+    "init: grant peer ok"
+    "shell: DeepRoot shell 1.14 ready"
     "init: handing off to shell"
   )
 
